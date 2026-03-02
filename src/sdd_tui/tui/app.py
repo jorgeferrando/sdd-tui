@@ -6,8 +6,8 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 
 from sdd_tui.core.git_reader import GitReader
-from sdd_tui.core.models import Change, OpenspecNotFoundError
-from sdd_tui.core.pipeline import PipelineInferer
+from sdd_tui.core.models import Change, OpenspecNotFoundError, Task, TaskGitState
+from sdd_tui.core.pipeline import PipelineInferer, TaskParser
 from sdd_tui.core.reader import OpenspecReader
 from sdd_tui.tui.epics import EpicsView
 
@@ -24,6 +24,7 @@ class SddTuiApp(App):
         self._openspec_path = openspec_path
         self._reader = OpenspecReader()
         self._inferer = PipelineInferer()
+        self._parser = TaskParser()
         self._git = GitReader()
 
     def compose(self) -> ComposeResult:
@@ -38,7 +39,21 @@ class SddTuiApp(App):
         changes = self._reader.load(self._openspec_path)
         for change in changes:
             change.pipeline = self._inferer.infer(change.path, self._git)
+            change.tasks = self._load_tasks(change)
         return changes
+
+    def _load_tasks(self, change: Change) -> list[Task]:
+        tasks_md = change.path / "tasks.md"
+        if not tasks_md.exists():
+            return []
+        tasks = self._parser.parse(tasks_md)
+        for task in tasks:
+            if task.commit_hint:
+                commit_info = self._git.find_commit(task.commit_hint, change.path)
+                if commit_info:
+                    task.git_state = TaskGitState.COMMITTED
+                    task.commit = commit_info
+        return tasks
 
 
 def main() -> None:
