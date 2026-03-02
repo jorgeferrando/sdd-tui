@@ -11,6 +11,17 @@ class PhaseState(Enum):
 
 
 @dataclass
+class CommitInfo:
+    hash: str
+    message: str
+
+
+class TaskGitState(Enum):
+    COMMITTED = "committed"
+    PENDING = "pending"
+
+
+@dataclass
 class Pipeline:
     propose: PhaseState = PhaseState.PENDING
     spec: PhaseState = PhaseState.PENDING
@@ -26,6 +37,9 @@ class Task:
     description: str
     done: bool
     amendment: str | None = None
+    commit_hint: str | None = None
+    git_state: TaskGitState = field(default_factory=lambda: TaskGitState.PENDING)
+    commit: CommitInfo | None = None
 
 
 @dataclass
@@ -33,6 +47,7 @@ class Change:
     name: str
     path: Path
     pipeline: Pipeline = field(default_factory=Pipeline)
+    tasks: list[Task] = field(default_factory=list)
 
 
 class OpenspecNotFoundError(Exception):
