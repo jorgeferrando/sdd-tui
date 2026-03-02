@@ -8,23 +8,38 @@ from sdd_tui.core.models import PhaseState, Pipeline, Task
 
 
 class TaskParser:
-    _TASK_RE = re.compile(r"^- \[(x| )\] (T\d+) (.+)$")
+    _TASK_RE = re.compile(r"^- \[(x| )\] \*{0,2}(T\d+)\*{0,2} (.+)$")
     _AMENDMENT_RE = re.compile(r"^── amendment: (.+) ──$")
+    _COMMIT_HINT_RE = re.compile(r"^\s{2,}-\s+Commit:\s+`?(.+?)`?\s*$")
 
     def parse(self, tasks_md: Path) -> list[Task]:
         tasks: list[Task] = []
         current_amendment: str | None = None
+        last_task: Task | None = None
 
         for line in tasks_md.read_text().splitlines():
-            if amendment_match := self._AMENDMENT_RE.match(line.strip()):
+            stripped = line.strip()
+
+            if amendment_match := self._AMENDMENT_RE.match(stripped):
                 current_amendment = amendment_match.group(1).strip()
+                last_task = None
                 continue
 
-            if task_match := self._TASK_RE.match(line.strip()):
-                done = task_match.group(1) == "x"
-                task_id = task_match.group(2)
-                description = task_match.group(3).strip()
-                tasks.append(Task(id=task_id, description=description, done=done, amendment=current_amendment))
+            if task_match := self._TASK_RE.match(stripped):
+                task = Task(
+                    id=task_match.group(2),
+                    description=task_match.group(3).strip(),
+                    done=task_match.group(1) == "x",
+                    amendment=current_amendment,
+                )
+                tasks.append(task)
+                last_task = task
+                continue
+
+            if last_task is not None:
+                if hint_match := self._COMMIT_HINT_RE.match(line):
+                    last_task.commit_hint = hint_match.group(1).strip()
+                    last_task = None
 
         return tasks
 
