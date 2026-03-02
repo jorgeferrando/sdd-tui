@@ -104,3 +104,33 @@ def test_parse_ignores_malformed_lines(tmp_path: Path) -> None:
     tasks = TaskParser().parse(tasks_md)
     assert len(tasks) == 1
     assert tasks[0].id == "T01"
+
+
+def test_parse_bold_format(tmp_path: Path) -> None:
+    tasks_md = tmp_path / "tasks.md"
+    tasks_md.write_text("- [x] **T01** Create something\n- [ ] **T02** Do another\n")
+    tasks = TaskParser().parse(tasks_md)
+    assert len(tasks) == 2
+    assert tasks[0].id == "T01"
+    assert tasks[0].done is True
+    assert tasks[1].id == "T02"
+    assert tasks[1].done is False
+
+
+def test_parse_captures_commit_hint(tmp_path: Path) -> None:
+    tasks_md = tmp_path / "tasks.md"
+    tasks_md.write_text(
+        "- [x] **T01** Create something\n"
+        "  - Commit: `[bootstrap] Add something`\n"
+        "- [ ] **T02** Do another\n"
+    )
+    tasks = TaskParser().parse(tasks_md)
+    assert tasks[0].commit_hint == "[bootstrap] Add something"
+    assert tasks[1].commit_hint is None
+
+
+def test_parse_no_hint_when_absent(tmp_path: Path) -> None:
+    tasks_md = tmp_path / "tasks.md"
+    tasks_md.write_text("- [x] T01 Create something\n")
+    tasks = TaskParser().parse(tasks_md)
+    assert tasks[0].commit_hint is None
