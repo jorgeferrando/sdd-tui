@@ -27,9 +27,9 @@ class TaskListPanel(ScrollableContainer):
         self._tasks = tasks
 
     def compose(self) -> ComposeResult:
-        yield Static(self._render())
+        yield Static(self._build_content())
 
-    def _render(self) -> str:
+    def _build_content(self) -> str:
         if not self._tasks:
             return "  No tasks defined yet"
 
@@ -64,10 +64,10 @@ class PipelinePanel(Static):
     """
 
     def __init__(self, pipeline: Pipeline) -> None:
-        content = self._render(pipeline)
+        content = self._build_content(pipeline)
         super().__init__(content)
 
-    def _render(self, pipeline: Pipeline) -> str:
+    def _build_content(self, pipeline: Pipeline) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
             state = getattr(pipeline, phase)

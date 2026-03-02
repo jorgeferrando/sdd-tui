@@ -5,7 +5,7 @@ from textual.binding import Binding
 from textual.widgets import DataTable, Footer, Header
 from textual.widget import Widget
 
-from sdd_tui.core.models import Change, PhaseState
+from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
@@ -17,9 +17,19 @@ def _phase_symbol(state: PhaseState) -> str:
     return DONE if state == PhaseState.DONE else PENDING
 
 
+def _apply_display(state: PhaseState, tasks: list[Task]) -> str:
+    if state == PhaseState.DONE:
+        return DONE
+    if not tasks:
+        return PENDING
+    done = sum(1 for t in tasks if t.done)
+    if done == 0:
+        return PENDING
+    return f"{done}/{len(tasks)}"
+
+
 class EpicsView(Widget):
     BINDINGS = [
-        Binding("enter", "select_change", "Detail", show=True),
         Binding("r", "refresh", "Refresh"),
         Binding("q", "quit", "Quit"),
     ]
@@ -36,7 +46,7 @@ class EpicsView(Widget):
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
-        yield DataTable()
+        yield DataTable(cursor_type="row")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -55,7 +65,7 @@ class EpicsView(Widget):
                 _phase_symbol(pipeline.spec),
                 _phase_symbol(pipeline.design),
                 _phase_symbol(pipeline.tasks),
-                _phase_symbol(pipeline.apply),
+                _apply_display(pipeline.apply, change.tasks),
                 _phase_symbol(pipeline.verify),
             )
             table.add_row(*row)

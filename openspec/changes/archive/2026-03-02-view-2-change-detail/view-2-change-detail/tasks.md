@@ -52,6 +52,18 @@
   - Fix: reemplazar `Binding("enter", "select_change")` + `action_select_change()` por `on_data_table_row_selected()`
   - Commit: `[view-2] Fix Enter navigation using DataTable.RowSelected event`
 
+- [x] **BUG02** `src/sdd_tui/tui/epics.py` + `change_detail.py` — `DataTable.RowSelected` solo se dispara con `cursor_type="row"`; `PipelinePanel._render()` y `TaskListPanel._render()` colisionan con método interno de Textual
+  - Detectado: smoke test — Enter seguía sin navegar; crash al abrir View 2
+  - Fix: añadir `cursor_type="row"` al `DataTable`; renombrar `_render()` → `_build_content()` en ambos paneles
+  - Commit: `[view-2] Fix cursor_type and _render name conflict with Textual internals`
+
+## Mejoras post-archive
+
+- [x] **MEJ01** `src/sdd_tui/tui/epics.py` — columna apply muestra progreso parcial como `X/Y` en lugar de solo `·`
+  - Detectado: apply aparecía como no iniciado aunque había tareas completadas
+  - Fix: añadir `_apply_display()` que devuelve `✓`, `·` o fracción `done/total`
+  - Commit: `[view-2] Show partial apply progress as X/Y in epics dashboard`
+
 ## Notas
 
 - Orden TDD: test (RED) → implementación (GREEN)
