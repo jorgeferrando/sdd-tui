@@ -6,6 +6,7 @@ from textual.widgets import DataTable, Footer, Header
 from textual.widget import Widget
 
 from sdd_tui.core.models import Change, PhaseState
+from sdd_tui.tui.change_detail import ChangeDetailScreen
 
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
 DONE = "✓"
@@ -18,6 +19,7 @@ def _phase_symbol(state: PhaseState) -> str:
 
 class EpicsView(Widget):
     BINDINGS = [
+        Binding("enter", "select_change", "Detail"),
         Binding("r", "refresh", "Refresh"),
         Binding("q", "quit", "Quit"),
     ]
@@ -61,6 +63,11 @@ class EpicsView(Widget):
     def update(self, changes: list[Change]) -> None:
         self._changes = changes
         self._populate()
+
+    def action_select_change(self) -> None:
+        row_index = self.query_one(DataTable).cursor_row
+        if 0 <= row_index < len(self._changes):
+            self.app.push_screen(ChangeDetailScreen(self._changes[row_index]))
 
     def action_refresh(self) -> None:
         self.app.refresh_changes()  # type: ignore[attr-defined]
