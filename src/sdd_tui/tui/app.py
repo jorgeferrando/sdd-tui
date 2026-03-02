@@ -30,6 +30,10 @@ class SddTuiApp(App):
         changes = self._load_changes()
         yield EpicsView(changes)
 
+    def refresh_changes(self) -> None:
+        changes = self._load_changes()
+        self.query_one(EpicsView).update(changes)
+
     def _load_changes(self) -> list[Change]:
         changes = self._reader.load(self._openspec_path)
         for change in changes:

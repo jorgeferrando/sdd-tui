@@ -58,6 +58,10 @@ class EpicsView(Widget):
             )
             table.add_row(*row)
 
+    def update(self, changes: list[Change]) -> None:
+        self._changes = changes
+        self._populate()
+
     def action_refresh(self) -> None:
         self.app.refresh_changes()  # type: ignore[attr-defined]
 
