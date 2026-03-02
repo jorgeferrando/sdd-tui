@@ -12,5 +12,4 @@ paths:
 
 notes: >
   Proyecto standalone (Python + Textual).
-  No es proyecto Parclick — sin skills de proyecto específicos.
   Spec de diseño en ~/.claude/memory/sdd-tui-spec.md.
