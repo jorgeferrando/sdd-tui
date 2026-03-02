@@ -49,7 +49,7 @@
 
 ## Quality Gate Final
 
-- [ ] **QG** Ejecutar tests y verificar arranque
+- [x] **QG** Ejecutar tests y verificar arranque
   - `uv run pytest`
   - `uv run sdd-tui` (smoke test visual)
 
