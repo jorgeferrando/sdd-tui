@@ -3,8 +3,30 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
+from sdd_tui.core.models import CommitInfo
+
 
 class GitReader:
+    def find_commit(self, message_fragment: str | None, cwd: Path) -> CommitInfo | None:
+        if message_fragment is None:
+            return None
+        try:
+            result = subprocess.run(
+                ["git", "log", "--oneline", "--abbrev-commit",
+                 f"--grep={message_fragment}", "-1"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0 or not result.stdout.strip():
+                return None
+            parts = result.stdout.strip().split(" ", 1)
+            if len(parts) < 2:
+                return None
+            return CommitInfo(hash=parts[0], message=parts[1])
+        except FileNotFoundError:
+            return None
+
     def is_clean(self, cwd: Path) -> bool | None:
         try:
             result = subprocess.run(
