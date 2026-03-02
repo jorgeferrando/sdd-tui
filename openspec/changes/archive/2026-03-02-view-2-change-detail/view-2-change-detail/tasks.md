@@ -45,6 +45,13 @@
   - `uv run pytest`
   - `uv run sdd-tui` → Enter en un change → ver detalle → Esc → volver
 
+## Bugs post-archive
+
+- [x] **BUG01** `src/sdd_tui/tui/epics.py` — Enter no navega: DataTable consume el evento antes que EpicsView
+  - Detectado: smoke test manual tras archive
+  - Fix: reemplazar `Binding("enter", "select_change")` + `action_select_change()` por `on_data_table_row_selected()`
+  - Commit: `[view-2] Fix Enter navigation using DataTable.RowSelected event`
+
 ## Notas
 
 - Orden TDD: test (RED) → implementación (GREEN)

@@ -19,7 +19,7 @@ def _phase_symbol(state: PhaseState) -> str:
 
 class EpicsView(Widget):
     BINDINGS = [
-        Binding("enter", "select_change", "Detail"),
+        Binding("enter", "select_change", "Detail", show=True),
         Binding("r", "refresh", "Refresh"),
         Binding("q", "quit", "Quit"),
     ]
@@ -64,8 +64,8 @@ class EpicsView(Widget):
         self._changes = changes
         self._populate()
 
-    def action_select_change(self) -> None:
-        row_index = self.query_one(DataTable).cursor_row
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        row_index = event.cursor_row
         if 0 <= row_index < len(self._changes):
             self.app.push_screen(ChangeDetailScreen(self._changes[row_index]))
 
