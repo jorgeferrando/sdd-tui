@@ -1,10 +1,10 @@
-# Spec: Core — openspec reader + pipeline inference
+# Spec: Core — openspec reader + pipeline inference + task git state
 
 ## Metadata
 - **Dominio:** core
-- **Change:** bootstrap
+- **Change:** view-2-change-detail
 - **Fecha:** 2026-03-02
-- **Versión:** 0.1
+- **Versión:** 0.2
 - **Estado:** approved
 
 ## Contexto
@@ -44,7 +44,21 @@ class Change:
     name: str          # nombre del directorio (ej: "bootstrap", "di-450-rate")
     path: Path         # ruta absoluta al directorio del change
     pipeline: Pipeline # estado inferido de cada fase
+    tasks: list[Task]  # tareas con estado git poblado
 ```
+
+### Carga de task git states
+
+**Dado** un `Change` con `tasks.md` que contiene hints de commit
+**Cuando** se carga el change
+**Entonces** cada `Task` tiene su `git_state` y `commit` poblados
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Sin `tasks.md` | Change sin tareas | `change.tasks = []` |
+| Tarea sin hint | `commit_hint=None` | `git_state=PENDING`, `commit=None` |
+| Hint no encontrado en log | `find_commit()` retorna `None` | `git_state=PENDING` |
+| Hint encontrado | `find_commit()` retorna info | `git_state=COMMITTED`, `commit=CommitInfo` |
 
 ### Reglas de negocio
 
@@ -126,10 +140,11 @@ class Pipeline:
 
 ```
 - [x] T01 Create Command
-- [ ] T02 Create Handler
-- [x] T03 Update services.yaml
+- [x] **T02** Create Handler   ← formato con negrita (también soportado)
+- [ ] T03 Update services.yaml
 ── amendment: descripción ──
 - [ ] T04 Fix validation
+  - Commit: `[change-name] Add validation`
 ```
 
 ### Comportamiento
@@ -142,10 +157,13 @@ preservando los separadores de amendment como metadato
 ```python
 @dataclass
 class Task:
-    id: str            # "T01", "T02"… formato TXX obligatorio
-    description: str   # texto tras el ID
-    done: bool         # True si [x], False si [ ]
-    amendment: str | None  # nombre del amendment al que pertenece, si aplica
+    id: str                   # "T01", "T02"… formato TXX obligatorio
+    description: str          # texto tras el ID
+    done: bool                # True si [x], False si [ ]
+    amendment: str | None     # nombre del amendment al que pertenece, si aplica
+    commit_hint: str | None   # extraído de "  - Commit: `...`"
+    git_state: TaskGitState   # COMMITTED o PENDING (por defecto PENDING)
+    commit: CommitInfo | None # solo si COMMITTED
 ```
 
 ### Casos alternativos — task parser
@@ -156,27 +174,60 @@ class Task:
 | Línea de amendment | `── amendment: foo ──` | No genera Task, setea contexto |
 | Línea en blanco | Línea vacía | Se ignora |
 | tasks.md vacío | Archivo existe sin contenido | Lista vacía `[]` |
+| Tarea con negrita | `- [x] **T01** Desc` | Parseada correctamente |
+| Tarea sin negrita | `- [x] T01 Desc` | Parseada correctamente (retrocompatible) |
+| Sin hint de commit | Tarea sin línea `- Commit:` | `commit_hint=None` |
+| Hint con backticks | `` - Commit: `[x] msg` `` | hint = `[x] msg` (sin backticks) |
+
+### Reglas de negocio
+
+- **RB-07:** El parser debe aceptar tanto `T01` como `**T01**` (con o sin negrita markdown).
+- **RB-08:** El `commit_hint` se extrae eliminando los backticks envolventes si los hay.
+- **RB-09:** Solo se captura el hint de la línea inmediatamente siguiente a la tarea (indentada con 2+ espacios).
 
 ---
 
-## 4. Git Reader — Estado del working tree
+## 4. Git Reader — Estado del working tree y commits
 
-Responsabilidad limitada en v1: solo detectar si el repo tiene cambios
-pendientes (para inferir `verify`).
-
-### Comportamiento
+### is_clean — Estado del working tree
 
 **Dado** un path de directorio
 **Cuando** se consulta si el working tree está limpio
 **Entonces** se ejecuta `git status --porcelain` y se retorna `True` si
 la salida está vacía, `False` en caso contrario
 
+### find_commit — Búsqueda de commit por mensaje
+
+**Dado** un fragmento de mensaje de commit y un directorio de repo git
+**Cuando** se busca en git log
+**Entonces** se retorna el `CommitInfo` del commit más reciente que coincide,
+o `None` si no se encuentra
+
+```python
+@dataclass
+class CommitInfo:
+    hash: str     # hash corto de 7 caracteres
+    message: str  # mensaje completo del commit
+
+class TaskGitState(Enum):
+    COMMITTED = "committed"  # encontrado en git log
+    PENDING   = "pending"    # no encontrado
+```
+
 ### Casos alternativos — git reader
 
 | Escenario | Condición | Resultado |
 |-----------|-----------|-----------|
-| No es repo git | `git status` falla | Retorna `None` (sin estado) |
+| No es repo git | `git status` / `git log` falla | Retorna `None` |
 | git no instalado | Comando no encontrado | Retorna `None` |
+| Commit encontrado | `git log --grep` retorna línea | `CommitInfo(hash, message)` |
+| No encontrado | Salida vacía | `None` |
+| `message_fragment` es `None` | Sin hint | `None` (sin llamar a git) |
+
+### Reglas de negocio
+
+- **RB-10:** El hash siempre tiene 7 caracteres (`--abbrev-commit`).
+- **RB-11:** Si `commit_hint` es `None`, no se ejecuta git — retorna `None` directamente.
 
 ---
 
@@ -189,6 +240,10 @@ la salida está vacía, `False` en caso contrario
 | Dataclasses para modelos | TypedDict / Pydantic | Suficiente para v1, sin overhead |
 | `OpenspecNotFoundError` en lugar de `[]` | Retornar lista vacía | Distinguir "no hay changes" de "no hay openspec" |
 | IDs de tarea siempre `TXX` | IDs libres | Formato fijo → parseado predecible, líneas sin ID ignoradas |
+| Hint de commit en tasks.md | Buscar por TXX en git log | Formato de commit no incluye TXX; hint es preciso |
+| `git log --grep` | `git log --all` manual | Comando nativo, un resultado basta |
+| `TaskGitState` independiente de `done` | Unificar en un solo campo | `done` = estado en tasks.md; `git_state` = realidad en git. Pueden diferir |
+| Hash 7 chars | Hash completo | Estándar git, suficiente para display |
 
 ## Abierto / Pendiente
 
