@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from rich.syntax import Syntax
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, ScrollableContainer, Vertical
@@ -96,7 +97,11 @@ class DiffPanel(ScrollableContainer):
     def compose(self) -> ComposeResult:
         yield Static("", id="diff-content")
 
-    def update_diff(self, text: str) -> None:
+    def show_diff(self, text: str) -> None:
+        content = Syntax(text, "diff", theme="monokai", word_wrap=False)
+        self.query_one("#diff-content", Static).update(content)
+
+    def show_message(self, text: str) -> None:
         self.query_one("#diff-content", Static).update(text)
 
 
@@ -137,9 +142,16 @@ class ChangeDetailScreen(Screen):
         diff_panel = self.query_one(DiffPanel)
         if task.git_state == TaskGitState.COMMITTED and task.commit:
             diff = GitReader().get_diff(task.commit.hash, Path.cwd())
-            diff_panel.update_diff(diff or "Could not load diff")
+            if diff:
+                diff_panel.show_diff(diff)
+            else:
+                diff_panel.show_message("Could not load diff")
         else:
-            diff_panel.update_diff("Not committed yet")
+            diff = GitReader().get_working_diff(Path.cwd())
+            if diff:
+                diff_panel.show_diff(diff)
+            else:
+                diff_panel.show_message("No uncommitted changes")
 
     def action_refresh_view(self) -> None:
         self.app.refresh_changes()  # type: ignore[attr-defined]
