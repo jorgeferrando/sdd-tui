@@ -145,7 +145,10 @@ class ChangeDetailScreen(Screen):
         task = self.query_one(TaskListPanel).get_task(event.row_key.value)
         if task is None:
             return
-        diff_panel = self.query_one(DiffPanel)
+        diff_panels = self.query(DiffPanel)
+        if not diff_panels:
+            return
+        diff_panel = diff_panels.first(DiffPanel)
         if task.git_state == TaskGitState.COMMITTED and task.commit:
             diff = GitReader().get_diff(task.commit.hash, Path.cwd())
             if diff:
