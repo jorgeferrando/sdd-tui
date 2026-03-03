@@ -31,13 +31,13 @@ class SddTuiApp(App):
         changes = self._load_changes()
         yield EpicsView(changes)
 
-    def refresh_changes(self) -> list[Change]:
-        changes = self._load_changes()
+    def refresh_changes(self, include_archived: bool = False) -> list[Change]:
+        changes = self._load_changes(include_archived)
         self.query_one(EpicsView).update(changes)
         return changes
 
-    def _load_changes(self) -> list[Change]:
-        changes = self._reader.load(self._openspec_path)
+    def _load_changes(self, include_archived: bool = False) -> list[Change]:
+        changes = self._reader.load(self._openspec_path, include_archived)
         for change in changes:
             change.pipeline = self._inferer.infer(change.path, self._git)
             change.tasks = self._load_tasks(change)
