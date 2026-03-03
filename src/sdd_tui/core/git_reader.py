@@ -27,6 +27,22 @@ class GitReader:
         except FileNotFoundError:
             return None
 
+    def get_diff(self, commit_hash: str | None, cwd: Path) -> str | None:
+        if not commit_hash:
+            return None
+        try:
+            result = subprocess.run(
+                ["git", "show", "--no-color", commit_hash],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return None
+            return result.stdout
+        except FileNotFoundError:
+            return None
+
     def is_clean(self, cwd: Path) -> bool | None:
         try:
             result = subprocess.run(
