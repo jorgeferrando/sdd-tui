@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, ScrollableContainer
+from textual.containers import Horizontal, ScrollableContainer, Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Header, Static
+from textual.widget import Widget
+from textual.widgets import DataTable, Footer, Header, Static
 
+from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
 
 DONE = "✓"
@@ -13,44 +17,43 @@ PENDING = "·"
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
 
 
-class TaskListPanel(ScrollableContainer):
+class TaskListPanel(Widget):
     DEFAULT_CSS = """
     TaskListPanel {
         width: 2fr;
         height: 1fr;
-        padding: 1 2;
     }
     """
 
     def __init__(self, tasks: list[Task]) -> None:
         super().__init__()
         self._tasks = tasks
+        self._row_task_map: dict[str, Task] = {}
 
     def compose(self) -> ComposeResult:
-        yield Static(self._build_content())
+        yield DataTable(cursor_type="row", show_header=False)
 
-    def _build_content(self) -> str:
+    def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.add_columns("state", "hash", "id", "desc")
+
         if not self._tasks:
-            return "  No tasks defined yet"
+            table.add_row("", "", "", "No tasks defined yet")
+            return
 
-        lines: list[str] = []
         last_amendment: str | None = None
-
         for task in self._tasks:
             if task.amendment != last_amendment and task.amendment is not None:
-                lines.append(f"  ── amendment: {task.amendment} ──")
+                table.add_row("", f"── amendment: {task.amendment} ──", "", "")
                 last_amendment = task.amendment
 
-            if task.git_state == TaskGitState.COMMITTED and task.commit:
-                state = DONE
-                ref = task.commit.hash
-            else:
-                state = PENDING
-                ref = " " * 7
+            state = DONE if task.git_state == TaskGitState.COMMITTED else PENDING
+            hash_str = task.commit.hash if task.commit else " " * 7
+            table.add_row(state, hash_str, task.id, task.description, key=task.id)
+            self._row_task_map[task.id] = task
 
-            lines.append(f"  {state} {ref}  {task.id}  {task.description}")
-
-        return "\n".join(lines)
+    def get_task(self, row_key: str) -> Task | None:
+        return self._row_task_map.get(row_key)
 
 
 class PipelinePanel(Static):
@@ -80,7 +83,29 @@ class PipelinePanel(Static):
         return "\n".join(lines)
 
 
+class DiffPanel(ScrollableContainer):
+    DEFAULT_CSS = """
+    DiffPanel {
+        height: 2fr;
+        padding: 1 2;
+        border-top: solid $panel-darken-2;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        yield Static("", id="diff-content")
+
+    def update_diff(self, text: str) -> None:
+        self.query_one("#diff-content", Static).update(text)
+
+
 class ChangeDetailScreen(Screen):
+    DEFAULT_CSS = """
+    ChangeDetailScreen .top-panel {
+        height: 3fr;
+    }
+    """
+
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back"),
         Binding("r", "refresh_view", "Refresh"),
@@ -92,13 +117,28 @@ class ChangeDetailScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        with Horizontal():
-            yield TaskListPanel(self._change.tasks)
-            yield PipelinePanel(self._change.pipeline, self._change.tasks)
+        with Vertical():
+            with Horizontal(classes="top-panel"):
+                yield TaskListPanel(self._change.tasks)
+                yield PipelinePanel(self._change.pipeline, self._change.tasks)
+            yield DiffPanel()
         yield Footer()
 
     def on_mount(self) -> None:
         self.title = f"sdd-tui — {self._change.name}"
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        if event.row_key is None or event.row_key.value is None:
+            return
+        task = self.query_one(TaskListPanel).get_task(event.row_key.value)
+        if task is None:
+            return
+        diff_panel = self.query_one(DiffPanel)
+        if task.git_state == TaskGitState.COMMITTED and task.commit:
+            diff = GitReader().get_diff(task.commit.hash, Path.cwd())
+            diff_panel.update_diff(diff or "Could not load diff")
+        else:
+            diff_panel.update_diff("Not committed yet")
 
     def action_refresh_view(self) -> None:
         self.app.refresh_changes()  # type: ignore[attr-defined]
