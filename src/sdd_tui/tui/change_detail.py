@@ -56,8 +56,13 @@ class TaskListPanel(Widget):
             self._row_task_map[task.id] = task
             row_count += 1
 
+        self._row_count = row_count
+        self.call_after_refresh(self._set_height)
+
+    def _set_height(self) -> None:
         screen_h = self.app.size.height
-        self.styles.height = min(row_count + 1, max(6, screen_h * 2 // 5))
+        max_list_height = max(6, screen_h - 10)
+        self.styles.height = min(self._row_count + 1, max_list_height)
 
     def get_task(self, row_key: str) -> Task | None:
         return self._row_task_map.get(row_key)
