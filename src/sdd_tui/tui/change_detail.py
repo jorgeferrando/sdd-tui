@@ -67,7 +67,7 @@ class PipelinePanel(Static):
     DEFAULT_CSS = """
     PipelinePanel {
         width: 1fr;
-        height: 1fr;
+        height: auto;
         padding: 1 2;
         border-left: solid $panel-darken-2;
     }
