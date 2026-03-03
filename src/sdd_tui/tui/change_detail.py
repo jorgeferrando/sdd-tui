@@ -22,8 +22,6 @@ class TaskListPanel(Widget):
     DEFAULT_CSS = """
     TaskListPanel {
         width: 2fr;
-        height: auto;
-        max-height: 40%;
     }
     """
 
@@ -41,18 +39,25 @@ class TaskListPanel(Widget):
 
         if not self._tasks:
             table.add_row("", "", "", "No tasks defined yet")
+            self.styles.height = 3
             return
 
         last_amendment: str | None = None
+        row_count = 0
         for task in self._tasks:
             if task.amendment != last_amendment and task.amendment is not None:
                 table.add_row("", f"── amendment: {task.amendment} ──", "", "")
                 last_amendment = task.amendment
+                row_count += 1
 
             state = DONE if task.git_state == TaskGitState.COMMITTED else PENDING
             hash_str = task.commit.hash if task.commit else " " * 7
             table.add_row(state, hash_str, task.id, task.description, key=task.id)
             self._row_task_map[task.id] = task
+            row_count += 1
+
+        screen_h = self.app.size.height
+        self.styles.height = min(row_count + 1, max(6, screen_h * 2 // 5))
 
     def get_task(self, row_key: str) -> Task | None:
         return self._row_task_map.get(row_key)
@@ -62,7 +67,7 @@ class PipelinePanel(Static):
     DEFAULT_CSS = """
     PipelinePanel {
         width: 1fr;
-        height: auto;
+        height: 1fr;
         padding: 1 2;
         border-left: solid $panel-darken-2;
     }
@@ -109,6 +114,7 @@ class ChangeDetailScreen(Screen):
     DEFAULT_CSS = """
     ChangeDetailScreen .top-panel {
         height: auto;
+        min-height: 6;
     }
     """
 
