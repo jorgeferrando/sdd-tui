@@ -63,16 +63,20 @@ class PipelinePanel(Static):
     }
     """
 
-    def __init__(self, pipeline: Pipeline) -> None:
-        content = self._build_content(pipeline)
+    def __init__(self, pipeline: Pipeline, tasks: list[Task]) -> None:
+        content = self._build_content(pipeline, tasks)
         super().__init__(content)
 
-    def _build_content(self, pipeline: Pipeline) -> str:
+    def _build_content(self, pipeline: Pipeline, tasks: list[Task]) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
             state = getattr(pipeline, phase)
-            symbol = DONE if state == PhaseState.DONE else PENDING
-            lines.append(f"  {symbol}  {phase}")
+            if phase == "apply" and state != PhaseState.DONE and tasks:
+                done = sum(1 for t in tasks if t.done)
+                symbol = f"{done}/{len(tasks)}" if done > 0 else PENDING
+            else:
+                symbol = DONE if state == PhaseState.DONE else PENDING
+            lines.append(f"  {symbol:<3}  {phase}")
         return "\n".join(lines)
 
 
@@ -90,7 +94,7 @@ class ChangeDetailScreen(Screen):
         yield Header()
         with Horizontal():
             yield TaskListPanel(self._change.tasks)
-            yield PipelinePanel(self._change.pipeline)
+            yield PipelinePanel(self._change.pipeline, self._change.tasks)
         yield Footer()
 
     def on_mount(self) -> None:
