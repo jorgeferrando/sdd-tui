@@ -134,3 +134,19 @@ def test_parse_no_hint_when_absent(tmp_path: Path) -> None:
     tasks_md.write_text("- [x] T01 Create something\n")
     tasks = TaskParser().parse(tasks_md)
     assert tasks[0].commit_hint is None
+
+
+def test_parse_bug_and_mej_ids(tmp_path: Path) -> None:
+    tasks_md = tmp_path / "tasks.md"
+    tasks_md.write_text(
+        "- [x] **BUG01** Fix the grep flag\n"
+        "  - Commit: `[view-3] Fix grep`\n"
+        "- [ ] **MEJ01** Improve layout\n"
+    )
+    tasks = TaskParser().parse(tasks_md)
+    assert len(tasks) == 2
+    assert tasks[0].id == "BUG01"
+    assert tasks[0].done is True
+    assert tasks[0].commit_hint == "[view-3] Fix grep"
+    assert tasks[1].id == "MEJ01"
+    assert tasks[1].done is False
