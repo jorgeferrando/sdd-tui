@@ -8,7 +8,7 @@ from sdd_tui.core.models import PhaseState, Pipeline, Task
 
 
 class TaskParser:
-    _TASK_RE = re.compile(r"^- \[(x| )\] \*{0,2}(T\d+)\*{0,2} (.+)$")
+    _TASK_RE = re.compile(r"^- \[(x| )\] \*{0,2}([A-Z]+\d+)\*{0,2} (.+)$")
     _AMENDMENT_RE = re.compile(r"^── amendment: (.+) ──$")
     _COMMIT_HINT_RE = re.compile(r"^\s{2,}-\s+Commit:\s+`?(.+?)`?\s*$")
 
