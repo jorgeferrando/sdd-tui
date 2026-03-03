@@ -78,8 +78,8 @@ class ZellijTransport:
 
     def find_pane(self, process_name: str) -> str | None:
         # Zellij has no CLI to list/target panes by process name.
-        # Returns "focused" as sentinel — the focused pane will receive input.
-        return "focused" if self.is_available() else None
+        # Returns None — targeting a specific pane is not supported.
+        return None
 
     def send_command(self, pane_id: str, command: str) -> None:
         subprocess.run(["zellij", "action", "write-chars", command], check=True)

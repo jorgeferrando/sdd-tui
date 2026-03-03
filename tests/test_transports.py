@@ -71,10 +71,10 @@ def test_zellij_not_available_when_env_missing():
         assert ZellijTransport().is_available() is False
 
 
-def test_zellij_find_pane_returns_focused_sentinel():
+def test_zellij_find_pane_returns_none_targeting_unsupported():
     with patch.dict("os.environ", {"ZELLIJ": "0"}):
         result = ZellijTransport().find_pane("claude")
-    assert result == "focused"
+    assert result is None
 
 
 def test_zellij_find_pane_returns_none_when_unavailable():
