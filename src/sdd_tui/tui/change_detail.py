@@ -133,6 +133,7 @@ class ChangeDetailScreen(Screen):
         Binding("d", "view_design", "Design"),
         Binding("s", "view_spec", "Spec"),
         Binding("t", "view_tasks", "Tasks"),
+        Binding("space", "copy_next_command", "Copy cmd", priority=True),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -207,3 +208,28 @@ class ChangeDetailScreen(Screen):
         path = self._change.path / filename
         title = f"sdd-tui — {self._change.name} / {label}"
         self.app.push_screen(DocumentViewerScreen(path, title))
+
+    def action_copy_next_command(self) -> None:
+        cmd = self._build_next_command()
+        self.app.copy_to_clipboard(cmd)
+        self.notify(f"Copied: {cmd}")
+
+    def _build_next_command(self) -> str:
+        p = self._change.pipeline
+        name = self._change.name
+        if p.propose == PhaseState.PENDING:
+            return f'/sdd-propose "{name}"'
+        if p.spec == PhaseState.PENDING:
+            return f"/sdd-spec {name}"
+        if p.design == PhaseState.PENDING:
+            return f"/sdd-design {name}"
+        if p.tasks == PhaseState.PENDING:
+            return f"/sdd-tasks {name}"
+        if p.apply == PhaseState.PENDING:
+            next_task = next((t for t in self._change.tasks if not t.done), None)
+            if next_task:
+                return f"/sdd-apply {next_task.id}"
+            return f"/sdd-apply {name}"
+        if p.verify == PhaseState.PENDING:
+            return f"/sdd-verify {name}"
+        return f"/sdd-archive {name}"
