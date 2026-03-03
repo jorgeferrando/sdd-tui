@@ -12,6 +12,7 @@ from textual.widgets import DataTable, Footer, Header, Static
 
 from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
+from sdd_tui.tui.doc_viewer import DocumentViewerScreen, SpecSelectorScreen
 
 DONE = "✓"
 PENDING = "·"
@@ -128,6 +129,10 @@ class ChangeDetailScreen(Screen):
     BINDINGS = [
         Binding("escape", "app.pop_screen", "Back"),
         Binding("r", "refresh_view", "Refresh"),
+        Binding("p", "view_proposal", "Proposal"),
+        Binding("d", "view_design", "Design"),
+        Binding("s", "view_spec", "Spec"),
+        Binding("t", "view_tasks", "Tasks"),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -173,3 +178,32 @@ class ChangeDetailScreen(Screen):
     def action_refresh_view(self) -> None:
         self.app.refresh_changes()  # type: ignore[attr-defined]
         self.app.pop_screen()
+
+    def action_view_proposal(self) -> None:
+        self._open_doc("proposal.md", "proposal")
+
+    def action_view_design(self) -> None:
+        self._open_doc("design.md", "design")
+
+    def action_view_tasks(self) -> None:
+        self._open_doc("tasks.md", "tasks")
+
+    def action_view_spec(self) -> None:
+        specs_dir = self._change.path / "specs"
+        domains = sorted(
+            d.name for d in specs_dir.iterdir()
+            if d.is_dir() and (d / "spec.md").exists()
+        ) if specs_dir.exists() else []
+        if not domains:
+            self.notify("No specs found")
+        elif len(domains) == 1:
+            path = specs_dir / domains[0] / "spec.md"
+            title = f"sdd-tui — {self._change.name} / spec:{domains[0]}"
+            self.app.push_screen(DocumentViewerScreen(path, title))
+        else:
+            self.app.push_screen(SpecSelectorScreen(self._change))
+
+    def _open_doc(self, filename: str, label: str) -> None:
+        path = self._change.path / filename
+        title = f"sdd-tui — {self._change.name} / {label}"
+        self.app.push_screen(DocumentViewerScreen(path, title))
