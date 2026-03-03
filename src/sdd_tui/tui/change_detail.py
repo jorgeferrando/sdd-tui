@@ -100,14 +100,16 @@ class DiffPanel(ScrollableContainer):
     """
 
     def compose(self) -> ComposeResult:
-        yield Static("", id="diff-content")
+        yield Static("Select a task to view its diff", id="diff-content")
 
     def show_diff(self, text: str) -> None:
         content = Syntax(text, "diff", theme="monokai", word_wrap=False)
         self.query_one("#diff-content", Static).update(content)
+        self.scroll_home(animate=False)
 
     def show_message(self, text: str) -> None:
         self.query_one("#diff-content", Static).update(text)
+        self.scroll_home(animate=False)
 
 
 class ChangeDetailScreen(Screen):
@@ -138,6 +140,7 @@ class ChangeDetailScreen(Screen):
 
     def on_mount(self) -> None:
         self.title = f"sdd-tui — {self._change.name}"
+        self.call_after_refresh(lambda: self.query_one(DataTable).focus())
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.row_key is None or event.row_key.value is None:
@@ -145,10 +148,10 @@ class ChangeDetailScreen(Screen):
         task = self.query_one(TaskListPanel).get_task(event.row_key.value)
         if task is None:
             return
-        diff_panels = self.query(DiffPanel)
-        if not diff_panels:
+        try:
+            diff_panel = self.query_one(DiffPanel)
+        except Exception:
             return
-        diff_panel = diff_panels.first(DiffPanel)
         if task.git_state == TaskGitState.COMMITTED and task.commit:
             diff = GitReader().get_diff(task.commit.hash, Path.cwd())
             if diff:
