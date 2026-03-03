@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** view-2-change-detail
-- **Fecha:** 2026-03-02
-- **Versión:** 0.2
+- **Change:** view-5-transports
+- **Fecha:** 2026-03-03
+- **Versión:** 0.4
 - **Estado:** approved
 
 ## Contexto
@@ -182,6 +182,7 @@ class Task:
 ### Reglas de negocio
 
 - **RB-07:** El parser debe aceptar tanto `T01` como `**T01**` (con o sin negrita markdown).
+- **RB-07b:** El parser acepta cualquier prefijo de letras mayúsculas seguido de dígitos: `T01`, `BUG01`, `MEJ01`, etc.
 - **RB-08:** El `commit_hint` se extrae eliminando los backticks envolventes si los hay.
 - **RB-09:** Solo se captura el hint de la línea inmediatamente siguiente a la tarea (indentada con 2+ espacios).
 
@@ -228,6 +229,82 @@ class TaskGitState(Enum):
 
 - **RB-10:** El hash siempre tiene 7 caracteres (`--abbrev-commit`).
 - **RB-11:** Si `commit_hint` es `None`, no se ejecuta git — retorna `None` directamente.
+- **RB-11b:** `find_commit` usa `--grep` con flag `-F` (fixed-strings) para que los corchetes en nombres de change (`[view-3]`) no se interpreten como regex.
+
+---
+
+## 5. Git Reader — get_diff y get_working_diff
+
+### get_diff — Diff de un commit concreto
+
+**Dado** un hash de commit y un path de repo
+**Cuando** se llama a `get_diff(commit_hash, cwd)`
+**Entonces** se ejecuta `git show --no-color {hash}` y se retorna el output como `str`
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Hash válido | `git show` retorna output | `str` con el diff completo (incluye header del commit) |
+| Hash inválido o `None` | `git show` falla o hash es falsy | `None` |
+| No es repo git | Comando falla | `None` |
+| git no instalado | `FileNotFoundError` | `None` |
+
+- **RB-12:** Si `commit_hash` es `None` o vacío, retorna `None` sin ejecutar git.
+- **RB-13:** Errores de subprocess se capturan silenciosamente — retorna `None`.
+- **RB-14:** El output incluye el header del commit (`commit`, `Author`, `Date`, mensaje) seguido del diff.
+
+### get_working_diff — Diff del working tree actual
+
+**Dado** un path de repo git
+**Cuando** se llama a `get_working_diff(cwd)`
+**Entonces** se ejecuta `git diff HEAD --no-color` y se retorna el output como `str`
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Hay cambios pendientes | `git diff HEAD` retorna output | `str` con el diff |
+| Working tree limpio | `git diff HEAD` retorna vacío | `None` |
+| Error de git | returncode != 0 o git no instalado | `None` |
+
+- **RB-15:** `git diff HEAD` incluye cambios staged y unstaged respecto al último commit.
+- **RB-16:** Si el output es string vacío, se retorna `None` (repo limpio).
+
+---
+
+---
+
+## 6. Transport — Comunicación inter-panel
+
+### Propósito
+
+Capa de abstracción para enviar instrucciones a un agente IA (Claude, Codex, etc.)
+corriendo en otro panel del terminal. Desacoplada del agente y del multiplexer.
+
+### Protocol
+
+```python
+class Transport(Protocol):
+    @property
+    def name(self) -> str: ...
+    def is_available(self) -> bool: ...
+    def find_pane(self, process_name: str) -> str | None: ...
+    def send_command(self, pane_id: str, command: str) -> None: ...
+```
+
+### Implementaciones
+
+| Clase | Detección | Targeting | Limitación |
+|-------|-----------|-----------|------------|
+| `TmuxTransport` | `$TMUX` | Por `pane_id` exacto | Ninguna |
+| `ZellijTransport` | `$ZELLIJ` | No soportado | `find_pane()` siempre retorna `None` — Zellij CLI no expone targeting por proceso |
+
+### `detect_transport()`
+
+Auto-detecta el multiplexer activo. Orden de prioridad: tmux → zellij → `None`.
+
+### Reglas
+
+- **RB-TR-01:** `detect_transport()` prueba tmux antes que zellij.
+- **RB-TR-02:** `find_pane()` retorna `None` si no encuentra el proceso o si targeting no está soportado.
+- **RB-TR-03:** Errores de subprocess en `find_pane()` se capturan silenciosamente → `None`.
 
 ---
 
@@ -244,6 +321,10 @@ class TaskGitState(Enum):
 | `git log --grep` | `git log --all` manual | Comando nativo, un resultado basta |
 | `TaskGitState` independiente de `done` | Unificar en un solo campo | `done` = estado en tasks.md; `git_state` = realidad en git. Pueden diferir |
 | Hash 7 chars | Hash completo | Estándar git, suficiente para display |
+| `find_commit` usa `-F` (fixed-strings) | grep regex por defecto | `[view-3]` como regex es clase de caracteres, nunca coincide |
+| `git show` para diff de commit | `git diff {hash}^..{hash}` | `git show` incluye metadata del commit |
+| `get_working_diff` retorna `None` si vacío | Retornar `""` | Permite distinción entre "sin cambios" y "error" en la TUI |
+| TaskParser acepta `[A-Z]+\d+` | Solo `T\d+` | BUG01, MEJ01 son IDs válidos en el flujo SDD |
 
 ## Abierto / Pendiente
 
