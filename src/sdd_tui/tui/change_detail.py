@@ -21,7 +21,8 @@ class TaskListPanel(Widget):
     DEFAULT_CSS = """
     TaskListPanel {
         width: 2fr;
-        height: 1fr;
+        height: auto;
+        max-height: 40%;
     }
     """
 
@@ -60,7 +61,7 @@ class PipelinePanel(Static):
     DEFAULT_CSS = """
     PipelinePanel {
         width: 1fr;
-        height: 1fr;
+        height: auto;
         padding: 1 2;
         border-left: solid $panel-darken-2;
     }
@@ -86,7 +87,7 @@ class PipelinePanel(Static):
 class DiffPanel(ScrollableContainer):
     DEFAULT_CSS = """
     DiffPanel {
-        height: 2fr;
+        height: 1fr;
         padding: 1 2;
         border-top: solid $panel-darken-2;
     }
@@ -102,7 +103,7 @@ class DiffPanel(ScrollableContainer):
 class ChangeDetailScreen(Screen):
     DEFAULT_CSS = """
     ChangeDetailScreen .top-panel {
-        height: 3fr;
+        height: auto;
     }
     """
 
