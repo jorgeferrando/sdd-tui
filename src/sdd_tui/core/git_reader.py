@@ -12,7 +12,7 @@ class GitReader:
             return None
         try:
             result = subprocess.run(
-                ["git", "log", "--oneline", "--abbrev-commit",
+                ["git", "log", "--oneline", "--abbrev-commit", "-F",
                  f"--grep={message_fragment}", "-1"],
                 cwd=cwd,
                 capture_output=True,
