@@ -31,6 +31,7 @@ def _apply_display(state: PhaseState, tasks: list[Task]) -> str:
 class EpicsView(Widget):
     BINDINGS = [
         Binding("r", "refresh", "Refresh"),
+        Binding("a", "toggle_archived", "Archived"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -43,6 +44,8 @@ class EpicsView(Widget):
     def __init__(self, changes: list[Change]) -> None:
         super().__init__()
         self._changes = changes
+        self._show_archived = False
+        self._change_map: dict[str, Change] = {}
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
@@ -56,31 +59,50 @@ class EpicsView(Widget):
         table = self.query_one(DataTable)
         table.clear(columns=True)
         table.add_columns("change", *PHASES)
+        self._change_map = {}
 
-        for change in self._changes:
-            pipeline = change.pipeline
-            row = (
-                change.name,
-                _phase_symbol(pipeline.propose),
-                _phase_symbol(pipeline.spec),
-                _phase_symbol(pipeline.design),
-                _phase_symbol(pipeline.tasks),
-                _apply_display(pipeline.apply, change.tasks),
-                _phase_symbol(pipeline.verify),
-            )
-            table.add_row(*row)
+        active = [c for c in self._changes if not c.archived]
+        archived = [c for c in self._changes if c.archived]
+
+        for change in active:
+            self._add_change_row(table, change)
+
+        if archived:
+            table.add_row("── archived ──", "", "", "", "", "", "")
+            for change in archived:
+                self._add_change_row(table, change)
+
+    def _add_change_row(self, table: DataTable, change: Change) -> None:
+        pipeline = change.pipeline
+        row = (
+            change.name,
+            _phase_symbol(pipeline.propose),
+            _phase_symbol(pipeline.spec),
+            _phase_symbol(pipeline.design),
+            _phase_symbol(pipeline.tasks),
+            _apply_display(pipeline.apply, change.tasks),
+            _phase_symbol(pipeline.verify),
+        )
+        table.add_row(*row, key=change.name)
+        self._change_map[change.name] = change
 
     def update(self, changes: list[Change]) -> None:
         self._changes = changes
         self._populate()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        row_index = event.cursor_row
-        if 0 <= row_index < len(self._changes):
-            self.app.push_screen(ChangeDetailScreen(self._changes[row_index]))
+        if event.row_key is None or event.row_key.value is None:
+            return
+        change = self._change_map.get(event.row_key.value)
+        if change:
+            self.app.push_screen(ChangeDetailScreen(change))
+
+    def action_toggle_archived(self) -> None:
+        self._show_archived = not self._show_archived
+        self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
 
     def action_refresh(self) -> None:
-        self.app.refresh_changes()  # type: ignore[attr-defined]
+        self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
 
     def action_quit(self) -> None:
         self.app.exit()
