@@ -177,8 +177,24 @@ class ChangeDetailScreen(Screen):
                 diff_panel.show_message("No uncommitted changes")
 
     def action_refresh_view(self) -> None:
-        self.app.refresh_changes()  # type: ignore[attr-defined]
-        self.app.pop_screen()
+        changes = self.app.refresh_changes()  # type: ignore[attr-defined]
+        fresh_change = next(
+            (c for c in changes if c.name == self._change.name), None
+        )
+        if fresh_change is None:
+            self.notify("Change not found — returning to list")
+            self.app.pop_screen()
+            return
+        self._change = fresh_change
+        top = self.query_one(".top-panel", Horizontal)
+        self.query_one(TaskListPanel).remove()
+        self.query_one(PipelinePanel).remove()
+        top.mount(
+            TaskListPanel(self._change.tasks),
+            PipelinePanel(self._change.pipeline, self._change.tasks),
+        )
+        self.query_one(DiffPanel).show_message("Select a task to view its diff")
+        self.call_after_refresh(lambda: self.query_one(DataTable).focus())
 
     def action_view_proposal(self) -> None:
         self._open_doc("proposal.md", "proposal")
