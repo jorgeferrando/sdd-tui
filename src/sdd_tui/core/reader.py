@@ -32,9 +32,7 @@ class OpenspecReader:
             raise OpenspecNotFoundError(f"openspec/ not found at {openspec_path}")
 
         entries = sorted(
-            entry
-            for entry in changes_path.iterdir()
-            if entry.is_dir() and entry.name != "archive"
+            entry for entry in changes_path.iterdir() if entry.is_dir() and entry.name != "archive"
         )
         changes = [Change(name=entry.name, path=entry) for entry in entries]
 
@@ -45,8 +43,7 @@ class OpenspecReader:
                     entry for entry in archive_path.iterdir() if entry.is_dir()
                 )
                 changes += [
-                    Change(name=entry.name, path=entry, archived=True)
-                    for entry in archived_entries
+                    Change(name=entry.name, path=entry, archived=True) for entry in archived_entries
                 ]
 
         return changes

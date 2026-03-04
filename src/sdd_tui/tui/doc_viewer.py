@@ -51,18 +51,13 @@ class SpecSelectorScreen(Screen):
         if not specs_dir.exists():
             return []
         return sorted(
-            d.name
-            for d in specs_dir.iterdir()
-            if d.is_dir() and (d / "spec.md").exists()
+            d.name for d in specs_dir.iterdir() if d.is_dir() and (d / "spec.md").exists()
         )
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield ListView(
-            *[
-                ListItem(Label(domain), id=f"domain-{domain}")
-                for domain in self._domains
-            ]
+            *[ListItem(Label(domain), id=f"domain-{domain}") for domain in self._domains]
         )
         yield Footer()
 

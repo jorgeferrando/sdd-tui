@@ -54,10 +54,7 @@ def test_non_ears_tags_not_counted(tmp_path: Path) -> None:
     _make_spec(
         change_dir,
         "core",
-        (
-            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-            "- **REQ-02** [SomeOther] description\n"
-        ),
+        ("- **REQ-01** `[Event]` When X, the Y SHALL Z\n- **REQ-02** [SomeOther] description\n"),
     )
     metrics = parse_metrics(change_dir, tmp_path)
     assert metrics.req_count == 2
@@ -168,9 +165,7 @@ def test_inactive_threshold_is_seven() -> None:
 
 
 def test_change_metrics_fields() -> None:
-    m = ChangeMetrics(
-        req_count=3, ears_count=2, artifacts=["proposal"], inactive_days=5
-    )
+    m = ChangeMetrics(req_count=3, ears_count=2, artifacts=["proposal"], inactive_days=5)
     assert m.req_count == 3
     assert m.ears_count == 2
     assert m.artifacts == ["proposal"]
@@ -242,9 +237,7 @@ def test_reqs_deduped_across_requirements_and_specs(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
     # REQ-01 appears in both requirements.md and specs/
-    (change_dir / "requirements.md").write_text(
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-    )
+    (change_dir / "requirements.md").write_text("- **REQ-01** `[Event]` When X, the Y SHALL Z\n")
     _make_spec(
         change_dir,
         "core",

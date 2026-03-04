@@ -167,9 +167,7 @@ class ChangeDetailScreen(Screen):
         with Vertical():
             with Horizontal(classes="top-panel"):
                 yield TaskListPanel(self._change.tasks)
-                yield PipelinePanel(
-                    self._change.pipeline, self._change.tasks, self._metrics
-                )
+                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics)
             yield DiffPanel()
         yield Footer()
 
@@ -234,11 +232,7 @@ class ChangeDetailScreen(Screen):
     def action_view_spec(self) -> None:
         specs_dir = self._change.path / "specs"
         domains = (
-            sorted(
-                d.name
-                for d in specs_dir.iterdir()
-                if d.is_dir() and (d / "spec.md").exists()
-            )
+            sorted(d.name for d in specs_dir.iterdir() if d.is_dir() and (d / "spec.md").exists())
             if specs_dir.exists()
             else []
         )

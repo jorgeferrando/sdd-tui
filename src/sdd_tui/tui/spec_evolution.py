@@ -42,9 +42,7 @@ class SpecEvolutionScreen(Screen):
         if not specs_dir.exists():
             return []
         return sorted(
-            d.name
-            for d in specs_dir.iterdir()
-            if d.is_dir() and (d / "spec.md").exists()
+            d.name for d in specs_dir.iterdir() if d.is_dir() and (d / "spec.md").exists()
         )
 
     def compose(self) -> ComposeResult:
@@ -52,18 +50,14 @@ class SpecEvolutionScreen(Screen):
         if not self._domains:
             yield Static("No specs found for this change")
         elif len(self._domains) == 1:
-            yield ScrollableContainer(
-                Static("", id="diff-content"), classes="diff-panel"
-            )
+            yield ScrollableContainer(Static("", id="diff-content"), classes="diff-panel")
         else:
             with Horizontal():
                 yield ListView(
                     *[ListItem(Label(d), id=f"domain-{d}") for d in self._domains],
                     classes="domain-panel",
                 )
-                yield ScrollableContainer(
-                    Static("", id="diff-content"), classes="diff-panel"
-                )
+                yield ScrollableContainer(Static("", id="diff-content"), classes="diff-panel")
         yield Footer()
 
     def on_mount(self) -> None:

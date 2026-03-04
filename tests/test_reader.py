@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 from sdd_tui.core.models import OpenspecNotFoundError
 from sdd_tui.core.reader import OpenspecReader, load_spec_json, load_steering
@@ -15,16 +16,12 @@ def test_missing_openspec_raises(tmp_path: Path, reader: OpenspecReader) -> None
         reader.load(tmp_path / "openspec")
 
 
-def test_empty_changes_returns_empty_list(
-    openspec_dir: Path, reader: OpenspecReader
-) -> None:
+def test_empty_changes_returns_empty_list(openspec_dir: Path, reader: OpenspecReader) -> None:
     changes = reader.load(openspec_dir)
     assert changes == []
 
 
-def test_lists_active_changes_alphabetically(
-    openspec_dir: Path, reader: OpenspecReader
-) -> None:
+def test_lists_active_changes_alphabetically(openspec_dir: Path, reader: OpenspecReader) -> None:
     (openspec_dir / "changes" / "beta-change").mkdir()
     (openspec_dir / "changes" / "alpha-change").mkdir()
     (openspec_dir / "changes" / "archive" / "old-change").mkdir()
@@ -36,9 +33,7 @@ def test_lists_active_changes_alphabetically(
     assert changes[1].name == "beta-change"
 
 
-def test_archived_excluded_by_default(
-    openspec_dir: Path, reader: OpenspecReader
-) -> None:
+def test_archived_excluded_by_default(openspec_dir: Path, reader: OpenspecReader) -> None:
     (openspec_dir / "changes" / "active-change").mkdir()
     (openspec_dir / "changes" / "archive" / "2026-old-change").mkdir()
 
@@ -49,9 +44,7 @@ def test_archived_excluded_by_default(
     assert changes[0].archived is False
 
 
-def test_include_archived_returns_all(
-    openspec_dir: Path, reader: OpenspecReader
-) -> None:
+def test_include_archived_returns_all(openspec_dir: Path, reader: OpenspecReader) -> None:
     (openspec_dir / "changes" / "active-change").mkdir()
     (openspec_dir / "changes" / "archive" / "2026-old-change").mkdir()
 
@@ -66,9 +59,7 @@ def test_include_archived_returns_all(
     assert archived[0].name == "2026-old-change"
 
 
-def test_include_archived_empty_archive(
-    openspec_dir: Path, reader: OpenspecReader
-) -> None:
+def test_include_archived_empty_archive(openspec_dir: Path, reader: OpenspecReader) -> None:
     (openspec_dir / "changes" / "active-change").mkdir()
 
     changes = reader.load(openspec_dir, include_archived=True)

@@ -1,11 +1,12 @@
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+from textual.widgets import DataTable
 
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
-from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen
-from textual.widgets import DataTable
+from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
 
 
 def _git_mock() -> MagicMock:

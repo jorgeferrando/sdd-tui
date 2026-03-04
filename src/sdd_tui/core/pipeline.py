@@ -60,11 +60,7 @@ class PipelineInferer:
         apply = PhaseState.PENDING
         if tasks_exists:
             parsed = self._parser.parse(tasks_md)
-            apply = (
-                PhaseState.PENDING
-                if any(not t.done for t in parsed)
-                else PhaseState.DONE
-            )
+            apply = PhaseState.PENDING if any(not t.done for t in parsed) else PhaseState.DONE
 
         verify = PhaseState.PENDING
         if apply == PhaseState.DONE:

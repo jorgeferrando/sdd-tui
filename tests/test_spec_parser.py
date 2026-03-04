@@ -10,7 +10,6 @@ from sdd_tui.core.spec_parser import (
     parse_delta,
 )
 
-
 # ---------------------------------------------------------------------------
 # parse_delta
 # ---------------------------------------------------------------------------
@@ -48,10 +47,7 @@ def test_parse_delta_fallback_no_markers(tmp_path: Path) -> None:
 def test_parse_delta_case_insensitive(tmp_path: Path) -> None:
     spec = tmp_path / "spec.md"
     spec.write_text(
-        "## added Requirements\n"
-        "- **REQ-01** line\n"
-        "## modified requirements\n"
-        "- **REQ-02** line\n"
+        "## added Requirements\n- **REQ-01** line\n## modified requirements\n- **REQ-02** line\n"
     )
     delta = parse_delta(spec)
     assert delta.fallback is False
@@ -61,9 +57,7 @@ def test_parse_delta_case_insensitive(tmp_path: Path) -> None:
 
 def test_parse_delta_preserves_blank_lines(tmp_path: Path) -> None:
     spec = tmp_path / "spec.md"
-    spec.write_text(
-        "## ADDED Requirements\n- **REQ-01** first\n\n- **REQ-02** second\n"
-    )
+    spec.write_text("## ADDED Requirements\n- **REQ-01** first\n\n- **REQ-02** second\n")
     delta = parse_delta(spec)
     assert "" in delta.added  # blank line preserved
 

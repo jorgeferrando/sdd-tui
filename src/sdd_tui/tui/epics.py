@@ -4,8 +4,8 @@ from pathlib import Path
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import DataTable, Footer, Header
 from textual.widget import Widget
+from textual.widgets import DataTable, Footer, Header
 
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen

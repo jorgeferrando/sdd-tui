@@ -8,9 +8,7 @@ from pathlib import Path
 
 INACTIVE_THRESHOLD_DAYS = 7
 
-_EARS_TAGS = frozenset(
-    {"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"}
-)
+_EARS_TAGS = frozenset({"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"})
 _REQ_PATTERN = re.compile(r"\*\*(REQ-\d+)\*\*")
 
 _ARTIFACT_FILES = [

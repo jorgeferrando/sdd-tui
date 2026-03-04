@@ -1,6 +1,7 @@
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
+
+import pytest
 
 from sdd_tui.core.models import PhaseState
 from sdd_tui.core.pipeline import PipelineInferer, TaskParser
@@ -51,9 +52,7 @@ def test_propose_done_when_proposal_exists(
 def test_apply_done_when_all_tasks_checked(
     change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
 ) -> None:
-    (change_dir / "tasks.md").write_text(
-        "- [x] T01 Create something\n- [x] T02 Do another\n"
-    )
+    (change_dir / "tasks.md").write_text("- [x] T01 Create something\n- [x] T02 Do another\n")
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.apply == PhaseState.DONE
 
@@ -61,9 +60,7 @@ def test_apply_done_when_all_tasks_checked(
 def test_apply_pending_when_any_task_unchecked(
     change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
 ) -> None:
-    (change_dir / "tasks.md").write_text(
-        "- [x] T01 Create something\n- [ ] T02 Do another\n"
-    )
+    (change_dir / "tasks.md").write_text("- [x] T01 Create something\n- [ ] T02 Do another\n")
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.apply == PhaseState.PENDING
 
@@ -109,9 +106,7 @@ def test_parse_tasks_checked_and_unchecked(tmp_path: Path) -> None:
 def test_parse_tasks_with_amendment(tmp_path: Path) -> None:
     tasks_md = tmp_path / "tasks.md"
     tasks_md.write_text(
-        "- [x] T01 Create something\n"
-        "── amendment: fix limit ──\n"
-        "- [ ] T02 Fix validation\n"
+        "- [x] T01 Create something\n── amendment: fix limit ──\n- [ ] T02 Fix validation\n"
     )
     tasks = TaskParser().parse(tasks_md)
     assert tasks[0].amendment is None

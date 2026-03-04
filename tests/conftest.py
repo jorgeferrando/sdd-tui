@@ -1,8 +1,9 @@
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from sdd_tui.core.models import Change, Pipeline, PhaseState
+import pytest
+
+from sdd_tui.core.models import Change, PhaseState, Pipeline
 
 
 @pytest.fixture

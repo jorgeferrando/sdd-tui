@@ -46,16 +46,12 @@ class SpecHealthScreen(Screen):
 
         all_metrics = {c.name: parse_metrics(c.path, Path.cwd()) for c in visible}
         has_research = any("research" in m.artifacts for m in all_metrics.values())
-        has_requirements = any(
-            "requirements" in m.artifacts for m in all_metrics.values()
-        )
+        has_requirements = any("requirements" in m.artifacts for m in all_metrics.values())
 
         table.add_columns("CHANGE", "REQ", "EARS%", "TASKS", "ARTIFACTS", "INACTIVE")
 
         for change in active:
-            self._add_row(
-                table, change, all_metrics[change.name], has_research, has_requirements
-            )
+            self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
 
         if self._include_archived and archived:
             table.add_row(
@@ -98,9 +94,7 @@ class SpecHealthScreen(Screen):
             ears_cell = Text(f"{pct}%")
 
         tasks_cell = _tasks_cell(change)
-        artifacts_cell = Text(
-            _artifacts_str(metrics.artifacts, has_research, has_requirements)
-        )
+        artifacts_cell = Text(_artifacts_str(metrics.artifacts, has_research, has_requirements))
         inactive_cell = _inactive_cell(metrics.inactive_days)
 
         table.add_row(
@@ -122,9 +116,7 @@ def _tasks_cell(change: Change) -> Text:
     return Text(f"{done}/{total}")
 
 
-def _artifacts_str(
-    artifacts: list[str], has_research: bool, has_requirements: bool
-) -> str:
+def _artifacts_str(artifacts: list[str], has_research: bool, has_requirements: bool) -> str:
     order = ["proposal", "spec"]
     if has_research:
         order.append("research")
