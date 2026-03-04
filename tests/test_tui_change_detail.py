@@ -1,7 +1,7 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from textual.widgets import DataTable, Static
+from textual.widgets import DataTable
 
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen, DiffPanel
