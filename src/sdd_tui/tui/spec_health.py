@@ -106,10 +106,11 @@ def _artifacts_str(artifacts: list[str], has_research: bool, has_requirements: b
         order.append("requirements")
     order += ["design", "tasks"]
 
+    _letters = {"requirements": "Q"}
     parts = []
     for name in order:
         if name in artifacts:
-            parts.append(name[0].upper())
+            parts.append(_letters.get(name, name[0].upper()))
         else:
             parts.append(".")
     return " ".join(parts)
