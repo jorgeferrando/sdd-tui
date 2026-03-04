@@ -50,3 +50,41 @@ async def test_spec_health_esc_goes_back(openspec_with_change: Path) -> None:
             await pilot.press("escape")
             assert not isinstance(app.screen, SpecHealthScreen)
             assert len(app.screen_stack) == 1
+
+async def test_spec_health_enter_opens_change_detail(openspec_with_change: Path) -> None:
+    """REQ-04: pressing Enter on a change row opens ChangeDetailScreen."""
+    from sdd_tui.tui.change_detail import ChangeDetailScreen
+
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            await pilot.press("h")
+            assert isinstance(app.screen, SpecHealthScreen)
+            await pilot.press("enter")
+            assert isinstance(app.screen, ChangeDetailScreen)
+
+
+async def test_spec_health_separator_no_drill_down(tmp_path: Path) -> None:
+    """REQ-05: pressing Enter on the archived separator row does nothing."""
+    from sdd_tui.tui.epics import EpicsView
+
+    openspec = tmp_path / "openspec"
+    archive = openspec / "changes" / "archive"
+    (openspec / "specs").mkdir(parents=True)
+    active = openspec / "changes" / "active-change"
+    active.mkdir(parents=True)
+    archived = archive / "2026-01-01-old-change"
+    archived.mkdir(parents=True)
+
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec)
+        async with app.run_test() as pilot:
+            await pilot.press("a")   # show archived
+            await pilot.press("h")   # open SpecHealthScreen
+            assert isinstance(app.screen, SpecHealthScreen)
+            table = app.screen.query_one(DataTable)
+            # Move cursor to the separator row (row 1: active=0, separator=1)
+            table.move_cursor(row=1)
+            await pilot.press("enter")
+            # Should still be on SpecHealthScreen (no drill-down for separator)
+            assert isinstance(app.screen, SpecHealthScreen)
