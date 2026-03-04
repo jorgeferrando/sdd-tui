@@ -59,9 +59,18 @@ class GitReader:
 
     def is_clean(self, cwd: Path) -> bool | None:
         try:
+            toplevel = subprocess.run(
+                ["git", "rev-parse", "--show-toplevel"],
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+            )
+            if toplevel.returncode != 0:
+                return None
+            root = Path(toplevel.stdout.strip())
             result = subprocess.run(
                 ["git", "status", "--porcelain", "--", ".", ":(exclude)openspec/", ":(exclude).claude/"],
-                cwd=cwd,
+                cwd=root,
                 capture_output=True,
                 text=True,
             )
