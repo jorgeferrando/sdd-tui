@@ -36,6 +36,7 @@ class EpicsView(Widget):
     BINDINGS = [
         Binding("r", "refresh", "Refresh"),
         Binding("a", "toggle_archived", "Archived"),
+        Binding("s", "steering", "Steering"),
         Binding("h", "health", "Health"),
         Binding("x", "decisions_timeline", "Decisions"),
         Binding("q", "quit", "Quit"),
@@ -112,6 +113,11 @@ class EpicsView(Widget):
 
     def action_health(self) -> None:
         self.app.push_screen(SpecHealthScreen(self._changes, self._show_archived))
+
+    def action_steering(self) -> None:
+        from sdd_tui.tui.doc_viewer import DocumentViewerScreen
+        steering_path = Path.cwd() / "openspec" / "steering.md"
+        self.app.push_screen(DocumentViewerScreen(steering_path, "sdd-tui — steering"))
 
     def action_decisions_timeline(self) -> None:
         archive_dir = Path.cwd() / "openspec" / "changes" / "archive"
