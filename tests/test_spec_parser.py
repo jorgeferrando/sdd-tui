@@ -95,6 +95,20 @@ def test_extract_decisions_with_table(tmp_path: Path) -> None:
     assert cd.decisions[1] == Decision("Keep Z", "Remove Z", "Backward compat")
 
 
+def test_extract_decisions_diseno_heading(tmp_path: Path) -> None:
+    design = tmp_path / "design.md"
+    design.write_text(
+        "## Decisiones de Diseño\n"
+        "\n"
+        "| Decisión | Alternativa Descartada | Motivo |\n"
+        "|---------|----------------------|--------|\n"
+        "| Use X | Use Y | simpler |\n"
+    )
+    cd = extract_decisions(design, "my-change")
+    assert len(cd.decisions) == 1
+    assert cd.decisions[0].decision == "Use X"
+
+
 def test_extract_decisions_no_table(tmp_path: Path) -> None:
     design = tmp_path / "design.md"
     design.write_text("# Design\n\nNo decisions section here.\n")

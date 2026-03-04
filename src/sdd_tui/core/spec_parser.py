@@ -74,7 +74,7 @@ def extract_decisions(design_path: Path, change_name: str) -> ChangeDecisions:
     header_seen = False
 
     for line in lines:
-        if re.match(r"^##\s+Decisiones Tomadas", line):
+        if re.match(r"^##\s+Decisiones\s+(Tomadas|de Dise[ñn]o)", line):
             in_decisions = True
             continue
 
