@@ -60,3 +60,37 @@ async def test_change_detail_e_opens_spec_evolution(openspec_with_change: Path) 
             await _navigate_to_detail(pilot, app)
             await pilot.press("e")
             assert isinstance(app.screen, SpecEvolutionScreen)
+
+
+async def test_open_existing_doc_notifies(openspec_with_change: Path) -> None:
+    """REQ-06: opening an existing document triggers notify 'Opening {label}'."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            await _navigate_to_detail(pilot, app)
+            screen = app.screen
+            assert isinstance(screen, ChangeDetailScreen)
+            with patch.object(screen, "notify") as mock_notify:
+                await pilot.press("p")  # proposal.md exists in fixture
+                mock_notify.assert_called_once_with("Opening proposal")
+
+
+async def test_open_missing_doc_no_notify_in_detail(tmp_path: Path) -> None:
+    """REQ-06: opening a missing document does NOT notify in ChangeDetailScreen."""
+    openspec = tmp_path / "openspec"
+    (openspec / "changes" / "archive").mkdir(parents=True)
+    (openspec / "specs").mkdir()
+    change = openspec / "changes" / "my-change"
+    change.mkdir()
+    (change / "tasks.md").write_text("- [ ] **T01** Pending\n")
+    # proposal.md intentionally absent
+
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec)
+        async with app.run_test() as pilot:
+            await pilot.press("enter")
+            screen = app.screen
+            assert isinstance(screen, ChangeDetailScreen)
+            with patch.object(screen, "notify") as mock_notify:
+                await pilot.press("p")  # proposal.md missing
+                mock_notify.assert_not_called()
