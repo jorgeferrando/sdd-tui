@@ -51,14 +51,18 @@ class SpecSelectorScreen(Screen):
         if not specs_dir.exists():
             return []
         return sorted(
-            d.name for d in specs_dir.iterdir()
+            d.name
+            for d in specs_dir.iterdir()
             if d.is_dir() and (d / "spec.md").exists()
         )
 
     def compose(self) -> ComposeResult:
         yield Header()
         yield ListView(
-            *[ListItem(Label(domain), id=f"domain-{domain}") for domain in self._domains]
+            *[
+                ListItem(Label(domain), id=f"domain-{domain}")
+                for domain in self._domains
+            ]
         )
         yield Footer()
 
@@ -69,7 +73,7 @@ class SpecSelectorScreen(Screen):
         item_id = event.item.id or ""
         if not item_id.startswith("domain-"):
             return
-        domain = item_id[len("domain-"):]
+        domain = item_id[len("domain-") :]
         path = self._change.path / "specs" / domain / "spec.md"
         title = f"sdd-tui — {self._change.name} / spec:{domain}"
         self.app.push_screen(DocumentViewerScreen(path, title))

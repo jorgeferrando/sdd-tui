@@ -42,7 +42,8 @@ class SpecEvolutionScreen(Screen):
         if not specs_dir.exists():
             return []
         return sorted(
-            d.name for d in specs_dir.iterdir()
+            d.name
+            for d in specs_dir.iterdir()
             if d.is_dir() and (d / "spec.md").exists()
         )
 
@@ -51,14 +52,18 @@ class SpecEvolutionScreen(Screen):
         if not self._domains:
             yield Static("No specs found for this change")
         elif len(self._domains) == 1:
-            yield ScrollableContainer(Static("", id="diff-content"), classes="diff-panel")
+            yield ScrollableContainer(
+                Static("", id="diff-content"), classes="diff-panel"
+            )
         else:
             with Horizontal():
                 yield ListView(
                     *[ListItem(Label(d), id=f"domain-{d}") for d in self._domains],
                     classes="domain-panel",
                 )
-                yield ScrollableContainer(Static("", id="diff-content"), classes="diff-panel")
+                yield ScrollableContainer(
+                    Static("", id="diff-content"), classes="diff-panel"
+                )
         yield Footer()
 
     def on_mount(self) -> None:
@@ -69,7 +74,7 @@ class SpecEvolutionScreen(Screen):
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         item_id = event.item.id or ""
         if item_id.startswith("domain-"):
-            self._current_domain = item_id[len("domain-"):]
+            self._current_domain = item_id[len("domain-") :]
             self._render_domain(self._current_domain)
 
     def action_toggle_canonical(self) -> None:

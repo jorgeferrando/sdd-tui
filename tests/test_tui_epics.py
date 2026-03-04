@@ -19,12 +19,14 @@ async def test_epics_loads_changes(openspec_with_change: Path) -> None:
     """REQ-04: EpicsView renders one row per active change."""
     with patch("sdd_tui.tui.app.GitReader", _git_mock()):
         app = SddTuiApp(openspec_with_change)
-        async with app.run_test() as pilot:
+        async with app.run_test() as _:
             table = app.query_one(DataTable)
             assert table.row_count == 1
 
 
-async def test_epics_toggle_archived_shows_archived(openspec_with_archive: Path) -> None:
+async def test_epics_toggle_archived_shows_archived(
+    openspec_with_archive: Path,
+) -> None:
     """REQ-05: pressing 'a' adds archived changes to the table."""
     with patch("sdd_tui.tui.app.GitReader", _git_mock()):
         app = SddTuiApp(openspec_with_archive)
@@ -48,7 +50,9 @@ async def test_epics_toggle_archived_hides_again(openspec_with_archive: Path) ->
             assert table.row_count == rows_before
 
 
-async def test_epics_enter_navigates_to_change_detail(openspec_with_change: Path) -> None:
+async def test_epics_enter_navigates_to_change_detail(
+    openspec_with_change: Path,
+) -> None:
     """REQ-06: Enter on a change row pushes ChangeDetailScreen."""
     with patch("sdd_tui.tui.app.GitReader", _git_mock()):
         app = SddTuiApp(openspec_with_change)

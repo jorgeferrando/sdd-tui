@@ -27,7 +27,10 @@ def git_dirty() -> MagicMock:
 
 # --- PipelineInferer ---
 
-def test_all_pending_when_empty(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
+
+def test_all_pending_when_empty(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.propose == PhaseState.PENDING
     assert pipeline.spec == PhaseState.PENDING
@@ -37,43 +40,60 @@ def test_all_pending_when_empty(change_dir: Path, inferer: PipelineInferer, git_
     assert pipeline.verify == PhaseState.PENDING
 
 
-def test_propose_done_when_proposal_exists(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
+def test_propose_done_when_proposal_exists(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
     (change_dir / "proposal.md").touch()
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.propose == PhaseState.DONE
 
 
-def test_apply_done_when_all_tasks_checked(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
-    (change_dir / "tasks.md").write_text("- [x] T01 Create something\n- [x] T02 Do another\n")
+def test_apply_done_when_all_tasks_checked(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
+    (change_dir / "tasks.md").write_text(
+        "- [x] T01 Create something\n- [x] T02 Do another\n"
+    )
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.apply == PhaseState.DONE
 
 
-def test_apply_pending_when_any_task_unchecked(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
-    (change_dir / "tasks.md").write_text("- [x] T01 Create something\n- [ ] T02 Do another\n")
+def test_apply_pending_when_any_task_unchecked(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
+    (change_dir / "tasks.md").write_text(
+        "- [x] T01 Create something\n- [ ] T02 Do another\n"
+    )
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.apply == PhaseState.PENDING
 
 
-def test_verify_pending_when_apply_pending(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
+def test_verify_pending_when_apply_pending(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
     (change_dir / "tasks.md").write_text("- [ ] T01 Pending task\n")
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.verify == PhaseState.PENDING
 
 
-def test_verify_done_when_apply_done_and_git_clean(change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock) -> None:
+def test_verify_done_when_apply_done_and_git_clean(
+    change_dir: Path, inferer: PipelineInferer, git_clean: MagicMock
+) -> None:
     (change_dir / "tasks.md").write_text("- [x] T01 Done task\n")
     pipeline = inferer.infer(change_dir, git_clean)
     assert pipeline.verify == PhaseState.DONE
 
 
-def test_verify_pending_when_git_dirty(change_dir: Path, inferer: PipelineInferer, git_dirty: MagicMock) -> None:
+def test_verify_pending_when_git_dirty(
+    change_dir: Path, inferer: PipelineInferer, git_dirty: MagicMock
+) -> None:
     (change_dir / "tasks.md").write_text("- [x] T01 Done task\n")
     pipeline = inferer.infer(change_dir, git_dirty)
     assert pipeline.verify == PhaseState.PENDING
 
 
 # --- TaskParser ---
+
 
 def test_parse_tasks_checked_and_unchecked(tmp_path: Path) -> None:
     tasks_md = tmp_path / "tasks.md"

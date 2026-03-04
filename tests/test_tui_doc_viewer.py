@@ -23,7 +23,7 @@ async def test_doc_viewer_renders_content(openspec_with_change: Path) -> None:
         app = SddTuiApp(openspec_with_change)
         async with app.run_test() as pilot:
             await pilot.press("enter")  # navigate to ChangeDetailScreen
-            await pilot.press("p")      # open proposal via DocumentViewerScreen
+            await pilot.press("p")  # open proposal via DocumentViewerScreen
             assert isinstance(app.screen, DocumentViewerScreen)
             content_widget = app.screen.query_one("#doc-content", Static)
             # Content should be a Markdown renderable, not the "not found" message

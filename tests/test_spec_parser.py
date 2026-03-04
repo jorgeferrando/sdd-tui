@@ -4,9 +4,7 @@ from datetime import date
 from pathlib import Path
 
 from sdd_tui.core.spec_parser import (
-    ChangeDecisions,
     Decision,
-    DeltaSpec,
     collect_archived_decisions,
     extract_decisions,
     parse_delta,
@@ -64,10 +62,7 @@ def test_parse_delta_case_insensitive(tmp_path: Path) -> None:
 def test_parse_delta_preserves_blank_lines(tmp_path: Path) -> None:
     spec = tmp_path / "spec.md"
     spec.write_text(
-        "## ADDED Requirements\n"
-        "- **REQ-01** first\n"
-        "\n"
-        "- **REQ-02** second\n"
+        "## ADDED Requirements\n- **REQ-01** first\n\n- **REQ-02** second\n"
     )
     delta = parse_delta(spec)
     assert "" in delta.added  # blank line preserved
@@ -132,16 +127,21 @@ def test_collect_archived_decisions_order(tmp_path: Path) -> None:
 
     # Create two archived changes
     for dirname, content in [
-        ("2026-02-01-view-2-change-detail", "| Use DataTable | ListView | row selection |\n"),
-        ("2026-03-04-view-8-spec-health", "| REQ count unique | count occurrences | accuracy |\n"),
+        (
+            "2026-02-01-view-2-change-detail",
+            "| Use DataTable | ListView | row selection |\n",
+        ),
+        (
+            "2026-03-04-view-8-spec-health",
+            "| REQ count unique | count occurrences | accuracy |\n",
+        ),
     ]:
         d = archive / dirname
         d.mkdir(parents=True)
         (d / "design.md").write_text(
             "## Decisiones Tomadas\n\n"
             "| Decisión | Alternativa Descartada | Motivo |\n"
-            "|---------|----------------------|--------|\n"
-            + content
+            "|---------|----------------------|--------|\n" + content
         )
 
     results = collect_archived_decisions(archive)

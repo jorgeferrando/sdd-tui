@@ -8,12 +8,14 @@ from pathlib import Path
 
 INACTIVE_THRESHOLD_DAYS = 7
 
-_EARS_TAGS = frozenset({"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"})
+_EARS_TAGS = frozenset(
+    {"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"}
+)
 _REQ_PATTERN = re.compile(r"\*\*(REQ-\d+)\*\*")
 
 _ARTIFACT_FILES = [
     ("proposal", "proposal.md"),
-    ("spec", None),              # special: specs/*/spec.md
+    ("spec", None),  # special: specs/*/spec.md
     ("research", "research.md"),
     ("requirements", "requirements.md"),
     ("design", "design.md"),
@@ -86,8 +88,15 @@ def _get_artifacts(change_path: Path) -> list[str]:
 def _get_inactive_days(change_name: str, repo_cwd: Path) -> int | None:
     try:
         result = subprocess.run(
-            ["git", "log", "--format=%ad", "--date=short", "-1", "-F",
-             f"--grep={change_name}"],
+            [
+                "git",
+                "log",
+                "--format=%ad",
+                "--date=short",
+                "-1",
+                "-F",
+                f"--grep={change_name}",
+            ],
             cwd=repo_cwd,
             capture_output=True,
             text=True,

@@ -167,7 +167,9 @@ class ChangeDetailScreen(Screen):
         with Vertical():
             with Horizontal(classes="top-panel"):
                 yield TaskListPanel(self._change.tasks)
-                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics)
+                yield PipelinePanel(
+                    self._change.pipeline, self._change.tasks, self._metrics
+                )
             yield DiffPanel()
         yield Footer()
 
@@ -200,9 +202,7 @@ class ChangeDetailScreen(Screen):
 
     def action_refresh_view(self) -> None:
         changes = self.app.refresh_changes()  # type: ignore[attr-defined]
-        fresh_change = next(
-            (c for c in changes if c.name == self._change.name), None
-        )
+        fresh_change = next((c for c in changes if c.name == self._change.name), None)
         if fresh_change is None:
             self.notify("Change not found — returning to list")
             self.app.pop_screen()
@@ -233,10 +233,15 @@ class ChangeDetailScreen(Screen):
 
     def action_view_spec(self) -> None:
         specs_dir = self._change.path / "specs"
-        domains = sorted(
-            d.name for d in specs_dir.iterdir()
-            if d.is_dir() and (d / "spec.md").exists()
-        ) if specs_dir.exists() else []
+        domains = (
+            sorted(
+                d.name
+                for d in specs_dir.iterdir()
+                if d.is_dir() and (d / "spec.md").exists()
+            )
+            if specs_dir.exists()
+            else []
+        )
         if not domains:
             self.notify("No specs found")
         elif len(domains) == 1:

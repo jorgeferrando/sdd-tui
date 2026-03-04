@@ -13,13 +13,18 @@ def _make_spec(change_dir: Path, domain: str, content: str) -> None:
 
 # --- REQ counting ---
 
+
 def test_req_count_from_spec_files(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
-    _make_spec(change_dir, "core", (
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-        "- **REQ-02** `[Unwanted]` If A, the B SHALL C\n"
-    ))
+    _make_spec(
+        change_dir,
+        "core",
+        (
+            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+            "- **REQ-02** `[Unwanted]` If A, the B SHALL C\n"
+        ),
+    )
     metrics = parse_metrics(change_dir, tmp_path)
     assert metrics.req_count == 2
 
@@ -27,13 +32,17 @@ def test_req_count_from_spec_files(tmp_path: Path) -> None:
 def test_ears_count_typed_reqs(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
-    _make_spec(change_dir, "core", (
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-        "- **REQ-02** `[Unwanted]` If A, the B SHALL C\n"
-        "- **REQ-03** `[State]` While D, the E SHALL F\n"
-        "- **REQ-04** `[Optional]` Where feature, the G SHALL H\n"
-        "- **REQ-05** `[Ubiquitous]` The I SHALL J\n"
-    ))
+    _make_spec(
+        change_dir,
+        "core",
+        (
+            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+            "- **REQ-02** `[Unwanted]` If A, the B SHALL C\n"
+            "- **REQ-03** `[State]` While D, the E SHALL F\n"
+            "- **REQ-04** `[Optional]` Where feature, the G SHALL H\n"
+            "- **REQ-05** `[Ubiquitous]` The I SHALL J\n"
+        ),
+    )
     metrics = parse_metrics(change_dir, tmp_path)
     assert metrics.req_count == 5
     assert metrics.ears_count == 5
@@ -42,10 +51,14 @@ def test_ears_count_typed_reqs(tmp_path: Path) -> None:
 def test_non_ears_tags_not_counted(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
-    _make_spec(change_dir, "core", (
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-        "- **REQ-02** [SomeOther] description\n"
-    ))
+    _make_spec(
+        change_dir,
+        "core",
+        (
+            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+            "- **REQ-02** [SomeOther] description\n"
+        ),
+    )
     metrics = parse_metrics(change_dir, tmp_path)
     assert metrics.req_count == 2
     assert metrics.ears_count == 1
@@ -63,12 +76,16 @@ def test_duplicate_req_counted_once(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
     # REQ-01 appears twice: once as definition (with EARS), once as scenario header (without)
-    _make_spec(change_dir, "core", (
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-        "\n"
-        "**REQ-01** — Scenario name\n"
-        "**Dado** ...\n"
-    ))
+    _make_spec(
+        change_dir,
+        "core",
+        (
+            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+            "\n"
+            "**REQ-01** — Scenario name\n"
+            "**Dado** ...\n"
+        ),
+    )
     metrics = parse_metrics(change_dir, tmp_path)
     assert metrics.req_count == 1
     assert metrics.ears_count == 1
@@ -85,6 +102,7 @@ def test_reqs_across_multiple_domains(tmp_path: Path) -> None:
 
 
 # --- Artifacts ---
+
 
 def test_artifacts_presence(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
@@ -130,6 +148,7 @@ def test_empty_change_has_no_artifacts(tmp_path: Path) -> None:
 
 # --- Inactive days ---
 
+
 def test_inactive_days_no_git(tmp_path: Path) -> None:
     """tmp_path is not a git repo → inactive_days=None."""
     change_dir = tmp_path / "my-change"
@@ -140,14 +159,18 @@ def test_inactive_days_no_git(tmp_path: Path) -> None:
 
 # --- Threshold constant ---
 
+
 def test_inactive_threshold_is_seven() -> None:
     assert INACTIVE_THRESHOLD_DAYS == 7
 
 
 # --- ChangeMetrics dataclass ---
 
+
 def test_change_metrics_fields() -> None:
-    m = ChangeMetrics(req_count=3, ears_count=2, artifacts=["proposal"], inactive_days=5)
+    m = ChangeMetrics(
+        req_count=3, ears_count=2, artifacts=["proposal"], inactive_days=5
+    )
     assert m.req_count == 3
     assert m.ears_count == 2
     assert m.artifacts == ["proposal"]
@@ -155,6 +178,7 @@ def test_change_metrics_fields() -> None:
 
 
 # --- requirements.md artifact ---
+
 
 def test_requirements_artifact_detected(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
@@ -187,10 +211,18 @@ def test_requirements_artifact_order(tmp_path: Path) -> None:
 
     metrics = parse_metrics(change_dir, tmp_path)
 
-    assert metrics.artifacts == ["proposal", "spec", "research", "requirements", "design", "tasks"]
+    assert metrics.artifacts == [
+        "proposal",
+        "spec",
+        "research",
+        "requirements",
+        "design",
+        "tasks",
+    ]
 
 
 # --- REQ counting from requirements.md ---
+
 
 def test_reqs_counted_from_requirements_md(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
@@ -213,10 +245,14 @@ def test_reqs_deduped_across_requirements_and_specs(tmp_path: Path) -> None:
     (change_dir / "requirements.md").write_text(
         "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
     )
-    _make_spec(change_dir, "core", (
-        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
-        "- **REQ-02** `[State]` While D, the E SHALL F\n"
-    ))
+    _make_spec(
+        change_dir,
+        "core",
+        (
+            "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+            "- **REQ-02** `[State]` While D, the E SHALL F\n"
+        ),
+    )
 
     metrics = parse_metrics(change_dir, tmp_path)
 

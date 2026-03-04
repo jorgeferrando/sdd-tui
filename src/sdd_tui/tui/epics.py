@@ -129,6 +129,7 @@ class EpicsView(Widget):
 
     def action_steering(self) -> None:
         from sdd_tui.tui.doc_viewer import DocumentViewerScreen
+
         steering_path = Path.cwd() / "openspec" / "steering.md"
         self.app.push_screen(DocumentViewerScreen(steering_path, "sdd-tui — steering"))
 

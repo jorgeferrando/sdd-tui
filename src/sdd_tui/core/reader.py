@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from sdd_tui.core.models import Change, OpenspecNotFoundError, Pipeline
+from sdd_tui.core.models import Change, OpenspecNotFoundError
 
 
 def load_steering(openspec_path: Path) -> str | None:
@@ -32,7 +32,8 @@ class OpenspecReader:
             raise OpenspecNotFoundError(f"openspec/ not found at {openspec_path}")
 
         entries = sorted(
-            entry for entry in changes_path.iterdir()
+            entry
+            for entry in changes_path.iterdir()
             if entry.is_dir() and entry.name != "archive"
         )
         changes = [Change(name=entry.name, path=entry) for entry in entries]
@@ -41,8 +42,7 @@ class OpenspecReader:
             archive_path = changes_path / "archive"
             if archive_path.exists():
                 archived_entries = sorted(
-                    entry for entry in archive_path.iterdir()
-                    if entry.is_dir()
+                    entry for entry in archive_path.iterdir() if entry.is_dir()
                 )
                 changes += [
                     Change(name=entry.name, path=entry, archived=True)

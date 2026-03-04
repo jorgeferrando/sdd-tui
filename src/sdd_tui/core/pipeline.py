@@ -60,14 +60,25 @@ class PipelineInferer:
         apply = PhaseState.PENDING
         if tasks_exists:
             parsed = self._parser.parse(tasks_md)
-            apply = PhaseState.PENDING if any(not t.done for t in parsed) else PhaseState.DONE
+            apply = (
+                PhaseState.PENDING
+                if any(not t.done for t in parsed)
+                else PhaseState.DONE
+            )
 
         verify = PhaseState.PENDING
         if apply == PhaseState.DONE:
             clean = git_reader.is_clean(change_path)
             verify = PhaseState.DONE if clean is True else PhaseState.PENDING
 
-        return Pipeline(propose=propose, spec=spec, design=design, tasks=tasks, apply=apply, verify=verify)
+        return Pipeline(
+            propose=propose,
+            spec=spec,
+            design=design,
+            tasks=tasks,
+            apply=apply,
+            verify=verify,
+        )
 
     def _check_file(self, path: Path) -> PhaseState:
         return PhaseState.DONE if path.exists() else PhaseState.PENDING
