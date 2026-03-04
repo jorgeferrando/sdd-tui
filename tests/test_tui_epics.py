@@ -75,3 +75,42 @@ async def test_epics_r_stays_on_epics(openspec_with_change: Path) -> None:
             # Still on the default screen (EpicsView is a widget, not a Screen)
             assert app.query_one(EpicsView) is not None
             assert len(app.screen_stack) == 1
+
+
+async def test_toggle_archived_label_changes(openspec_with_archive: Path) -> None:
+    """REQ-01/02: pressing 'a' changes the binding label to 'Hide archived'."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_archive)
+        async with app.run_test() as pilot:
+            epics = app.query_one(EpicsView)
+            await pilot.press("a")
+            labels = [b.description for b in epics.BINDINGS]
+            assert "Hide archived" in labels
+            assert "Show archived" not in labels
+
+
+async def test_toggle_archived_label_reverts(openspec_with_archive: Path) -> None:
+    """REQ-01/02: pressing 'a' twice reverts the binding label to 'Show archived'."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_archive)
+        async with app.run_test() as pilot:
+            epics = app.query_one(EpicsView)
+            await pilot.press("a")
+            await pilot.press("a")
+            labels = [b.description for b in epics.BINDINGS]
+            assert "Show archived" in labels
+            assert "Hide archived" not in labels
+
+
+async def test_refresh_emits_notify(openspec_with_archive: Path) -> None:
+    """REQ-04: pressing 'r' emits a notify with change count."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_archive)
+        async with app.run_test() as pilot:
+            epics = app.query_one(EpicsView)
+            with patch.object(epics, "notify") as mock_notify:
+                await pilot.press("r")
+                mock_notify.assert_called_once()
+                message = mock_notify.call_args[0][0]
+                assert "changes loaded" in message
+                assert "archived" in message
