@@ -13,8 +13,9 @@ _REQ_PATTERN = re.compile(r"\*\*(REQ-\d+)\*\*")
 
 _ARTIFACT_FILES = [
     ("proposal", "proposal.md"),
-    ("spec", None),        # special: specs/*/spec.md
+    ("spec", None),              # special: specs/*/spec.md
     ("research", "research.md"),
+    ("requirements", "requirements.md"),
     ("design", "design.md"),
     ("tasks", "tasks.md"),
 ]
@@ -41,21 +42,29 @@ def parse_metrics(change_path: Path, repo_cwd: Path) -> ChangeMetrics:
 
 
 def _count_reqs(change_path: Path) -> tuple[int, int]:
-    specs_dir = change_path / "specs"
-    if not specs_dir.exists():
-        return 0, 0
-
     seen: set[str] = set()
     ears: set[str] = set()
-    for md_file in specs_dir.rglob("*.md"):
-        for line in md_file.read_text(errors="replace").splitlines():
-            match = _REQ_PATTERN.search(line)
-            if match:
-                req_id = match.group(1)
-                seen.add(req_id)
-                if any(tag in line for tag in _EARS_TAGS):
-                    ears.add(req_id)
+
+    specs_dir = change_path / "specs"
+    if specs_dir.exists():
+        for md_file in specs_dir.rglob("*.md"):
+            _scan_req_lines(md_file, seen, ears)
+
+    req_file = change_path / "requirements.md"
+    if req_file.exists():
+        _scan_req_lines(req_file, seen, ears)
+
     return len(seen), len(ears)
+
+
+def _scan_req_lines(path: Path, seen: set[str], ears: set[str]) -> None:
+    for line in path.read_text(errors="replace").splitlines():
+        match = _REQ_PATTERN.search(line)
+        if match:
+            req_id = match.group(1)
+            seen.add(req_id)
+            if any(tag in line for tag in _EARS_TAGS):
+                ears.add(req_id)
 
 
 def _get_artifacts(change_path: Path) -> list[str]:
