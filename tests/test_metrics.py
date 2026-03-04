@@ -152,3 +152,73 @@ def test_change_metrics_fields() -> None:
     assert m.ears_count == 2
     assert m.artifacts == ["proposal"]
     assert m.inactive_days == 5
+
+
+# --- requirements.md artifact ---
+
+def test_requirements_artifact_detected(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+    (change_dir / "requirements.md").touch()
+
+    metrics = parse_metrics(change_dir, tmp_path)
+
+    assert "requirements" in metrics.artifacts
+
+
+def test_requirements_artifact_absent(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+
+    metrics = parse_metrics(change_dir, tmp_path)
+
+    assert "requirements" not in metrics.artifacts
+
+
+def test_requirements_artifact_order(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+    (change_dir / "proposal.md").touch()
+    (change_dir / "research.md").touch()
+    (change_dir / "requirements.md").touch()
+    (change_dir / "design.md").touch()
+    (change_dir / "tasks.md").touch()
+    _make_spec(change_dir, "core", "")
+
+    metrics = parse_metrics(change_dir, tmp_path)
+
+    assert metrics.artifacts == ["proposal", "spec", "research", "requirements", "design", "tasks"]
+
+
+# --- REQ counting from requirements.md ---
+
+def test_reqs_counted_from_requirements_md(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+    (change_dir / "requirements.md").write_text(
+        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+        "- **REQ-02** `[Unwanted]` If A, the B SHALL C\n"
+    )
+
+    metrics = parse_metrics(change_dir, tmp_path)
+
+    assert metrics.req_count == 2
+    assert metrics.ears_count == 2
+
+
+def test_reqs_deduped_across_requirements_and_specs(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+    # REQ-01 appears in both requirements.md and specs/
+    (change_dir / "requirements.md").write_text(
+        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+    )
+    _make_spec(change_dir, "core", (
+        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+        "- **REQ-02** `[State]` While D, the E SHALL F\n"
+    ))
+
+    metrics = parse_metrics(change_dir, tmp_path)
+
+    assert metrics.req_count == 2  # REQ-01 deduplicated, REQ-02 from spec
+    assert metrics.ears_count == 2
