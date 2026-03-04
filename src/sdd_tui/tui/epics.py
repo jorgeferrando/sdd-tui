@@ -35,7 +35,7 @@ def _apply_display(state: PhaseState, tasks: list[Task]) -> str:
 class EpicsView(Widget):
     BINDINGS = [
         Binding("r", "refresh", "Refresh"),
-        Binding("a", "toggle_archived", "Archived"),
+        Binding("a", "toggle_archived", "Show archived"),
         Binding("s", "steering", "Steering"),
         Binding("h", "health", "Health"),
         Binding("x", "decisions_timeline", "Decisions"),
@@ -106,10 +106,23 @@ class EpicsView(Widget):
 
     def action_toggle_archived(self) -> None:
         self._show_archived = not self._show_archived
+        label = "Hide archived" if self._show_archived else "Show archived"
+        self.BINDINGS = [
+            Binding("r", "refresh", "Refresh"),
+            Binding("a", "toggle_archived", label),
+            Binding("s", "steering", "Steering"),
+            Binding("h", "health", "Health"),
+            Binding("x", "decisions_timeline", "Decisions"),
+            Binding("q", "quit", "Quit"),
+        ]
+        self.refresh_bindings()
         self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
 
     def action_refresh(self) -> None:
-        self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
+        changes = self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
+        n_active = sum(1 for c in changes if not c.archived)
+        n_archived = sum(1 for c in changes if c.archived)
+        self.notify(f"{n_active} changes loaded ({n_archived} archived)")
 
     def action_health(self) -> None:
         self.app.push_screen(SpecHealthScreen(self._changes, self._show_archived))
