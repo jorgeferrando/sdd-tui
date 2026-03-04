@@ -13,7 +13,11 @@ from sdd_tui.core.models import Change
 
 
 class DocumentViewerScreen(Screen):
-    BINDINGS = [Binding("escape", "app.pop_screen", "Back")]
+    BINDINGS = [
+        Binding("j", "scroll_down", "Down"),
+        Binding("k", "scroll_up", "Up"),
+        Binding("escape", "app.pop_screen", "Back"),
+    ]
 
     def __init__(self, path: Path, title: str) -> None:
         super().__init__()
