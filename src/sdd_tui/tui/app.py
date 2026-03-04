@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 
 from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, OpenspecNotFoundError, Task, TaskGitState
@@ -13,6 +14,8 @@ from sdd_tui.tui.epics import EpicsView
 
 
 class SddTuiApp(App):
+    BINDINGS = [Binding("question_mark", "help", "Help", priority=True)]
+
     CSS = """
     EpicsView {
         height: 1fr;
@@ -26,6 +29,11 @@ class SddTuiApp(App):
         self._inferer = PipelineInferer()
         self._parser = TaskParser()
         self._git = GitReader()
+
+    def action_help(self) -> None:
+        from sdd_tui.tui.help import HelpScreen
+
+        self.push_screen(HelpScreen())
 
     @property
     def changes(self) -> list[Change]:
