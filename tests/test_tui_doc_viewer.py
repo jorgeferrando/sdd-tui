@@ -61,3 +61,54 @@ async def test_doc_viewer_esc_goes_back(openspec_with_change: Path) -> None:
             assert isinstance(app.screen, DocumentViewerScreen)
             await pilot.press("escape")
             assert isinstance(app.screen, ChangeDetailScreen)
+
+
+async def test_doc_viewer_missing_emits_warning(tmp_path: Path) -> None:
+    """REQ-07: DocumentViewerScreen calls app.notify with severity=warning for missing files."""
+    from sdd_tui.tui.doc_viewer import DocumentViewerScreen
+
+    openspec = tmp_path / "openspec"
+    (openspec / "changes" / "archive").mkdir(parents=True)
+    (openspec / "specs").mkdir()
+    change = openspec / "changes" / "my-change"
+    change.mkdir()
+    (change / "tasks.md").write_text("- [ ] **T01** Pending\n")
+    # proposal.md intentionally absent
+
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec)
+        async with app.run_test() as pilot:
+            await pilot.press("enter")
+            with patch.object(app, "notify") as mock_notify:
+                await pilot.press("p")  # opens DocumentViewerScreen for missing file
+                assert isinstance(app.screen, DocumentViewerScreen)
+                mock_notify.assert_called_once()
+                call_kwargs = mock_notify.call_args
+                assert call_kwargs.kwargs.get("severity") == "warning"
+
+
+async def test_spec_selector_q_closes(tmp_path: Path) -> None:
+    """REQ-08/09: pressing 'q' in SpecSelectorScreen closes the screen."""
+    from sdd_tui.tui.doc_viewer import SpecSelectorScreen
+
+    openspec = tmp_path / "openspec"
+    (openspec / "changes" / "archive").mkdir(parents=True)
+    (openspec / "specs").mkdir()
+    change = openspec / "changes" / "my-change"
+    change.mkdir()
+    (change / "tasks.md").write_text("- [ ] **T01** Pending\n")
+    # Two spec domains so SpecSelectorScreen is opened
+    for domain in ("core", "tui"):
+        spec_dir = change / "specs" / domain
+        spec_dir.mkdir(parents=True)
+        (spec_dir / "spec.md").write_text(f"# Spec: {domain}\n")
+
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec)
+        async with app.run_test() as pilot:
+            await pilot.press("enter")
+            assert isinstance(app.screen, ChangeDetailScreen)
+            await pilot.press("s")  # opens SpecSelectorScreen (2 domains)
+            assert isinstance(app.screen, SpecSelectorScreen)
+            await pilot.press("q")
+            assert isinstance(app.screen, ChangeDetailScreen)
