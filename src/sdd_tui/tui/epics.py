@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import DataTable, Footer, Header
@@ -7,6 +9,7 @@ from textual.widget import Widget
 
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
+from sdd_tui.tui.spec_evolution import DecisionsTimeline
 from sdd_tui.tui.spec_health import SpecHealthScreen
 
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
@@ -34,6 +37,7 @@ class EpicsView(Widget):
         Binding("r", "refresh", "Refresh"),
         Binding("a", "toggle_archived", "Archived"),
         Binding("h", "health", "Health"),
+        Binding("x", "decisions_timeline", "Decisions"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -108,6 +112,10 @@ class EpicsView(Widget):
 
     def action_health(self) -> None:
         self.app.push_screen(SpecHealthScreen(self._changes, self._show_archived))
+
+    def action_decisions_timeline(self) -> None:
+        archive_dir = Path.cwd() / "openspec" / "changes" / "archive"
+        self.app.push_screen(DecisionsTimeline(archive_dir))
 
     def action_quit(self) -> None:
         self.app.exit()
