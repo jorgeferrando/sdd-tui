@@ -38,6 +38,12 @@ class DocumentViewerScreen(Screen):
             content = f"[dim]{self._path.name} not found[/dim]"
         self.query_one("#doc-content", Static).update(content)
 
+    def action_scroll_down(self) -> None:
+        self.query_one(ScrollableContainer).scroll_down()
+
+    def action_scroll_up(self) -> None:
+        self.query_one(ScrollableContainer).scroll_up()
+
 
 class SpecSelectorScreen(Screen):
     BINDINGS = [

@@ -122,6 +122,12 @@ class SpecEvolutionScreen(Screen):
 
         static.update(content)
 
+    def action_scroll_down(self) -> None:
+        self.query_one(ScrollableContainer).scroll_down()
+
+    def action_scroll_up(self) -> None:
+        self.query_one(ScrollableContainer).scroll_up()
+
 
 class DecisionsTimeline(Screen):
     BINDINGS = [
@@ -163,3 +169,9 @@ class DecisionsTimeline(Screen):
             content.append("\n")
 
         static.update(content)
+
+    def action_scroll_down(self) -> None:
+        self.query_one(ScrollableContainer).scroll_down()
+
+    def action_scroll_up(self) -> None:
+        self.query_one(ScrollableContainer).scroll_up()
