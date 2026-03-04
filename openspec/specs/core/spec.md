@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** openspec-enrichment
+- **Change:** cleanup-spec-debt
 - **Fecha:** 2026-03-04
-- **Versión:** 0.6
+- **Versión:** 0.7
 - **Estado:** approved
 
 ## Contexto
@@ -270,45 +270,6 @@ class TaskGitState(Enum):
 
 ---
 
----
-
-## 6. Transport — Comunicación inter-panel
-
-### Propósito
-
-Capa de abstracción para enviar instrucciones a un agente IA (Claude, Codex, etc.)
-corriendo en otro panel del terminal. Desacoplada del agente y del multiplexer.
-
-### Protocol
-
-```python
-class Transport(Protocol):
-    @property
-    def name(self) -> str: ...
-    def is_available(self) -> bool: ...
-    def find_pane(self, process_name: str) -> str | None: ...
-    def send_command(self, pane_id: str, command: str) -> None: ...
-```
-
-### Implementaciones
-
-| Clase | Detección | Targeting | Limitación |
-|-------|-----------|-----------|------------|
-| `TmuxTransport` | `$TMUX` | Por `pane_id` exacto | Ninguna |
-| `ZellijTransport` | `$ZELLIJ` | No soportado | `find_pane()` siempre retorna `None` — Zellij CLI no expone targeting por proceso |
-
-### `detect_transport()`
-
-Auto-detecta el multiplexer activo. Orden de prioridad: tmux → zellij → `None`.
-
-### Reglas
-
-- **RB-TR-01:** `detect_transport()` prueba tmux antes que zellij.
-- **RB-TR-02:** `find_pane()` retorna `None` si no encuentra el proceso o si targeting no está soportado.
-- **RB-TR-03:** Errores de subprocess en `find_pane()` se capturan silenciosamente → `None`.
-
----
-
 ## Decisiones Tomadas
 
 | Decisión | Alternativa Descartada | Motivo |
@@ -323,6 +284,7 @@ Auto-detecta el multiplexer activo. Orden de prioridad: tmux → zellij → `Non
 | `TaskGitState` independiente de `done` | Unificar en un solo campo | `done` = estado en tasks.md; `git_state` = realidad en git. Pueden diferir |
 | Hash 7 chars | Hash completo | Estándar git, suficiente para display |
 | `find_commit` usa `-F` (fixed-strings) | grep regex por defecto | `[view-3]` como regex es clase de caracteres, nunca coincide |
+| Transport Protocol eliminado (TmuxTransport, ZellijTransport, detect_transport) | Mantener como feature activa | Complejidad sin retorno: tmux/zellij targeting no fiable. Eliminado en cleanup-remove-transports (2026-03-03) |
 | `git show` para diff de commit | `git diff {hash}^..{hash}` | `git show` incluye metadata del commit |
 | `get_working_diff` retorna `None` si vacío | Retornar `""` | Permite distinción entre "sin cambios" y "error" en la TUI |
 | TaskParser acepta `[A-Z]+\d+` | Solo `T\d+` | BUG01, MEJ01 son IDs válidos en el flujo SDD |
