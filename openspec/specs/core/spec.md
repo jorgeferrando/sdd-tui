@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** view-5-transports
-- **Fecha:** 2026-03-03
-- **Versión:** 0.4
+- **Change:** openspec-enrichment
+- **Fecha:** 2026-03-04
+- **Versión:** 0.6
 - **Estado:** approved
 
 ## Contexto
@@ -128,7 +128,7 @@ class Pipeline:
 ### Regla de verify
 
 - **RB-05:** `verify` es `DONE` si `apply=DONE` Y el working tree del repo
-  está limpio (`git status --porcelain` retorna vacío)
+  está limpio (excluyendo `openspec/` y `.claude/` del check)
 - **RB-06:** Si `git` no está disponible o el directorio no es un repo git,
   `verify` es `PENDING` (sin error — degradación silenciosa)
 
@@ -194,8 +194,9 @@ class Task:
 
 **Dado** un path de directorio
 **Cuando** se consulta si el working tree está limpio
-**Entonces** se ejecuta `git status --porcelain` y se retorna `True` si
-la salida está vacía, `False` en caso contrario
+**Entonces** se resuelve el git toplevel desde el path dado, se ejecuta
+`git status --porcelain -- . :(exclude)openspec/ :(exclude).claude/`
+desde el toplevel, y se retorna `True` si la salida está vacía, `False` en caso contrario
 
 ### find_commit — Búsqueda de commit por mensaje
 
@@ -329,3 +330,221 @@ Auto-detecta el multiplexer activo. Orden de prioridad: tmux → zellij → `Non
 ## Abierto / Pendiente
 
 Ninguno.
+
+---
+
+## 8. Spec Parser — Delta format + decisions extractor
+
+### Propósito
+
+Módulo `core/spec_parser.py` — Python puro, sin dependencias de TUI, testable de forma aislada.
+Dos capacidades: parsear secciones ADDED/MODIFIED/REMOVED de delta specs, y extraer
+la tabla de decisiones de `design.md` archivados.
+
+### `parse_delta` — Parser de delta spec
+
+**Dado** un `spec_path: Path`
+**Cuando** se llama a `parse_delta(spec_path)`
+**Entonces** se retorna un `DeltaSpec` con las líneas bajo cada sección reconocida
+
+```python
+@dataclass
+class DeltaSpec:
+    added: list[str]      # líneas bajo ## ADDED
+    modified: list[str]   # líneas bajo ## MODIFIED
+    removed: list[str]    # líneas bajo ## REMOVED
+    fallback: bool        # True si no hay marcadores → mostrar texto plano
+```
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Con marcadores | `## ADDED/MODIFIED/REMOVED` presentes | `fallback=False`, listas pobladas |
+| Sin marcadores | Ninguna sección reconocida | `DeltaSpec(fallback=True)`, listas vacías |
+| Case-insensitive | `## added` o `## ADDED` | Ambas formas reconocidas |
+| Líneas entre secciones | Blank lines en sección | Preservadas en la lista |
+
+### `extract_decisions` — Extractor de decisiones
+
+**Dado** un `design_path: Path` y un `change_name: str`
+**Cuando** se llama a `extract_decisions(design_path, change_name)`
+**Entonces** se retorna un `ChangeDecisions` con las filas de la tabla de decisiones
+
+```python
+@dataclass
+class Decision:
+    decision: str
+    alternative: str
+    reason: str
+
+@dataclass
+class ChangeDecisions:
+    change_name: str       # nombre sin prefijo de fecha
+    archive_date: date     # fecha del prefijo del directorio (rellenado por collect)
+    decisions: list[Decision]
+```
+
+Reconoce tanto `## Decisiones Tomadas` como `## Decisiones de Diseño` (y variantes sin tilde).
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| `design.md` no existe | Archivo ausente | `ChangeDecisions` con `decisions=[]` |
+| Sin tabla de decisiones | No hay `##` de decisiones | `decisions=[]` |
+| Tabla presente | Filas `\| col1 \| col2 \| col3 \|` | Lista de `Decision` |
+
+### `collect_archived_decisions` — Agregador por archive
+
+**Dado** un `archive_dir: Path`
+**Cuando** se llama a `collect_archived_decisions(archive_dir)`
+**Entonces** itera subdirectorios con prefijo `YYYY-MM-DD-`, extrae decisiones de cada `design.md`,
+y retorna lista `ChangeDecisions` ordenada por fecha ascendente
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Directorio no existe | `archive_dir` ausente | `[]` |
+| Directorio sin prefijo YYYY-MM-DD | Nombre inválido | Ignorado silenciosamente |
+| Prefijo con fecha inválida | `ValueError` en `date.fromisoformat` | Ignorado silenciosamente |
+
+### Reglas de negocio
+
+- **RB-SP-01:** `parse_delta` usa `errors="replace"` al leer el archivo — nunca lanza UnicodeDecodeError.
+- **RB-SP-02:** `fallback=True` en lugar de excepción cuando no hay marcadores — specs legacy funcionales.
+- **RB-SP-03:** `collect_archived_decisions` ordena por prefijo YYYY-MM-DD del nombre de directorio — no por metadata interna.
+- **RB-SP-04:** `change_name` en `ChangeDecisions` es el nombre semántico sin el prefijo de fecha.
+
+---
+
+## 7. Metrics — Calidad de specs por change
+
+### Propósito
+
+Módulo `core/metrics.py` — Python puro, sin dependencias de TUI, testable de forma aislada.
+Extrae métricas de calidad de un change: requisitos EARS, artefactos presentes, e inactividad git.
+
+### `parse_metrics` — Función principal
+
+**Dado** un `change_path` y un `repo_cwd`
+**Cuando** se llama a `parse_metrics(change_path, repo_cwd)`
+**Entonces** se retorna un `ChangeMetrics` con `req_count`, `ears_count`, `artifacts` e `inactive_days`
+
+```python
+@dataclass
+class ChangeMetrics:
+    req_count: int            # REQ únicos detectados
+    ears_count: int           # REQ únicos con tipo EARS válido
+    artifacts: list[str]      # orden fijo: proposal, spec, research, design, tasks
+    inactive_days: int | None # días desde último commit del change (None si no hay o falla git)
+
+INACTIVE_THRESHOLD_DAYS: int = 7
+```
+
+### Conteo de REQ únicos
+
+**Dado** specs bajo `{change_path}/specs/`
+**Cuando** se parsean
+**Entonces** se detectan líneas que contienen `**REQ-XX**` (patrón `\*\*(REQ-\d+)\*\*`),
+acumulando IDs únicos — el mismo REQ apareciendo en definición y en escenario cuenta solo una vez.
+
+Un REQ se cuenta como EARS-typed si **alguna** de sus apariciones contiene uno de:
+`[Event]`, `[State]`, `[Unwanted]`, `[Optional]`, `[Ubiquitous]`.
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Sin specs/ | Directorio ausente | `req_count=0`, `ears_count=0` |
+| REQ en definición + escenario | Mismo ID, dos líneas | Cuenta como 1 único |
+| REQ sin tag EARS | Solo aparece sin tag | `req_count+1`, `ears_count` sin cambio |
+
+### Detección de artefactos
+
+Orden fijo; `research` solo si el archivo existe:
+
+| Artefacto | Huella en disco |
+|-----------|----------------|
+| `proposal` | `proposal.md` |
+| `spec` | `specs/*/spec.md` (al menos uno) |
+| `research` | `research.md` (opcional) |
+| `design` | `design.md` |
+| `tasks` | `tasks.md` |
+
+### Días de inactividad
+
+**Dado** un change name
+**Cuando** se ejecuta `git log --format=%ad --date=short -1 -F --grep={change_name}`
+**Entonces** se retorna `(date.today() - commit_date).days`
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Sin commits del change | Salida vacía | `None` |
+| git no disponible | `FileNotFoundError` | `None` |
+| No es repo git | returncode != 0 | `None` |
+
+### Reglas de negocio
+
+- **RB-M1:** `parse_metrics` no lanza excepciones — todos los errores se degradan silenciosamente.
+- **RB-M2:** El conteo de REQs usa IDs únicos (no ocurrencias). Un mismo REQ en varias líneas cuenta como uno.
+- **RB-M3:** `INACTIVE_THRESHOLD_DAYS = 7` es constante exportada — no hardcodeada en la TUI.
+- **RB-M4:** `git log` usa `-F` (fixed-strings) para que `[view-8]` no se interprete como regex.
+- **RB-M5:** Si existe `requirements.md` en el change, `parse_metrics` lo escanea además de `specs/*/spec.md` para conteo de REQs (IDs únicos — union de ambas fuentes).
+- **RB-M6:** El orden de artefactos es fijo: `proposal`, `spec`, `research`, `requirements`, `design`, `tasks`.
+
+---
+
+## 9. Reader — load_steering y load_spec_json
+
+### `load_steering(openspec_path: Path) -> str | None`
+
+**Dado** un path al directorio `openspec/`
+**Cuando** se llama a `load_steering(openspec_path)`
+**Entonces** se retorna el contenido de `openspec/steering.md` como `str`,
+o `None` si el archivo no existe
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Archivo existe | `steering.md` presente | `str` con el contenido completo |
+| Archivo ausente | No existe `steering.md` | `None` |
+| Archivo vacío | Existe pero sin contenido | `""` (string vacío) |
+| Error de encoding | Caracteres inválidos | Reemplazados con `errors="replace"` — nunca lanza `UnicodeDecodeError` |
+
+### `load_spec_json(change_path: Path) -> dict | None`
+
+**Dado** un path al directorio de un change
+**Cuando** se llama a `load_spec_json(change_path)`
+**Entonces** se retorna el dict parseado de `spec.json`, o `None` si no existe o está malformado
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| JSON válido | `spec.json` presente y parseable | `dict` con los datos |
+| Archivo ausente | No existe `spec.json` | `None` |
+| JSON malformado | `json.JSONDecodeError` | `None` (excepción capturada) |
+| Error de I/O | `OSError` | `None` (excepción capturada) |
+
+### spec.json — Formato
+
+```json
+{
+  "format": "openspec",
+  "version": "1.0",
+  "change": "string — nombre del change",
+  "generated_at": "ISO 8601 timestamp",
+  "pipeline": {
+    "propose": "done|pending",
+    "spec": "done|pending",
+    "design": "done|pending",
+    "tasks": "done|pending",
+    "apply": "done|pending",
+    "verify": "done|pending"
+  },
+  "tasks": {
+    "total": 0,
+    "done": 0,
+    "pending": 0
+  },
+  "requirements": ["REQ-01", "REQ-02"]
+}
+```
+
+### Reglas de negocio
+
+- **RB-R01:** `spec.json` es informacional — la TUI y la inferencia de pipeline siempre recomputan desde disco. `spec.json` no es fuente de verdad.
+- **RB-R02:** `load_spec_json` captura tanto `json.JSONDecodeError` como `OSError` — nunca lanza excepción.
+- **RB-R03:** `load_steering` usa `errors="replace"` al leer — nunca lanza `UnicodeDecodeError`.
+
