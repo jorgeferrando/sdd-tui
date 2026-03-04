@@ -1,8 +1,11 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from textual.widgets import DataTable
+import pytest
+from rich.text import Text
+from textual.widgets import DataTable, Input
 
+from sdd_tui.core.models import Change
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 from sdd_tui.tui.epics import EpicsView
@@ -119,3 +122,186 @@ async def test_refresh_emits_notify(openspec_with_archive: Path) -> None:
                 message = mock_notify.call_args[0][0]
                 assert "changes loaded" in message
                 assert "archived" in message
+
+
+# ── Search & Filter ───────────────────────────────────────────────────────────
+
+
+@pytest.fixture
+def openspec_with_two_changes(tmp_path: Path) -> Path:
+    """openspec/ with 2 active changes: 'view-search-filter' and 'perf-async-diffs'."""
+    openspec = tmp_path / "openspec"
+    (openspec / "changes" / "archive").mkdir(parents=True)
+    (openspec / "specs").mkdir()
+    for name in ("view-search-filter", "perf-async-diffs"):
+        change = openspec / "changes" / name
+        change.mkdir()
+        (change / "proposal.md").write_text("# Proposal\n")
+    return openspec
+
+
+# Unit tests — pure helpers, no Textual app needed
+
+
+def test_filter_changes_case_insensitive() -> None:
+    """_filter_changes returns changes whose name contains query (case-insensitive)."""
+    view = EpicsView([])
+    changes = [
+        Change(name="view-search-filter", path=Path("/tmp")),
+        Change(name="perf-async-diffs", path=Path("/tmp")),
+        Change(name="VIEW-HELP", path=Path("/tmp")),
+    ]
+    result = view._filter_changes(changes, "view")
+    assert [c.name for c in result] == ["view-search-filter", "VIEW-HELP"]
+
+
+def test_filter_changes_no_match() -> None:
+    """_filter_changes returns empty list when no match."""
+    view = EpicsView([])
+    changes = [Change(name="perf-async-diffs", path=Path("/tmp"))]
+    assert view._filter_changes(changes, "xyz") == []
+
+
+def test_highlight_match_returns_text_with_bold_cyan() -> None:
+    """REQ-13: _highlight_match wraps matching substring in bold cyan."""
+    view = EpicsView([])
+    result = view._highlight_match("view-search-filter", "search")
+    assert isinstance(result, Text)
+    plain = result.plain
+    assert plain == "view-search-filter"
+    # The span covering "search" should have bold cyan style
+    spans = [(s.start, s.end, str(s.style)) for s in result._spans]
+    match_span = next((s for s in spans if "cyan" in s[2]), None)
+    assert match_span is not None
+    assert plain[match_span[0] : match_span[1]] == "search"
+
+
+def test_highlight_match_no_match_returns_plain_text() -> None:
+    """_highlight_match returns plain Text when query not found in name."""
+    view = EpicsView([])
+    result = view._highlight_match("perf-async-diffs", "view")
+    assert isinstance(result, Text)
+    assert result.plain == "perf-async-diffs"
+    assert result._spans == []
+
+
+# TUI tests
+
+
+async def test_search_slash_shows_input(openspec_with_change: Path) -> None:
+    """REQ-01: pressing '/' makes the search Input visible."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            search_input = app.query_one("#search-input", Input)
+            assert not search_input.display
+            await pilot.press("/")
+            assert search_input.display
+
+
+async def test_search_filters_in_realtime(openspec_with_two_changes: Path) -> None:
+    """REQ-03: typing in search input filters DataTable rows in real time."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_two_changes)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            assert table.row_count == 2
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "view"
+            await pilot.pause()
+            assert table.row_count == 1
+
+
+async def test_search_escape_cancels(openspec_with_two_changes: Path) -> None:
+    """REQ-04: Esc cancels search and restores full list."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_two_changes)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "view"
+            await pilot.pause()
+            assert table.row_count == 1
+            await pilot.press("escape")
+            await pilot.pause()
+            assert table.row_count == 2
+            assert not app.query_one("#search-input", Input).display
+
+
+async def test_search_enter_confirms(openspec_with_two_changes: Path) -> None:
+    """REQ-05: Enter confirms filter, hides Input, keeps filtered rows."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_two_changes)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "view"
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert table.row_count == 1
+            assert not app.query_one("#search-input", Input).display
+
+
+async def test_search_no_results(openspec_with_two_changes: Path) -> None:
+    """REQ-06: 0 results shows a 'No matches' placeholder row."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_two_changes)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "zzz-no-match"
+            await pilot.pause()
+            assert table.row_count == 1
+            # The single row should be the "No matches" placeholder (no key)
+            epics = app.query_one(EpicsView)
+            assert epics._change_map == {}
+
+
+async def test_refresh_clears_filter(openspec_with_two_changes: Path) -> None:
+    """REQ-09: pressing 'r' clears the active filter."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_two_changes)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "view"
+            await pilot.pause()
+            assert table.row_count == 1
+            await pilot.press("escape")  # cancel to return focus to DataTable
+            await pilot.pause()
+            await pilot.press("r")
+            await pilot.pause()
+            assert table.row_count == 2
+            epics = app.query_one(EpicsView)
+            assert epics._search_query == ""
+
+
+async def test_search_persists_on_toggle_archived(openspec_with_archive: Path) -> None:
+    """REQ-10: filter persists when toggling archived changes."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_archive)
+        async with app.run_test() as pilot:
+            table = app.query_one(DataTable)
+            # "my-change" matches "my", archived "old-change" does not
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "my"
+            await pilot.pause()
+            assert table.row_count == 1
+            await pilot.press("escape")  # cancel search
+            await pilot.pause()
+            await pilot.press("a")  # show archived
+            await pilot.pause()
+            # re-activate search with same query
+            await pilot.press("/")
+            await pilot.pause()
+            app.query_one("#search-input", Input).value = "my"
+            await pilot.pause()
+            # still only 1 match (archived "old-change" doesn't match "my")
+            assert table.row_count == 1
