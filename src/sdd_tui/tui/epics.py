@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.events import Key
 from textual.widget import Widget
-from textual.widgets import DataTable, Footer, Header
+from textual.widgets import DataTable, Footer, Header, Input
 
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
@@ -37,12 +39,16 @@ class EpicsView(Widget):
         Binding("s", "steering", "Steering"),
         Binding("h", "health", "Health"),
         Binding("x", "decisions_timeline", "Decisions"),
+        Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
 
     DEFAULT_CSS = """
     EpicsView {
         height: 1fr;
+    }
+    #search-input {
+        display: none;
     }
     """
 
@@ -51,10 +57,13 @@ class EpicsView(Widget):
         self._changes = changes
         self._show_archived = False
         self._change_map: dict[str, Change] = {}
+        self._search_mode = False
+        self._search_query = ""
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=False)
         yield DataTable(cursor_type="row")
+        yield Input(placeholder="/ search...", id="search-input")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -69,6 +78,14 @@ class EpicsView(Widget):
         active = [c for c in self._changes if not c.archived]
         archived = [c for c in self._changes if c.archived]
 
+        if self._search_query:
+            active = self._filter_changes(active, self._search_query)
+            archived = self._filter_changes(archived, self._search_query)
+
+        if not active and not archived and self._search_query:
+            table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "")
+            return
+
         for change in active:
             self._add_change_row(table, change)
 
@@ -77,10 +94,31 @@ class EpicsView(Widget):
             for change in archived:
                 self._add_change_row(table, change)
 
+    def _filter_changes(self, changes: list[Change], query: str) -> list[Change]:
+        q = query.lower()
+        return [c for c in changes if q in c.name.lower()]
+
+    def _highlight_match(self, name: str, query: str) -> Text:
+        text = Text()
+        lower_name = name.lower()
+        lower_query = query.lower()
+        idx = lower_name.find(lower_query)
+        if idx == -1:
+            return Text(name)
+        text.append(name[:idx])
+        text.append(name[idx : idx + len(query)], style="bold cyan")
+        text.append(name[idx + len(query) :])
+        return text
+
     def _add_change_row(self, table: DataTable, change: Change) -> None:
         pipeline = change.pipeline
+        name_cell: str | Text = (
+            self._highlight_match(change.name, self._search_query)
+            if self._search_query
+            else change.name
+        )
         row = (
-            change.name,
+            name_cell,
             _phase_symbol(pipeline.propose),
             _phase_symbol(pipeline.spec),
             _phase_symbol(pipeline.design),
@@ -102,6 +140,42 @@ class EpicsView(Widget):
         if change:
             self.app.push_screen(ChangeDetailScreen(change))
 
+    def on_key(self, event: Key) -> None:
+        if self._search_mode and event.key == "escape":
+            event.stop()
+            self.action_cancel_search()
+
+    def action_search(self) -> None:
+        self._search_mode = True
+        search_input = self.query_one("#search-input", Input)
+        search_input.display = True
+        search_input.focus()
+
+    def action_cancel_search(self) -> None:
+        self._search_query = ""
+        self._search_mode = False
+        self.app.sub_title = ""  # type: ignore[attr-defined]
+        search_input = self.query_one("#search-input", Input)
+        search_input.clear()
+        search_input.display = False
+        self._populate()
+        self.call_after_refresh(lambda: self.query_one(DataTable).focus())
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if not self._search_mode:
+            return
+        self._search_query = event.value
+        self._populate()
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        query = event.value
+        self._search_query = query
+        self._search_mode = False
+        search_input = self.query_one("#search-input", Input)
+        search_input.display = False
+        self.app.sub_title = f'filtered: "{query}"' if query else ""  # type: ignore[attr-defined]
+        self.call_after_refresh(lambda: self.query_one(DataTable).focus())
+
     def action_toggle_archived(self) -> None:
         self._show_archived = not self._show_archived
         label = "Hide archived" if self._show_archived else "Show archived"
@@ -111,12 +185,19 @@ class EpicsView(Widget):
             Binding("s", "steering", "Steering"),
             Binding("h", "health", "Health"),
             Binding("x", "decisions_timeline", "Decisions"),
+            Binding("/", "search", "Search"),
             Binding("q", "quit", "Quit"),
         ]
         self.refresh_bindings()
         self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
 
     def action_refresh(self) -> None:
+        self._search_query = ""
+        self._search_mode = False
+        self.app.sub_title = ""  # type: ignore[attr-defined]
+        search_input = self.query_one("#search-input", Input)
+        search_input.clear()
+        search_input.display = False
         changes = self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
         n_active = sum(1 for c in changes if not c.archived)
         n_archived = sum(1 for c in changes if c.archived)
