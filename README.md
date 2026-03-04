@@ -17,6 +17,37 @@ pipx install git+https://github.com/jorgeferrando/sdd-tui
 pip install git+https://github.com/jorgeferrando/sdd-tui
 ```
 
+## Skills (Claude Code)
+
+sdd-tui works together with a set of Claude Code skills (`/sdd-init`, `/sdd-apply`, etc.) that drive the SDD workflow. Install them before using the tool.
+
+### From the repository (recommended)
+
+```bash
+# Clone and run the installer
+git clone https://github.com/jorgeferrando/sdd-tui
+cd sdd-tui
+./scripts/install-skills.sh
+```
+
+The installer will ask:
+- **Global** (`~/.claude/skills/`) — available in all your projects
+- **Project-local** (`.claude/skills/`) — only in the current project
+
+### Without cloning
+
+```bash
+# Global install
+curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install-skills.sh | bash -s -- --global
+
+# Project-local install
+curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install-skills.sh | bash -s -- --local
+```
+
+After installing, restart Claude Code. The `/sdd-*` skills will be available.
+
+---
+
 ## Prerequisito
 
 Necesita un directorio `openspec/` con la estructura SDD:
