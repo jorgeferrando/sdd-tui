@@ -16,6 +16,8 @@ from sdd_tui.core.spec_parser import collect_archived_decisions, parse_delta
 
 class SpecEvolutionScreen(Screen):
     BINDINGS = [
+        Binding("j", "scroll_down", "Down"),
+        Binding("k", "scroll_up", "Up"),
         Binding("escape", "app.pop_screen", "Back"),
         Binding("d", "toggle_canonical", "Toggle canonical"),
     ]
@@ -85,7 +87,7 @@ class SpecEvolutionScreen(Screen):
         static = self.query_one("#diff-content", Static)
 
         if self._canonical_mode:
-            canonical = Path.cwd() / "openspec" / "specs" / domain / "spec.md"
+            canonical = self.app._openspec_path / "specs" / domain / "spec.md"
             if canonical.exists():
                 static.update(Markdown(canonical.read_text()))
             else:
@@ -122,7 +124,11 @@ class SpecEvolutionScreen(Screen):
 
 
 class DecisionsTimeline(Screen):
-    BINDINGS = [Binding("escape", "app.pop_screen", "Back")]
+    BINDINGS = [
+        Binding("j", "scroll_down", "Down"),
+        Binding("k", "scroll_up", "Up"),
+        Binding("escape", "app.pop_screen", "Back"),
+    ]
 
     def __init__(self, archive_dir: Path) -> None:
         super().__init__()
