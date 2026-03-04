@@ -88,6 +88,13 @@ async def test_doc_viewer_missing_emits_warning(tmp_path: Path) -> None:
                 assert call_kwargs.kwargs.get("severity") == "warning"
 
 
+def test_document_viewer_jk_bindings() -> None:
+    """REQ-01/02/03: DocumentViewerScreen exposes j/k scroll bindings."""
+    keys = {b.key for b in DocumentViewerScreen.BINDINGS}
+    assert "j" in keys
+    assert "k" in keys
+
+
 async def test_spec_selector_q_closes(tmp_path: Path) -> None:
     """REQ-08/09: pressing 'q' in SpecSelectorScreen closes the screen."""
     from sdd_tui.tui.doc_viewer import SpecSelectorScreen
