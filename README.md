@@ -76,6 +76,8 @@ sdd-tui /ruta/al/openspec
 
 ## Keybindings
 
+> Pulsa `?` en cualquier pantalla para abrir la referencia completa de keybindings.
+
 ### View 1 — Lista de changes
 
 | Tecla | Acción |
@@ -83,19 +85,52 @@ sdd-tui /ruta/al/openspec
 | `Enter` | Abrir detalle del change |
 | `a` | Mostrar/ocultar archivados |
 | `r` | Refrescar |
+| `s` | Abrir steering.md |
+| `H` | Spec health dashboard |
+| `X` | Decisions timeline |
 | `q` | Salir |
 
 ### View 2 — Detalle del change
 
 | Tecla | Acción |
 |-------|--------|
-| `Space` | Copiar comando SDD al portapapeles |
-| `p` | Ver proposal |
-| `d` | Ver design |
+| `p` | Ver proposal.md |
+| `d` | Ver design.md |
 | `s` | Ver spec(s) |
-| `t` | Ver tasks |
+| `t` | Ver tasks.md |
+| `q` | Ver requirements.md |
+| `Space` | Copiar comando SDD al portapapeles |
+| `E` | Spec evolution viewer |
 | `r` | Refrescar en sitio |
+| `Esc` | Volver a changes |
+
+### View 8 — Spec Health
+
+| Tecla | Acción |
+|-------|--------|
+| `Enter` | Abrir detalle del change |
+| `Esc` | Volver a changes |
+
+### View 9 — Spec Evolution / Decisions Timeline
+
+| Tecla | Acción |
+|-------|--------|
+| `D` | Alternar vista delta / canónica |
+| `j` / `k` | Scroll hacia abajo / arriba |
 | `Esc` | Volver |
+
+### Viewers (documentos, specs)
+
+| Tecla | Acción |
+|-------|--------|
+| `j` / `k` | Scroll hacia abajo / arriba |
+| `q` / `Esc` | Cerrar |
+
+### Global
+
+| Tecla | Acción |
+|-------|--------|
+| `?` | Pantalla de ayuda |
 
 ## Stack
 
