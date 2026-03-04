@@ -6,13 +6,10 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.screen import Screen
-from textual.widgets import DataTable, Footer, Header, Static
+from textual.widgets import DataTable, Footer, Header
 
-from sdd_tui.core.metrics import INACTIVE_THRESHOLD_DAYS, parse_metrics
+from sdd_tui.core.metrics import INACTIVE_THRESHOLD_DAYS, ChangeMetrics, parse_metrics
 from sdd_tui.core.models import Change
-
-DONE = "✓"
-PENDING = "·"
 
 
 class SpecHealthScreen(Screen):
@@ -66,7 +63,7 @@ class SpecHealthScreen(Screen):
         self,
         table: DataTable,
         change: Change,
-        metrics,
+        metrics: ChangeMetrics,
         has_research: bool,
     ) -> None:
         warn = metrics.req_count == 0
