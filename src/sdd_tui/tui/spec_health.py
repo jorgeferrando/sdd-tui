@@ -21,6 +21,7 @@ class SpecHealthScreen(Screen):
         super().__init__()
         self._changes = changes
         self._include_archived = include_archived
+        self._change_map: dict[str, Change] = {}
 
     def on_mount(self) -> None:
         self.title = "sdd-tui — spec health"
@@ -106,6 +107,17 @@ class SpecHealthScreen(Screen):
             inactive_cell,
             key=change.name,
         )
+        self._change_map[change.name] = change
+
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        from sdd_tui.tui.change_detail import ChangeDetailScreen
+
+        if event.row_key is None or event.row_key.value is None:
+            return
+        change = self._change_map.get(event.row_key.value)
+        if change:
+            self.app.push_screen(ChangeDetailScreen(change))
 
 
 def _tasks_cell(change: Change) -> Text:
