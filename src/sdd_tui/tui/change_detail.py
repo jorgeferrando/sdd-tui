@@ -242,6 +242,8 @@ class ChangeDetailScreen(Screen):
         elif len(domains) == 1:
             path = specs_dir / domains[0] / "spec.md"
             title = f"sdd-tui — {self._change.name} / spec:{domains[0]}"
+            if path.exists():
+                self.notify("Opening spec")
             self.app.push_screen(DocumentViewerScreen(path, title))
         else:
             self.app.push_screen(SpecSelectorScreen(self._change))
@@ -252,6 +254,8 @@ class ChangeDetailScreen(Screen):
     def _open_doc(self, filename: str, label: str) -> None:
         path = self._change.path / filename
         title = f"sdd-tui — {self._change.name} / {label}"
+        if path.exists():
+            self.notify(f"Opening {label}")
         self.app.push_screen(DocumentViewerScreen(path, title))
 
     def action_copy_next_command(self) -> None:
