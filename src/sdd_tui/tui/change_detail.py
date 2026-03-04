@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from rich.syntax import Syntax
+from textual import work
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, ScrollableContainer, Vertical
@@ -185,18 +186,33 @@ class ChangeDetailScreen(Screen):
             diff_panel = self.query_one(DiffPanel)
         except Exception:
             return
+        diff_panel.show_message("[dim]Loading diff…[/dim]")
+        self._load_diff_worker(task)
+
+    @work(thread=True, exclusive=True)
+    def _load_diff_worker(self, task: Task) -> None:
         if task.git_state == TaskGitState.COMMITTED and task.commit:
             diff = GitReader().get_diff(task.commit.hash, Path.cwd())
             if diff:
-                diff_panel.show_diff(diff)
+                self.app.call_from_thread(self._update_diff_panel, diff, True)
             else:
-                diff_panel.show_message("Could not load diff")
+                self.app.call_from_thread(self._update_diff_panel, "Could not load diff", False)
         else:
             diff = GitReader().get_working_diff(Path.cwd())
             if diff:
-                diff_panel.show_diff(diff)
+                self.app.call_from_thread(self._update_diff_panel, diff, True)
             else:
-                diff_panel.show_message("No uncommitted changes")
+                self.app.call_from_thread(self._update_diff_panel, "No uncommitted changes", False)
+
+    def _update_diff_panel(self, text: str, as_diff: bool) -> None:
+        try:
+            diff_panel = self.query_one(DiffPanel)
+        except Exception:
+            return
+        if as_diff:
+            diff_panel.show_diff(text)
+        else:
+            diff_panel.show_message(text)
 
     def action_refresh_view(self) -> None:
         changes = self.app.refresh_changes()  # type: ignore[attr-defined]
