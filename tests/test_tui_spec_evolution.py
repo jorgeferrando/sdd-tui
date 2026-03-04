@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
-from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
+from sdd_tui.tui.spec_evolution import DecisionsTimeline, SpecEvolutionScreen
 
 
 def _git_mock() -> MagicMock:
@@ -48,3 +48,17 @@ async def test_spec_evolution_esc_goes_back(openspec_with_change: Path) -> None:
             assert isinstance(app.screen, SpecEvolutionScreen)
             await pilot.press("escape")
             assert isinstance(app.screen, ChangeDetailScreen)
+
+
+def test_spec_evolution_jk_bindings() -> None:
+    """REQ-01/02/03: SpecEvolutionScreen exposes j/k scroll bindings."""
+    keys = {b.key for b in SpecEvolutionScreen.BINDINGS}
+    assert "j" in keys
+    assert "k" in keys
+
+
+def test_decisions_timeline_jk_bindings() -> None:
+    """REQ-01/02/03: DecisionsTimeline exposes j/k scroll bindings."""
+    keys = {b.key for b in DecisionsTimeline.BINDINGS}
+    assert "j" in keys
+    assert "k" in keys
