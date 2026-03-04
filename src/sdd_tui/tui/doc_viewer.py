@@ -30,12 +30,16 @@ class DocumentViewerScreen(Screen):
         if self._path.exists():
             content: Markdown | str = Markdown(self._path.read_text())
         else:
+            self.app.notify(f"{self._path.name} not found", severity="warning")
             content = f"[dim]{self._path.name} not found[/dim]"
         self.query_one("#doc-content", Static).update(content)
 
 
 class SpecSelectorScreen(Screen):
-    BINDINGS = [Binding("escape", "app.pop_screen", "Back")]
+    BINDINGS = [
+        Binding("escape", "app.pop_screen", "Back"),
+        Binding("q", "app.pop_screen", "Close"),
+    ]
 
     def __init__(self, change: Change) -> None:
         super().__init__()
