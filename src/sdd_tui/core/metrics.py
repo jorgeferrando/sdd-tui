@@ -9,7 +9,7 @@ from pathlib import Path
 INACTIVE_THRESHOLD_DAYS = 7
 
 _EARS_TAGS = frozenset({"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"})
-_REQ_PATTERN = re.compile(r"\*\*REQ-\d+\*\*")
+_REQ_PATTERN = re.compile(r"\*\*(REQ-\d+)\*\*")
 
 _ARTIFACT_FILES = [
     ("proposal", "proposal.md"),
@@ -45,15 +45,17 @@ def _count_reqs(change_path: Path) -> tuple[int, int]:
     if not specs_dir.exists():
         return 0, 0
 
-    req_count = 0
-    ears_count = 0
+    seen: set[str] = set()
+    ears: set[str] = set()
     for md_file in specs_dir.rglob("*.md"):
         for line in md_file.read_text(errors="replace").splitlines():
-            if _REQ_PATTERN.search(line):
-                req_count += 1
+            match = _REQ_PATTERN.search(line)
+            if match:
+                req_id = match.group(1)
+                seen.add(req_id)
                 if any(tag in line for tag in _EARS_TAGS):
-                    ears_count += 1
-    return req_count, ears_count
+                    ears.add(req_id)
+    return len(seen), len(ears)
 
 
 def _get_artifacts(change_path: Path) -> list[str]:

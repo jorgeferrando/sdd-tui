@@ -59,6 +59,21 @@ def test_no_specs_returns_zero(tmp_path: Path) -> None:
     assert metrics.ears_count == 0
 
 
+def test_duplicate_req_counted_once(tmp_path: Path) -> None:
+    change_dir = tmp_path / "my-change"
+    change_dir.mkdir()
+    # REQ-01 appears twice: once as definition (with EARS), once as scenario header (without)
+    _make_spec(change_dir, "core", (
+        "- **REQ-01** `[Event]` When X, the Y SHALL Z\n"
+        "\n"
+        "**REQ-01** — Scenario name\n"
+        "**Dado** ...\n"
+    ))
+    metrics = parse_metrics(change_dir, tmp_path)
+    assert metrics.req_count == 1
+    assert metrics.ears_count == 1
+
+
 def test_reqs_across_multiple_domains(tmp_path: Path) -> None:
     change_dir = tmp_path / "my-change"
     change_dir.mkdir()
