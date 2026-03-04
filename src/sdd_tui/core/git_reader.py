@@ -60,7 +60,7 @@ class GitReader:
     def is_clean(self, cwd: Path) -> bool | None:
         try:
             result = subprocess.run(
-                ["git", "status", "--porcelain", "--", ".", ":(exclude)openspec/"],
+                ["git", "status", "--porcelain", "--", ".", ":(exclude)openspec/", ":(exclude).claude/"],
                 cwd=cwd,
                 capture_output=True,
                 text=True,
