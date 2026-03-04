@@ -14,6 +14,7 @@ from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.metrics import ChangeMetrics, parse_metrics
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen, SpecSelectorScreen
+from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
 
 DONE = "✓"
 PENDING = "·"
@@ -152,6 +153,7 @@ class ChangeDetailScreen(Screen):
         Binding("s", "view_spec", "Spec"),
         Binding("t", "view_tasks", "Tasks"),
         Binding("space", "copy_next_command", "Copy cmd", priority=True),
+        Binding("e", "spec_evolution", "Spec evolution"),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -239,6 +241,9 @@ class ChangeDetailScreen(Screen):
             self.app.push_screen(DocumentViewerScreen(path, title))
         else:
             self.app.push_screen(SpecSelectorScreen(self._change))
+
+    def action_spec_evolution(self) -> None:
+        self.app.push_screen(SpecEvolutionScreen(self._change))
 
     def _open_doc(self, filename: str, label: str) -> None:
         path = self._change.path / filename
