@@ -11,6 +11,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Footer, Header, Static
 
 from sdd_tui.core.git_reader import GitReader
+from sdd_tui.core.metrics import ChangeMetrics, parse_metrics
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen, SpecSelectorScreen
 
@@ -79,11 +80,21 @@ class PipelinePanel(Static):
     }
     """
 
-    def __init__(self, pipeline: Pipeline, tasks: list[Task]) -> None:
-        content = self._build_content(pipeline, tasks)
+    def __init__(
+        self,
+        pipeline: Pipeline,
+        tasks: list[Task],
+        metrics: ChangeMetrics | None = None,
+    ) -> None:
+        content = self._build_content(pipeline, tasks, metrics)
         super().__init__(content)
 
-    def _build_content(self, pipeline: Pipeline, tasks: list[Task]) -> str:
+    def _build_content(
+        self,
+        pipeline: Pipeline,
+        tasks: list[Task],
+        metrics: ChangeMetrics | None,
+    ) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
             state = getattr(pipeline, phase)
@@ -93,6 +104,13 @@ class PipelinePanel(Static):
             else:
                 symbol = DONE if state == PhaseState.DONE else PENDING
             lines.append(f"  {symbol:<3}  {phase}")
+        if metrics is not None:
+            lines.append("")
+            if metrics.req_count == 0:
+                lines.append("  REQ: —")
+            else:
+                pct = round(metrics.ears_count / metrics.req_count * 100)
+                lines.append(f"  REQ: {metrics.req_count} ({pct}%)")
         return "\n".join(lines)
 
 
@@ -139,13 +157,14 @@ class ChangeDetailScreen(Screen):
     def __init__(self, change: Change) -> None:
         super().__init__()
         self._change = change
+        self._metrics = parse_metrics(change.path, Path.cwd())
 
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical():
             with Horizontal(classes="top-panel"):
                 yield TaskListPanel(self._change.tasks)
-                yield PipelinePanel(self._change.pipeline, self._change.tasks)
+                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics)
             yield DiffPanel()
         yield Footer()
 
@@ -186,12 +205,13 @@ class ChangeDetailScreen(Screen):
             self.app.pop_screen()
             return
         self._change = fresh_change
+        self._metrics = parse_metrics(self._change.path, Path.cwd())
         top = self.query_one(".top-panel", Horizontal)
         self.query_one(TaskListPanel).remove()
         self.query_one(PipelinePanel).remove()
         top.mount(
             TaskListPanel(self._change.tasks),
-            PipelinePanel(self._change.pipeline, self._change.tasks),
+            PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics),
         )
         self.query_one(DiffPanel).show_message("Select a task to view its diff")
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
