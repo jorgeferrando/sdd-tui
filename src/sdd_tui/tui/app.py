@@ -27,6 +27,12 @@ class SddTuiApp(App):
         self._parser = TaskParser()
         self._git = GitReader()
 
+    @property
+    def changes(self) -> list[Change]:
+        from sdd_tui.tui.epics import EpicsView
+
+        return self.query_one(EpicsView)._changes
+
     def compose(self) -> ComposeResult:
         changes = self._load_changes()
         yield EpicsView(changes)
