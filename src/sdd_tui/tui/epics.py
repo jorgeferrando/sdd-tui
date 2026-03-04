@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widget import Widget
@@ -130,11 +128,11 @@ class EpicsView(Widget):
     def action_steering(self) -> None:
         from sdd_tui.tui.doc_viewer import DocumentViewerScreen
 
-        steering_path = Path.cwd() / "openspec" / "steering.md"
+        steering_path = self.app._openspec_path / "steering.md"
         self.app.push_screen(DocumentViewerScreen(steering_path, "sdd-tui — steering"))
 
     def action_decisions_timeline(self) -> None:
-        archive_dir = Path.cwd() / "openspec" / "changes" / "archive"
+        archive_dir = self.app._openspec_path / "changes" / "archive"
         self.app.push_screen(DecisionsTimeline(archive_dir))
 
     def action_quit(self) -> None:
