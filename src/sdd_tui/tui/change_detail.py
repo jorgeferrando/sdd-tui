@@ -152,6 +152,7 @@ class ChangeDetailScreen(Screen):
         Binding("d", "view_design", "Design"),
         Binding("s", "view_spec", "Spec"),
         Binding("t", "view_tasks", "Tasks"),
+        Binding("q", "view_requirements", "Requirements"),
         Binding("space", "copy_next_command", "Copy cmd", priority=True),
         Binding("e", "spec_evolution", "Spec evolution"),
     ]
@@ -217,6 +218,9 @@ class ChangeDetailScreen(Screen):
         )
         self.query_one(DiffPanel).show_message("Select a task to view its diff")
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
+
+    def action_view_requirements(self) -> None:
+        self._open_doc("requirements.md", "requirements")
 
     def action_view_proposal(self) -> None:
         self._open_doc("proposal.md", "proposal")
