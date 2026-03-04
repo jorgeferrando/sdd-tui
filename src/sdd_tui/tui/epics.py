@@ -7,6 +7,7 @@ from textual.widget import Widget
 
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
+from sdd_tui.tui.spec_health import SpecHealthScreen
 
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
 DONE = "✓"
@@ -32,6 +33,7 @@ class EpicsView(Widget):
     BINDINGS = [
         Binding("r", "refresh", "Refresh"),
         Binding("a", "toggle_archived", "Archived"),
+        Binding("h", "health", "Health"),
         Binding("q", "quit", "Quit"),
     ]
 
@@ -103,6 +105,9 @@ class EpicsView(Widget):
 
     def action_refresh(self) -> None:
         self.app.refresh_changes(self._show_archived)  # type: ignore[attr-defined]
+
+    def action_health(self) -> None:
+        self.app.push_screen(SpecHealthScreen(self._changes, self._show_archived))
 
     def action_quit(self) -> None:
         self.app.exit()
