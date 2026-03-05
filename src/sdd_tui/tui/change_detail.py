@@ -12,7 +12,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Footer, Header, Static
 
 from sdd_tui.core.git_reader import GitReader
-from sdd_tui.core.github import PrStatus
+from sdd_tui.core.github import CiStatus, PrStatus
 from sdd_tui.core.metrics import ChangeMetrics, parse_metrics
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen, SpecSelectorScreen
@@ -23,6 +23,7 @@ PENDING = "·"
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
 
 _PR_LOADING = object()  # sentinel: worker not yet finished
+_CI_LOADING = object()  # sentinel: worker not yet finished
 _PR_STATE_SYMBOL: dict[str, str] = {"OPEN": "⧗", "MERGED": DONE, "CLOSED": "✗"}
 
 
@@ -92,17 +93,28 @@ class PipelinePanel(Static):
         tasks: list[Task],
         metrics: ChangeMetrics | None = None,
         pr_status: PrStatus | None | object = _PR_LOADING,
+        ci_status: CiStatus | None | object = _CI_LOADING,
     ) -> None:
         self._pipeline = pipeline
         self._tasks = tasks
         self._metrics = metrics
         self._pr_status: PrStatus | None | object = pr_status
-        self._text = self._build_content(pipeline, tasks, metrics, pr_status)
+        self._ci_status: CiStatus | None | object = ci_status
+        self._text = self._build_content(pipeline, tasks, metrics, pr_status, ci_status)
         super().__init__(self._text)
 
     def update_pr(self, pr_status: PrStatus | None) -> None:
         self._pr_status = pr_status
-        self._text = self._build_content(self._pipeline, self._tasks, self._metrics, pr_status)
+        self._text = self._build_content(
+            self._pipeline, self._tasks, self._metrics, pr_status, self._ci_status
+        )
+        self.update(self._text)
+
+    def update_ci(self, ci_status: CiStatus | None) -> None:
+        self._ci_status = ci_status
+        self._text = self._build_content(
+            self._pipeline, self._tasks, self._metrics, self._pr_status, ci_status
+        )
         self.update(self._text)
 
     def _build_content(
@@ -111,6 +123,7 @@ class PipelinePanel(Static):
         tasks: list[Task],
         metrics: ChangeMetrics | None,
         pr_status: PrStatus | None | object = _PR_LOADING,
+        ci_status: CiStatus | None | object = _CI_LOADING,
     ) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
@@ -130,6 +143,7 @@ class PipelinePanel(Static):
                 lines.append(f"  REQ: {metrics.req_count} ({pct}%)")
         lines.append("")
         lines.append(self._build_pr_line(pr_status))
+        lines.append(self._build_ci_line(ci_status))
         return "\n".join(lines)
 
     def _build_pr_line(self, pr_status: PrStatus | None | object) -> str:
@@ -148,6 +162,18 @@ class PipelinePanel(Static):
         if review_parts:
             parts.append("  " + " ".join(review_parts))
         return "".join(parts)
+
+    def _build_ci_line(self, ci_status: CiStatus | None | object) -> str:
+        if ci_status is _CI_LOADING:
+            return "  …    CI"
+        if ci_status is None:
+            return "  —    CI"
+        assert isinstance(ci_status, CiStatus)
+        if ci_status.status != "completed":
+            return "  ⟳    CI"
+        if ci_status.conclusion == "success":
+            return "  ✓    CI"
+        return "  ✗    CI"
 
 
 class DiffPanel(ScrollableContainer):
@@ -191,6 +217,7 @@ class ChangeDetailScreen(Screen):
         Binding("space", "copy_next_command", "Copy cmd", priority=True),
         Binding("e", "spec_evolution", "Spec evolution"),
         Binding("g", "git_log", "Git log"),
+        Binding("shift+w", "ship_pr", "Ship PR"),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -211,6 +238,7 @@ class ChangeDetailScreen(Screen):
         self.title = f"sdd-tui — {self._change.name}"
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
         self._load_pr_status_worker()
+        self._load_ci_status_worker()
 
     @work(thread=True)
     def _load_pr_status_worker(self) -> None:
@@ -218,6 +246,15 @@ class ChangeDetailScreen(Screen):
 
         pr_status = get_pr_status(self._change.name, self._change.project_path)
         self.app.call_from_thread(lambda s=pr_status: self.query_one(PipelinePanel).update_pr(s))
+
+    @work(thread=True)
+    def _load_ci_status_worker(self) -> None:
+        from sdd_tui.core.github import get_ci_status
+
+        cwd = self._change.project_path or Path.cwd()
+        branch = GitReader().get_branch(cwd)
+        ci_status = get_ci_status(branch, cwd) if branch else None
+        self.app.call_from_thread(lambda s=ci_status: self.query_one(PipelinePanel).update_ci(s))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.row_key is None or event.row_key.value is None:
@@ -322,6 +359,30 @@ class ChangeDetailScreen(Screen):
         from sdd_tui.tui.git_log import GitLogScreen
 
         self.app.push_screen(GitLogScreen(self._change))
+
+    def action_ship_pr(self) -> None:
+        desc = self._extract_proposal_description()
+        title = f"[{self._change.name}] {desc}".strip() if desc else f"[{self._change.name}]"
+        cmd = f'gh pr create --title "{title}" --body ""'
+        self.app.copy_to_clipboard(cmd)
+        self.notify(f"Copied: {cmd}")
+
+    def _extract_proposal_description(self) -> str:
+        proposal = self._change.path / "proposal.md"
+        if not proposal.exists():
+            return ""
+        in_desc = False
+        for line in proposal.read_text().splitlines():
+            if line.startswith("## Descripción"):
+                in_desc = True
+                continue
+            if in_desc:
+                if line.startswith("##"):
+                    break
+                stripped = line.strip()
+                if stripped:
+                    return stripped
+        return ""
 
     def _open_doc(self, filename: str, label: str) -> None:
         path = self._change.path / filename
