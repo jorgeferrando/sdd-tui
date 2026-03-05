@@ -97,12 +97,13 @@ class PipelinePanel(Static):
         self._tasks = tasks
         self._metrics = metrics
         self._pr_status: PrStatus | None | object = pr_status
-        content = self._build_content(pipeline, tasks, metrics, pr_status)
-        super().__init__(content)
+        self._text = self._build_content(pipeline, tasks, metrics, pr_status)
+        super().__init__(self._text)
 
     def update_pr(self, pr_status: PrStatus | None) -> None:
         self._pr_status = pr_status
-        self.update(self._build_content(self._pipeline, self._tasks, self._metrics, pr_status))
+        self._text = self._build_content(self._pipeline, self._tasks, self._metrics, pr_status)
+        self.update(self._text)
 
     def _build_content(
         self,

@@ -3,8 +3,15 @@ from unittest.mock import MagicMock, patch
 
 from textual.widgets import DataTable
 
+from sdd_tui.core.github import PrStatus
+from sdd_tui.core.models import PhaseState, Pipeline
 from sdd_tui.tui.app import SddTuiApp
-from sdd_tui.tui.change_detail import ChangeDetailScreen, DiffPanel
+from sdd_tui.tui.change_detail import (
+    ChangeDetailScreen,
+    DiffPanel,
+    PipelinePanel,
+    _PR_LOADING,
+)
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen
 from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
 
@@ -144,6 +151,85 @@ async def test_diff_panel_reflects_last_navigation_after_rapid_moves(
                 # At least one diff was shown (the last worker completed)
                 assert len(diffs_shown) >= 1
                 assert all("diff --git" in d for d in diffs_shown)
+
+
+def test_pipeline_panel_shows_loading_pr_row(minimal_change) -> None:
+    """REQ-PR02: PipelinePanel with sentinel shows '…  PR'."""
+    pipeline = Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    panel = PipelinePanel(pipeline, [], pr_status=_PR_LOADING)
+    assert "…" in panel._text
+    assert "PR" in panel._text
+
+
+def test_pipeline_panel_shows_pr_none_row(minimal_change) -> None:
+    """REQ-PR04: update_pr(None) shows '—  PR'."""
+    pipeline = Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    panel = PipelinePanel(pipeline, [], pr_status=_PR_LOADING)
+    panel.update_pr(None)
+    assert "—" in panel._text
+    assert "PR" in panel._text
+
+
+def test_pipeline_panel_shows_open_pr(minimal_change) -> None:
+    """REQ-PR03: update_pr with OPEN PrStatus shows ⧗ and number."""
+    pipeline = Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    panel = PipelinePanel(pipeline, [], pr_status=_PR_LOADING)
+    panel.update_pr(PrStatus(number=42, state="OPEN", approvals=0, changes_requested=0))
+    assert "⧗" in panel._text
+    assert "42" in panel._text
+
+
+def test_pipeline_panel_shows_review_counts(minimal_change) -> None:
+    """REQ-PR03/PR08: review counts shown for non-zero values."""
+    pipeline = Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    panel = PipelinePanel(pipeline, [], pr_status=_PR_LOADING)
+    panel.update_pr(PrStatus(number=7, state="OPEN", approvals=2, changes_requested=1))
+    assert "2✓" in panel._text
+    assert "1✗" in panel._text
+
+
+def test_pipeline_panel_omits_zero_counts(minimal_change) -> None:
+    """REQ-PR08: zero approval count is omitted."""
+    pipeline = Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    panel = PipelinePanel(pipeline, [], pr_status=_PR_LOADING)
+    panel.update_pr(PrStatus(number=3, state="OPEN", approvals=0, changes_requested=1))
+    assert "0✓" not in panel._text
+    assert "1✗" in panel._text
 
 
 async def test_open_missing_doc_no_notify_in_detail(tmp_path: Path) -> None:
