@@ -41,6 +41,7 @@ class EpicsView(Widget):
         Binding("s", "steering", "Steering"),
         Binding("h", "health", "Health"),
         Binding("x", "decisions_timeline", "Decisions"),
+        Binding("V", "velocity", "Velocity"),
         Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
@@ -201,6 +202,7 @@ class EpicsView(Widget):
             Binding("s", "steering", "Steering"),
             Binding("h", "health", "Health"),
             Binding("x", "decisions_timeline", "Decisions"),
+            Binding("V", "velocity", "Velocity"),
             Binding("/", "search", "Search"),
             Binding("q", "quit", "Quit"),
         ]
@@ -238,6 +240,19 @@ class EpicsView(Widget):
         if not dirs:
             dirs = [self.app._openspec_path / "changes" / "archive"]
         self.app.push_screen(DecisionsTimeline(dirs))
+
+    def action_velocity(self) -> None:
+        from sdd_tui.tui.velocity import VelocityView
+
+        seen: set[Path] = set()
+        dirs: list[Path] = []
+        for change in self._changes:
+            if change.project_path and change.project_path not in seen:
+                seen.add(change.project_path)
+                dirs.append(change.project_path / "openspec" / "changes" / "archive")
+        if not dirs:
+            dirs = [self.app._openspec_path / "changes" / "archive"]
+        self.app.push_screen(VelocityView(dirs))
 
     def action_quit(self) -> None:
         self.app.exit()
