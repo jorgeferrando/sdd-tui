@@ -45,24 +45,29 @@ class SpecHealthScreen(Screen):
             table.add_row("No active changes")
             return
 
-        all_metrics = {c.name: parse_metrics(c.path, Path.cwd()) for c in visible}
+        all_metrics = {
+            c.name: parse_metrics(c.path, c.project_path or Path.cwd()) for c in visible
+        }
         has_research = any("research" in m.artifacts for m in all_metrics.values())
         has_requirements = any("requirements" in m.artifacts for m in all_metrics.values())
 
         table.add_columns("CHANGE", "REQ", "EARS%", "TASKS", "ARTIFACTS", "INACTIVE")
 
-        for change in active:
-            self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
+        active_projects = list(dict.fromkeys(c.project for c in active))
+        is_multi = len(active_projects) > 1
+
+        if is_multi:
+            for project_name in active_projects:
+                proj_changes = [c for c in active if c.project == project_name]
+                table.add_row(f"─── {project_name} ───", "", "", "", "", "")
+                for change in proj_changes:
+                    self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
+        else:
+            for change in active:
+                self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
 
         if self._include_archived and archived:
-            table.add_row(
-                "── archived ──",
-                "",
-                "",
-                "",
-                "",
-                "",
-            )
+            table.add_row("── archived ──", "", "", "", "", "")
             for change in archived:
                 self._add_row(
                     table,
