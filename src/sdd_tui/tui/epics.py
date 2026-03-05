@@ -213,8 +213,15 @@ class EpicsView(Widget):
         self.app.push_screen(DocumentViewerScreen(steering_path, "sdd-tui — steering"))
 
     def action_decisions_timeline(self) -> None:
-        archive_dir = self.app._openspec_path / "changes" / "archive"
-        self.app.push_screen(DecisionsTimeline(archive_dir))
+        seen: set[Path] = set()
+        dirs: list[Path] = []
+        for change in self._changes:
+            if change.project_path and change.project_path not in seen:
+                seen.add(change.project_path)
+                dirs.append(change.project_path / "openspec" / "changes" / "archive")
+        if not dirs:
+            dirs = [self.app._openspec_path / "changes" / "archive"]
+        self.app.push_screen(DecisionsTimeline(dirs))
 
     def action_quit(self) -> None:
         self.app.exit()

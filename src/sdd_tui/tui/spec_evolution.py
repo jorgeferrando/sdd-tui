@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import chain
 from pathlib import Path
 
 from rich.markdown import Markdown
@@ -136,9 +137,9 @@ class DecisionsTimeline(Screen):
         Binding("escape", "app.pop_screen", "Back"),
     ]
 
-    def __init__(self, archive_dir: Path) -> None:
+    def __init__(self, archive_dirs: list[Path]) -> None:
         super().__init__()
-        self._archive_dir = archive_dir
+        self._archive_dirs = archive_dirs
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -151,7 +152,12 @@ class DecisionsTimeline(Screen):
 
     def _populate(self) -> None:
         static = self.query_one("#timeline-content", Static)
-        all_changes = collect_archived_decisions(self._archive_dir)
+        all_changes = sorted(
+            chain.from_iterable(
+                collect_archived_decisions(d) for d in self._archive_dirs
+            ),
+            key=lambda cd: cd.archive_date,
+        )
         with_decisions = [cd for cd in all_changes if cd.decisions]
 
         if not with_decisions:
