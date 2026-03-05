@@ -6,10 +6,11 @@ from pathlib import Path
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 
+from sdd_tui.core.config import AppConfig
 from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, OpenspecNotFoundError, Task, TaskGitState
 from sdd_tui.core.pipeline import PipelineInferer, TaskParser
-from sdd_tui.core.reader import OpenspecReader
+from sdd_tui.core.reader import load_all_changes
 from sdd_tui.tui.epics import EpicsView
 
 
@@ -22,10 +23,10 @@ class SddTuiApp(App):
     }
     """
 
-    def __init__(self, openspec_path: Path) -> None:
+    def __init__(self, openspec_path: Path, config: AppConfig | None = None) -> None:
         super().__init__()
         self._openspec_path = openspec_path
-        self._reader = OpenspecReader()
+        self._config = config or AppConfig()
         self._inferer = PipelineInferer()
         self._parser = TaskParser()
         self._git = GitReader()
@@ -71,7 +72,8 @@ class SddTuiApp(App):
         return changes
 
     def _load_changes(self, include_archived: bool = False) -> list[Change]:
-        changes = self._reader.load(self._openspec_path, include_archived)
+        cwd = self._openspec_path.parent
+        changes = load_all_changes(self._config, cwd, include_archived)
         for change in changes:
             change.pipeline = self._inferer.infer(change.path, self._git)
             change.tasks = self._load_tasks(change)
@@ -92,6 +94,8 @@ class SddTuiApp(App):
 
 
 def main() -> None:
+    from sdd_tui.core.config import load_config
+
     openspec_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path.cwd() / "openspec"
 
     if not openspec_path.exists():
@@ -99,7 +103,8 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        app = SddTuiApp(openspec_path)
+        config = load_config()
+        app = SddTuiApp(openspec_path, config)
         app.run()
     except OpenspecNotFoundError as e:
         print(f"Error: {e}", file=sys.stderr)
