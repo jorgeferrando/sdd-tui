@@ -51,6 +51,8 @@ class SddTuiApp(App):
                 parts.append(dep.docs_url)
             self.notify("  |  ".join(parts), severity="warning", timeout=15)
 
+        self._refresh_branch()
+
     def action_help(self) -> None:
         from sdd_tui.tui.help import HelpScreen
 
@@ -67,9 +69,14 @@ class SddTuiApp(App):
         yield EpicsView(changes)
 
     def refresh_changes(self, include_archived: bool = False) -> list[Change]:
+        self._refresh_branch()
         changes = self._load_changes(include_archived)
         self.query_one(EpicsView).update(changes)
         return changes
+
+    def _refresh_branch(self) -> None:
+        branch = self._git.get_branch(self._openspec_path.parent)
+        self.sub_title = branch or ""
 
     def _load_changes(self, include_archived: bool = False) -> list[Change]:
         cwd = self._openspec_path.parent
