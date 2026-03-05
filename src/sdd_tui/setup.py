@@ -196,7 +196,9 @@ def _run_check() -> None:
             print("")
 
     if not any(
-        (Path.home() / ".claude" / "skills").exists(),
-        (Path.cwd() / ".claude" / "skills").exists(),
+        [
+            (Path.home() / ".claude" / "skills").exists(),
+            (Path.cwd() / ".claude" / "skills").exists(),
+        ]
     ):
         print("No skills installed yet. Run `sdd-setup` to install.")
