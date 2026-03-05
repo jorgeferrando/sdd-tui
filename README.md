@@ -6,22 +6,56 @@ navegar entre vistas, diffs y documentación sin salir del editor.
 
 ## Install
 
+### macOS
+
 ```bash
-# Con uv (recomendado — entorno aislado)
+# With Homebrew (recommended)
+brew tap jorgeferrando/sdd-tui
+brew install sdd-tui
+sdd-setup          # installs SDD skills for Claude Code
+
+# With uv
 uv tool install git+https://github.com/jorgeferrando/sdd-tui
-
-# Con pipx
-pipx install git+https://github.com/jorgeferrando/sdd-tui
-
-# Con pip
-pip install git+https://github.com/jorgeferrando/sdd-tui
+sdd-setup
 ```
 
-## Skills (Claude Code)
+### Linux
 
-sdd-tui works together with a set of Claude Code skills (`/sdd-init`, `/sdd-apply`, etc.) that drive the SDD workflow. Install them before using the tool.
+```bash
+# One-liner (detects uv / pipx / pip automatically)
+curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install.sh | bash
 
-### From the repository (recommended)
+# Or manually with uv
+uv tool install git+https://github.com/jorgeferrando/sdd-tui
+sdd-setup
+```
+
+### Windows (PowerShell 5.1+)
+
+```powershell
+# Download and run the installer
+irm https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/Install-SddTui.ps1 | iex
+
+# Or manually with uv
+uv tool install git+https://github.com/jorgeferrando/sdd-tui
+sdd-setup
+```
+
+### What `sdd-setup` does
+
+`sdd-setup` downloads the latest SDD skills from GitHub and installs them into
+Claude Code's skills directory. Skills are independent of the TUI version — you can
+update them at any time by running `sdd-setup` again.
+
+```bash
+sdd-setup --global    # install into ~/.claude/skills/ (all projects)
+sdd-setup --local     # install into .claude/skills/ (current project)
+sdd-setup --check     # show installed version and skills state
+```
+
+After installing, restart Claude Code. The `/sdd-*` skills will be available.
+
+### Manual skills install (legacy)
 
 ```bash
 # Clone and run the installer
@@ -29,22 +63,6 @@ git clone https://github.com/jorgeferrando/sdd-tui
 cd sdd-tui
 ./scripts/install-skills.sh
 ```
-
-The installer will ask:
-- **Global** (`~/.claude/skills/`) — available in all your projects
-- **Project-local** (`.claude/skills/`) — only in the current project
-
-### Without cloning
-
-```bash
-# Global install
-curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install-skills.sh | bash -s -- --global
-
-# Project-local install
-curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install-skills.sh | bash -s -- --local
-```
-
-After installing, restart Claude Code. The `/sdd-*` skills will be available.
 
 ---
 
