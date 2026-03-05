@@ -92,16 +92,12 @@ def _compute_throughput(changes: list[ChangeVelocity]) -> list[tuple[date, int]]
     result = []
     for ws in weeks:
         we = ws + timedelta(days=6)
-        count = sum(
-            1 for c in changes if c.end_date is not None and ws <= c.end_date <= we
-        )
+        count = sum(1 for c in changes if c.end_date is not None and ws <= c.end_date <= we)
         result.append((ws, count))
     return result
 
 
-def _get_change_dates(
-    change_name: str, project_path: Path
-) -> tuple[date | None, date | None]:
+def _get_change_dates(change_name: str, project_path: Path) -> tuple[date | None, date | None]:
     """Return (start_date, end_date) for a change from git log, or (None, None) on failure."""
     try:
         result = subprocess.run(
@@ -125,7 +121,7 @@ def _get_change_dates(
 
     lines = [line.strip() for line in result.stdout.strip().splitlines() if line.strip()]
     try:
-        end_date = date.fromisoformat(lines[0])   # newest first in git log
+        end_date = date.fromisoformat(lines[0])  # newest first in git log
         start_date = date.fromisoformat(lines[-1])  # oldest last
     except (ValueError, IndexError):
         return None, None

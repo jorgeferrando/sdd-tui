@@ -153,9 +153,7 @@ class DecisionsTimeline(Screen):
     def _populate(self) -> None:
         static = self.query_one("#timeline-content", Static)
         all_changes = sorted(
-            chain.from_iterable(
-                collect_archived_decisions(d) for d in self._archive_dirs
-            ),
+            chain.from_iterable(collect_archived_decisions(d) for d in self._archive_dirs),
             key=lambda cd: cd.archive_date,
         )
         with_decisions = [cd for cd in all_changes if cd.decisions]

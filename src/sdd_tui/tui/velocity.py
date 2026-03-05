@@ -126,8 +126,7 @@ def _build_markdown_report(report: VelocityReport) -> str:
 
     if report.slowest_change is not None:
         lines.append(
-            f"- Slowest: {report.slowest_change.name}"
-            f" ({report.slowest_change.lead_time_days} days)"
+            f"- Slowest: {report.slowest_change.name} ({report.slowest_change.lead_time_days} days)"
         )
 
     return "\n".join(lines) + "\n"

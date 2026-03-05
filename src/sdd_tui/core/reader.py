@@ -67,9 +67,7 @@ class OpenspecReader:
         return changes
 
 
-def load_all_changes(
-    config: AppConfig, cwd: Path, include_archived: bool = False
-) -> list[Change]:
+def load_all_changes(config: AppConfig, cwd: Path, include_archived: bool = False) -> list[Change]:
     """Return flat list of Changes from all configured projects.
 
     If config.projects is empty, falls back to single-project mode using cwd.
