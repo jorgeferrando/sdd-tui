@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** cleanup-spec-debt
-- **Fecha:** 2026-03-04
-- **Versión:** 0.7
+- **Change:** observatory-v1
+- **Fecha:** 2026-03-05
+- **Versión:** 0.9
 - **Estado:** approved
 
 ## Contexto
@@ -41,10 +41,12 @@ excepto `archive/`, ordenados alfabéticamente
 ```python
 @dataclass
 class Change:
-    name: str          # nombre del directorio (ej: "bootstrap", "di-450-rate")
-    path: Path         # ruta absoluta al directorio del change
-    pipeline: Pipeline # estado inferido de cada fase
-    tasks: list[Task]  # tareas con estado git poblado
+    name: str                    # nombre del directorio (ej: "bootstrap", "di-450-rate")
+    path: Path                   # ruta absoluta al directorio del change
+    pipeline: Pipeline           # estado inferido de cada fase
+    tasks: list[Task]            # tareas con estado git poblado
+    project: str = ""            # basename del proyecto origen (ej: "sdd-tui")
+    project_path: Path | None = None  # raíz del repo git del proyecto
 ```
 
 ### Carga de task git states
@@ -295,6 +297,71 @@ Ninguno.
 
 ---
 
+## 11. Multi-project Config — AppConfig y load_all_changes
+
+### Propósito
+
+Módulo `core/config.py` — parser manual de `~/.sdd-tui/config.yaml`. Sin dependencias nuevas.
+Módulo `core/reader.py` — `load_all_changes()` como punto de entrada multi-proyecto.
+
+### Modelo
+
+```python
+@dataclass
+class ProjectConfig:
+    path: Path          # absoluto (expandido de ~)
+
+@dataclass
+class AppConfig:
+    projects: list[ProjectConfig]  # vacío → single-project (legacy)
+```
+
+### `load_config() -> AppConfig`
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Config no existe | `~/.sdd-tui/config.yaml` ausente | `AppConfig(projects=[])` |
+| Config sin `projects` key | YAML válido pero sin la clave | `AppConfig(projects=[])` |
+| Config malformada | YAML inválido | `AppConfig(projects=[])` — sin excepción |
+| Path con `~` | `path: ~/sites/sdd-tui` | Expandido con `Path.expanduser().resolve()` |
+
+### `load_all_changes(config: AppConfig, cwd: Path, include_archived: bool = False) -> list[Change]`
+
+Retorna lista plana de `Change`. La agrupación por proyecto se infiere de `change.project` en la TUI.
+
+**Dado** `config.projects == []` (legacy)
+**Entonces** equivale exactamente a `OpenspecReader.load(cwd / "openspec", include_archived, project_path=cwd)`.
+
+**Dado** `config.projects` con N entradas
+**Entonces** agrega changes de todos los proyectos válidos; proyectos con `OpenspecNotFoundError` se omiten silenciosamente.
+
+### `OpenspecReader.load()` — parámetro `project_path`
+
+```python
+def load(self, openspec_path, include_archived=False, project_path=None):
+    proj = project_path or openspec_path.parent
+    # Cada Change lleva project=proj.name, project_path=proj
+```
+
+### Requisitos
+
+- **REQ-01** `[Optional]` Where `~/.sdd-tui/config.yaml` exists and declares multiple projects, the system SHALL load changes from all declared project paths.
+- **REQ-02** `[Ubiquitous]` The system SHALL use `Path.cwd()` as the single project when no config file exists.
+- **REQ-03** `[Unwanted]` If a declared project path does not exist or has no `openspec/`, the system SHALL skip it silently.
+- **REQ-04** `[Ubiquitous]` Each `Change` SHALL carry `project: str` and `project_path: Path`.
+- **REQ-05** `[Ubiquitous]` In single-project mode, `Change.project` SHALL be the basename of `Path.cwd()`.
+- **REQ-06** `[Unwanted]` If `config.yaml` is malformed, the system SHALL fall back to single-project mode silently.
+
+### Reglas de negocio
+
+- **RB-CFG1:** `config.yaml` se evalúa una vez al inicio — no se recarga en `r` (refresh).
+- **RB-CFG2:** El path del proyecto se expande con `Path.expanduser().resolve()`.
+- **RB-CFG3:** Errores de I/O, YAML o paths inválidos → `AppConfig(projects=[])` — nunca excepción.
+- **RB-CFG4:** `load_all_changes` con `projects == []` equivale exactamente al comportamiento legacy.
+- **RB-CFG5:** `Change.project_path` es la raíz del repo — todas las operaciones git del change usan este path.
+
+---
+
 ## 8. Spec Parser — Delta format + decisions extractor
 
 ### Propósito
@@ -509,4 +576,49 @@ o `None` si el archivo no existe
 - **RB-R01:** `spec.json` es informacional — la TUI y la inferencia de pipeline siempre recomputan desde disco. `spec.json` no es fuente de verdad.
 - **RB-R02:** `load_spec_json` captura tanto `json.JSONDecodeError` como `OSError` — nunca lanza excepción.
 - **RB-R03:** `load_steering` usa `errors="replace"` al leer — nunca lanza `UnicodeDecodeError`.
+
+---
+
+## 10. Deps — Detección de dependencias externas
+
+### Propósito
+
+Módulo `core/deps.py` — registro central de herramientas externas que la app requiere o puede aprovechar.
+Proporciona detección uniforme y datos de instalación por plataforma.
+
+### Modelo `Dep`
+
+```python
+@dataclass
+class Dep:
+    name: str                        # "git", "gh"
+    required: bool                   # True → app no arranca sin ella
+    check_cmd: list[str]             # ["git", "--version"]
+    install_hint: dict[str, str]     # {"macOS": "brew install git", "Ubuntu": "sudo apt install git"}
+    docs_url: str | None             # URL canónica de instalación
+    feature: str | None              # None si required; nombre de feature si optional
+```
+
+### Registro `DEPS`
+
+Lista estática — única fuente de verdad de dependencias externas.
+
+| `name` | `required` | `feature` |
+|--------|-----------|-----------|
+| `git`  | `True`    | `None` |
+| `gh`   | `False`   | `"pr-status"` |
+
+### `check_deps() -> tuple[list[Dep], list[Dep]]`
+
+Retorna `(missing_required, missing_optional)`.
+
+- **REQ-01** `[Ubiquitous]` The `check_deps()` function SHALL detect a dependency as missing when its `check_cmd` raises `FileNotFoundError` OR returns a non-zero exit code.
+- **REQ-02** `[Ubiquitous]` The `check_deps()` function SHALL detect a dependency as present when its `check_cmd` exits with code 0.
+- **REQ-03** `[Ubiquitous]` Each dependency check SHALL be independent — failure of one SHALL NOT prevent checking the rest.
+
+### Reglas de negocio
+
+- **RB-D1:** `check_deps()` captura `FileNotFoundError` — nunca lanza excepción.
+- **RB-D2:** Los checks usan `capture_output=True` — no contaminan stdout/stderr.
+- **RB-D3:** `DEPS` es la única fuente de verdad — ningún check de deps existe fuera de `core/deps.py`.
 

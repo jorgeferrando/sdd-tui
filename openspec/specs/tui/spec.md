@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** openspec-enrichment
-- **Fecha:** 2026-03-04
-- **Versión:** 0.9
+- **Change:** observatory-v1
+- **Fecha:** 2026-03-05
+- **Versión:** 1.6
 - **Estado:** approved
 
 ## Contexto
@@ -152,10 +152,15 @@ El contenido se resetea al top (`scroll_home`) en cada actualización.
 - **RB-T2:** Los amendments se agrupan visualmente — el separador precede al primer task del grupo.
 - **RB-T3:** El panel de tareas es scrollable si hay más tareas que espacio visible.
 - **RB-T4:** El panel derecho es fijo (no scrollable — máximo 6 fases + header).
-- **RB-V3-01:** El diff panel se actualiza en `on_data_table_row_highlighted` (hover), no en `RowSelected` (Enter).
+- **RB-V3-01:** El diff panel se actualiza en `on_data_table_row_highlighted` (hover), no en `RowSelected` (Enter). La carga ocurre en un worker asíncrono (`@work(thread=True, exclusive=True)`); el handler síncrono solo muestra el placeholder y lanza el worker.
 - **RB-V3-02:** Las filas de separador de amendment no tienen `key` → no disparan carga de diff.
 - **RB-V3-03:** El diff muestra syntax highlighting con `rich.Syntax` (lexer=`diff`, tema=`monokai`).
 - **RB-V3-04:** `DataTable` recibe focus explícito via `call_after_refresh` al montar la pantalla.
+- **RB-ASYNC-01:** `on_data_table_row_highlighted` muestra `"[dim]Loading diff…[/dim]"` inmediatamente y llama `_load_diff_worker(task)` (recibe el objeto `Task`, no el `task_id`).
+- **RB-ASYNC-02:** `exclusive=True` garantiza que solo hay un worker de diff activo; Textual cancela el anterior automáticamente al lanzar uno nuevo.
+- **RB-ASYNC-03:** El worker actualiza el DiffPanel via `self.app.call_from_thread(_update_diff_panel, text, as_diff)` — `Screen` no expone `call_from_thread`, solo `App`.
+- **RB-ASYNC-04:** El contenido del diff (syntax highlighting con `rich.Syntax`) es idéntico al comportamiento pre-async — la construcción de `Syntax` ocurre en `DiffPanel.show_diff` (event loop).
+- **RB-ASYNC-05:** Las filas de separador no tienen key → no llaman `_load_diff_worker` — comportamiento idéntico al actual.
 
 ---
 
@@ -241,6 +246,9 @@ Pantalla de selección cuando hay múltiples dominios de spec.
 | Actions separadas por doc | Action parametrizada | Más explícito; Textual action params tienen edge cases |
 | `id="domain-{name}"` en ListItem | Indexar por posición | Más robusto que asumir orden en el evento |
 | `priority=True` en binding Space | Sin priority | DataTable consume Space antes de que llegue al Screen |
+| `@work(thread=True, exclusive=True)` para diff | `subprocess` síncrono | Desbloquea event loop; `exclusive=True` cancela workers anteriores en nav rápida |
+| `self.app.call_from_thread` | `self.call_from_thread` | `Screen` no hereda `call_from_thread`; solo `App` lo expone en Textual 8.x |
+| Pasar `Task` al worker (no `task_id`) | Lookup `query_one` desde hilo | Evita acceso a widgets fuera del event loop — más thread-safe |
 | `_build_next_command` separado de la action | Lógica inline | Testable de forma aislada |
 | `copy_to_clipboard` nativo de Textual | `pyperclip` / `subprocess pbcopy` | Sin deps nuevas; API nativa ≥ 0.70.0 |
 | `.remove()` + `.mount()` para refresh | Re-compose completa | Quirúrgico; Textual soporta mount/remove en widgets montados |
@@ -570,3 +578,239 @@ P . . . D T
 - **RB-HQ02:** La letra para `requirements` es `Q` (de reQueriments) — no `R`, que ya está reservada para research.
 - **RB-HQ03:** El orden de columnas es fijo: `P S [R] [Q] D T` donde `[R]` y `[Q]` son condicionales.
 
+---
+
+## 13. UX Feedback — Estado Visual y Notificaciones
+
+### View 1 — Toggle archived label dinámico
+
+El binding `a` en `EpicsView` muestra un label dinámico según el estado:
+
+| Estado `_show_archived` | Label en footer |
+|------------------------|-----------------|
+| `False` (por defecto) | `Show archived` |
+| `True` | `Hide archived` |
+
+Implementación: `action_toggle_archived` asigna `self.BINDINGS` como atributo de instancia con el nuevo label y llama `self.refresh_bindings()` para invalidar el caché del footer.
+
+- **RB-UX01:** El label se actualiza de forma inmediata (sin delay) tras el toggle.
+- **RB-UX02:** `self.BINDINGS` de instancia sombrea el `BINDINGS` de clase — patrón Textual estándar para labels dinámicos.
+
+### View 1 — Notify en refresh
+
+`action_refresh` emite una notificación tras completar la recarga:
+
+```
+"{n_active} changes loaded ({n_archived} archived)"
+```
+
+donde `n_active` = changes con `archived == False` y `n_archived` = changes con `archived == True`.
+
+- **RB-UX03:** La notificación se emite siempre tras un refresh exitoso.
+- **RB-UX04:** `action_toggle_archived` NO emite notify — el cambio de label ya comunica el estado.
+
+### View 2 — Notify al abrir documento
+
+`ChangeDetailScreen._open_doc(filename, label)` emite `self.notify(f"Opening {label}")` si el archivo existe antes de hacer `push_screen`.
+
+- Aplica a: `p` (proposal), `d` (design), `t` (tasks), `q` (requirements).
+- `action_view_spec` (single domain) también emite `self.notify("Opening spec")`.
+- Si el archivo **no existe**: no se emite notify en `ChangeDetailScreen` (el warning lo emite `DocumentViewerScreen`).
+
+- **RB-UX05:** El label en el notify es el nombre semántico corto ("proposal", "design", "tasks", "requirements", "spec"), no la ruta ni el filename.
+- **RB-UX06:** Notify solo si `path.exists()` — sin notify para documentos ausentes desde View 2.
+
+### DocumentViewerScreen — Warning archivo no encontrado
+
+Cuando el archivo solicitado no existe, `DocumentViewerScreen.on_mount` emite:
+
+```python
+self.app.notify(f"{self._path.name} not found", severity="warning")
+```
+
+Además del mensaje `[dim]{filename} not found[/dim]` ya existente en el cuerpo.
+
+- **RB-UX07:** El warning es adicional al mensaje en el cuerpo — ambos se muestran simultáneamente.
+- **RB-UX08:** `severity="warning"` para distinguirlo de notificaciones informativas.
+
+### SpecSelectorScreen — Binding `q`
+
+`SpecSelectorScreen.BINDINGS` incluye `Binding("q", "app.pop_screen", "Close")` además del `Escape` existente.
+
+- **RB-UX09:** `q` y `Esc` son equivalentes en `SpecSelectorScreen` — ambos hacen `pop_screen`.
+- **RB-UX10:** Consistente con la expectativa del usuario de que `q` cierra pantallas modales/selectores.
+
+---
+
+## 14. UX Navigation — Scroll, Drill-down y Paths
+
+### Bindings `j/k` en viewers de texto
+
+`DocumentViewerScreen`, `SpecEvolutionScreen` y `DecisionsTimeline` exponen `j` y `k` para scroll.
+
+- **REQ-01** `[Event]` When el usuario pulsa `j`, la pantalla SHALL hacer scroll hacia abajo.
+- **REQ-02** `[Event]` When el usuario pulsa `k`, la pantalla SHALL hacer scroll hacia arriba.
+- **REQ-03** `[Ubiquitous]` The bindings `j/k` SHALL estar disponibles en todas las pantallas de solo lectura.
+
+Implementación: cada Screen define `action_scroll_down` y `action_scroll_up` que delegan a `self.query_one(ScrollableContainer).scroll_down/up()`. Las acciones nativas de `ScrollableContainer` no se propagan automáticamente al Screen.
+
+- **RB-NAV01:** `scroll_down`/`scroll_up` definidos explícitamente en cada Screen viewer — no heredados del Screen base.
+
+### Drill-down desde SpecHealthScreen
+
+- **REQ-04** `[Event]` When el usuario pulsa Enter sobre una fila de change en `SpecHealthScreen`, la app SHALL hacer `push_screen(ChangeDetailScreen(change))`.
+- **REQ-05** `[Unwanted]` If la fila seleccionada no tiene key (separador), Enter SHALL no hacer nada.
+- **REQ-06** `[Event]` When `ChangeDetailScreen` se abre desde `SpecHealthScreen`, `Esc` SHALL volver a `SpecHealthScreen`.
+
+`SpecHealthScreen` mantiene un `_change_map: dict[str, Change]` poblado durante `_populate()`. El handler `on_data_table_row_selected` hace lookup por `row_key.value`.
+
+- **RB-NAV02:** Stack de navegación de 3 niveles: View1 → SpecHealthScreen → ChangeDetailScreen. Patrón consistente con el resto de la app.
+- **RB-NAV03:** El separador `── archived ──` no tiene key → `_change_map.get()` devuelve `None` → no navega.
+
+### Propiedad pública `SddTuiApp.changes`
+
+- **REQ-07** `[Ubiquitous]` The `SddTuiApp` SHALL exponer los changes como `@property changes` (sin prefijo `_`).
+
+La lista de changes vive en `EpicsView._changes`. La propiedad delega: `return self.query_one(EpicsView)._changes`.
+
+### Paths centralizados
+
+- **REQ-08** `[Ubiquitous]` The paths de `openspec/` SHALL calcularse desde `self.app._openspec_path`, no desde `Path.cwd() / "openspec"`.
+
+Afecta: `EpicsView.action_steering`, `EpicsView.action_decisions_timeline`, `SpecEvolutionScreen._render_domain`.
+
+- **RB-NAV04:** `EpicsView` elimina el import de `Path` (queda sin uso tras el fix).
+
+
+---
+
+## 15. Help Screen — Referencia de Keybindings
+
+### Binding global `?`
+
+- **REQ-01** `[Event]` When el usuario pulsa `?` en cualquier pantalla, la app SHALL hacer `push_screen(HelpScreen)`.
+- **REQ-02** `[Ubiquitous]` The binding `?` SHALL estar disponible en todas las pantallas con `priority=True`.
+- **REQ-03** `[Event]` When el usuario pulsa `Esc` en `HelpScreen`, la app SHALL hacer `pop_screen`.
+- **REQ-04** `[Ubiquitous]` The `HelpScreen` SHALL mostrar todos los keybindings agrupados en 6 secciones: View 1, View 2, View 8, View 9, Viewers, Global.
+- **REQ-06** `[State]` While el contenido supera la altura de pantalla, el usuario SHALL poder hacer scroll con `j`/`k`.
+
+### Implementación
+
+- `HelpScreen` en `tui/help.py` — contenido `HELP_CONTENT` como `rich.Text` constante generada por `_build_help_content()`.
+- Binding en `SddTuiApp.BINDINGS` + `action_help` con import local de `HelpScreen`.
+- Patrón `action_scroll_down/up` → `ScrollableContainer` (igual que viewers).
+
+- **RB-HELP01:** Contenido estático — no generado dinámicamente desde BINDINGS de Textual.
+- **RB-HELP02:** `priority=True` en `?` — capturado antes que cualquier Screen o Widget hijo.
+- **RB-HELP03:** Import local en `action_help` — evita importaciones circulares.
+
+---
+
+## 16. View 1 — Search & Filter (binding `/`)
+
+### Activación del modo búsqueda
+
+- **REQ-01** `[Event]` When el usuario pulsa `/` en View 1, the app SHALL activar el modo búsqueda mostrando un `Input` en el pie de pantalla.
+- **REQ-02** `[State]` While el modo búsqueda está activo, the `Input` SHALL recibir las teclas del teclado y filtrar el `DataTable` en tiempo real.
+- **REQ-03** `[Event]` When el usuario escribe en el input, the `DataTable` SHALL actualizar sus filas mostrando solo los changes cuyo nombre contiene el texto (substring case-insensitive).
+- **REQ-04** `[Event]` When el usuario pulsa `Esc` con modo búsqueda activo, the app SHALL desactivar el modo, limpiar el filtro y restaurar la lista completa.
+- **REQ-05** `[Event]` When el usuario pulsa `Enter` con modo búsqueda activo, the app SHALL desactivar el modo, mantener el filtro y devolver el foco al `DataTable` con el cursor en el primer resultado.
+- **REQ-06** `[Unwanted]` If el filtro produce 0 resultados, the `DataTable` SHALL mostrar una fila `No matches for "{query}"` sin key.
+- **REQ-07** `[State]` While el filtro está confirmado, the `app.sub_title` SHALL mostrar `filtered: "{query}"`.
+- **REQ-08** `[Event]` When el usuario pulsa `r` (refresh) con filtro activo, the app SHALL limpiar el filtro antes de recargar.
+- **REQ-09** `[State]` While el filtro está activo y el usuario pulsa `a` (toggle archivados), the filtro SHALL persistir aplicándose al nuevo scope.
+- **REQ-10** `[Ubiquitous]` The filtrado SHALL respetar `_show_archived`: los archivados solo aparecen en resultados si el toggle está activo.
+- **REQ-11** `[Ubiquitous]` The separador `── archived ──` SHALL mantenerse si hay archivados en los resultados filtrados.
+- **REQ-12** `[Event]` When el `DataTable` muestra resultados filtrados, the nombre del change SHALL mostrar el substring coincidente en `bold cyan`.
+
+### Layout del Input
+
+El widget `Input` (id=`search-input`) está compuesto entre el `DataTable` y el `Footer`. Por defecto `display: none`; se muestra al activar modo búsqueda.
+
+### Implementación
+
+- `EpicsView._search_mode: bool` — estado del modo búsqueda
+- `EpicsView._search_query: str` — query actual (vacío = sin filtro)
+- `_filter_changes(changes, query) → list[Change]` — substring case-insensitive
+- `_highlight_match(name, query) → rich.Text` — bold cyan en el match
+- `_populate()` lee `_search_query` — el filtro persiste automáticamente en `update()`
+- `on_key` intercepta Escape con `event.stop()` para evitar propagación a la pila de pantallas
+- `app.sub_title` indica filtro activo cuando está confirmado
+
+### Reglas de negocio
+
+- **RB-SEARCH01:** `Input.value = text` + `pilot.pause()` es el patrón correcto para tests en Textual 8.x (`pilot.type()` no existe).
+- **RB-SEARCH02:** `on_key` con guard `if self._search_mode` — Esc solo interceptado en modo búsqueda.
+- **RB-SEARCH03:** `_populate()` siempre lee `self._search_query` — no hay parámetro externo; el filtro es transparente para `update()`.
+- **RB-SEARCH04:** Highlight usa `rich.Text` con `_spans`; `DataTable` acepta `Text` como valor de celda nativo.
+
+---
+
+## 17. Startup — Dependency Check
+
+### Flujo de startup
+
+- **REQ-01** `[Event]` When the app mounts, the system SHALL call `check_deps()` before the main view is usable.
+- **REQ-02** `[Event]` When required deps are missing, the app SHALL push `ErrorScreen` with the list of missing deps.
+- **REQ-03** `[Unwanted]` If `ErrorScreen` is displayed, the main view SHALL NOT be interactable.
+- **REQ-04** `[Event]` When optional deps are missing, the app SHALL emit one `notify()` per dep with `severity="warning"` and `timeout=15`.
+- **REQ-05** `[Event]` When all deps are present, the app SHALL mount normally without any notification.
+
+### `ErrorScreen`
+
+- Layout: `Header` + `ScrollableContainer(Static(...))` + `Footer`
+- Título: `"sdd-tui — dependency error"`
+- Muestra un bloque por dep: nombre, instrucciones por plataforma, `docs_url`
+- Binding `q` → `self.app.exit()`
+- Sin binding `Esc` — no hay pantalla previa válida
+
+### Notify toast — optional missing
+
+Formato: `"{name} not found — {feature} disabled  |  Install: {hint}  |  {docs_url}"`
+Plataforma detectada con `sys.platform`: `darwin` → key `"macOS"`, `linux` → key `"Ubuntu"`.
+
+### Reglas de negocio
+
+- **RB-SD1:** `on_mount` usa imports locales para `check_deps` y `ErrorScreen` — patrón establecido en `app.py`.
+- **RB-SD2:** `Esc` NO tiene binding en `ErrorScreen` — Textual haría `pop_screen` por defecto, lo cual es incorrecto sin pantalla previa.
+- **RB-SD3:** Los warnings de optional deps se emiten solo una vez por sesión (en `on_mount`), no en refresh ni navegación.
+
+---
+
+## 18. Observatory v1 — Multi-project Support
+
+### View 1 — Separadores de proyecto
+
+- **REQ-01** `[Optional]` Where multi-project config is active, `EpicsView` SHALL show changes grouped by project with a separator row per project.
+- **REQ-02** `[Ubiquitous]` The system SHALL NOT show project separators in single-project (legacy) mode.
+- **REQ-03** `[Event]` When the user presses `Enter` on any change (from any project), the app SHALL push `ChangeDetailScreen`.
+- **REQ-04** `[Event]` When the user presses `r`, the app SHALL reload all projects defined in config.
+- **REQ-05** `[Unwanted]` If a project becomes unavailable after startup, the system SHALL skip it silently during reload.
+
+Multi-proyecto detectado cuando `len(active_projects) > 1` donde `active_projects = list(dict.fromkeys(c.project for c in active))`. En single-project no se renderizan separadores.
+
+### SpecHealthScreen — Multi-proyecto
+
+- **REQ-06** `[Optional]` Where multi-project config is active, `SpecHealthScreen` SHALL show changes from all projects, grouped with separator rows.
+- **REQ-07** `[Ubiquitous]` In single-project mode, `SpecHealthScreen` behavior SHALL be identical to the current spec.
+
+`parse_metrics(change_path, change.project_path)` — usa `change.project_path` en lugar de `Path.cwd()`.
+
+### DecisionsTimeline — Multi-proyecto
+
+- **REQ-08** `[Optional]` Where multi-project config is active, `DecisionsTimeline` SHALL aggregate decisions from `archive/` of all configured projects.
+- **REQ-09** `[Ubiquitous]` Decisions SHALL be ordered chronologically (ascending) across all projects combined.
+
+`DecisionsTimeline.__init__(archive_dirs: list[Path])` — recibe lista de dirs; en single-project, lista de un elemento.
+
+### Reglas de negocio
+
+- **RB-MP01:** Los separadores de proyecto son filas sin key — Enter no navega.
+- **RB-MP02:** `is_multi = len(active_projects) > 1` — derivado de los changes presentes, no del config.
+- **RB-MP03:** El nombre en el separador = `change.project` (basename del proyecto).
+- **RB-MP04:** `SddTuiApp.__init__` acepta `config: AppConfig | None = None` — retrocompatible.
+- **RB-MP05:** `action_decisions_timeline` construye `archive_dirs` desde `change.project_path` de los changes cargados.
+
+### Fuera de scope
+
+- Binding `s` (steering) sigue usando `_openspec_path` single-project — extensión diferida a v2.
