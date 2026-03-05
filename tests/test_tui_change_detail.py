@@ -3,10 +3,11 @@ from unittest.mock import MagicMock, patch
 
 from textual.widgets import DataTable
 
-from sdd_tui.core.github import PrStatus
+from sdd_tui.core.github import CiStatus, PrStatus
 from sdd_tui.core.models import PhaseState, Pipeline
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import (
+    _CI_LOADING,
     _PR_LOADING,
     ChangeDetailScreen,
     DiffPanel,
@@ -230,6 +231,73 @@ def test_pipeline_panel_omits_zero_counts(minimal_change) -> None:
     panel.update_pr(PrStatus(number=3, state="OPEN", approvals=0, changes_requested=1))
     assert "0✓" not in panel._text
     assert "1✗" in panel._text
+
+
+def _full_pipeline() -> Pipeline:
+    return Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+
+
+def test_pipeline_panel_ci_loading(minimal_change) -> None:
+    """REQ-CI02: sentinel → '… CI'."""
+    panel = PipelinePanel(_full_pipeline(), [], ci_status=_CI_LOADING)
+    assert "…" in panel._text
+    assert "CI" in panel._text
+
+
+def test_pipeline_panel_ci_none(minimal_change) -> None:
+    """REQ-CI03/CI04: update_ci(None) → '— CI'."""
+    panel = PipelinePanel(_full_pipeline(), [], ci_status=_CI_LOADING)
+    panel.update_ci(None)
+    assert "—" in panel._text
+    assert "CI" in panel._text
+
+
+def test_pipeline_panel_ci_success(minimal_change) -> None:
+    """REQ-CI05: completed+success → '✓ CI'."""
+    panel = PipelinePanel(_full_pipeline(), [], ci_status=_CI_LOADING)
+    panel.update_ci(CiStatus(workflow="CI", status="completed", conclusion="success"))
+    assert "✓" in panel._text
+    assert "CI" in panel._text
+
+
+def test_pipeline_panel_ci_failure(minimal_change) -> None:
+    """REQ-CI06: completed+failure → '✗ CI'."""
+    panel = PipelinePanel(_full_pipeline(), [], ci_status=_CI_LOADING)
+    panel.update_ci(CiStatus(workflow="CI", status="completed", conclusion="failure"))
+    assert "✗" in panel._text
+    assert "CI" in panel._text
+
+
+def test_pipeline_panel_ci_in_progress(minimal_change) -> None:
+    """REQ-CI07: in_progress → '⟳ CI'."""
+    panel = PipelinePanel(_full_pipeline(), [], ci_status=_CI_LOADING)
+    panel.update_ci(CiStatus(workflow="CI", status="in_progress", conclusion=None))
+    assert "⟳" in panel._text
+    assert "CI" in panel._text
+
+
+async def test_ship_binding_copies_command(openspec_with_change: Path) -> None:
+    """REQ-SH01/SH02: W copies gh pr create command to clipboard."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            await pilot.press("enter")
+            assert isinstance(app.screen, ChangeDetailScreen)
+            screen = app.screen
+            copied: list[str] = []
+            app.copy_to_clipboard = lambda t: copied.append(t)  # type: ignore[method-assign]
+            with patch.object(screen, "notify"):
+                await pilot.press("shift+w")
+            assert len(copied) == 1
+            assert "gh pr create" in copied[0]
+            assert "my-change" in copied[0]
 
 
 async def test_open_missing_doc_no_notify_in_detail(tmp_path: Path) -> None:
