@@ -42,6 +42,7 @@ class EpicsView(Widget):
         Binding("h", "health", "Health"),
         Binding("x", "decisions_timeline", "Decisions"),
         Binding("V", "velocity", "Velocity"),
+        Binding("l", "releases", "Releases"),
         Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
@@ -207,6 +208,7 @@ class EpicsView(Widget):
             Binding("h", "health", "Health"),
             Binding("x", "decisions_timeline", "Decisions"),
             Binding("V", "velocity", "Velocity"),
+            Binding("l", "releases", "Releases"),
             Binding("/", "search", "Search"),
             Binding("q", "quit", "Quit"),
         ]
@@ -257,6 +259,11 @@ class EpicsView(Widget):
         if not dirs:
             dirs = [self.app._openspec_path / "changes" / "archive"]
         self.app.push_screen(VelocityView(dirs))
+
+    def action_releases(self) -> None:
+        from sdd_tui.tui.releases import ReleasesScreen
+
+        self.app.push_screen(ReleasesScreen())
 
     def action_quit(self) -> None:
         self.app.exit()
