@@ -11,6 +11,8 @@ from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 from sdd_tui.tui.epics import EpicsView
 from sdd_tui.tui.spec_health import SpecHealthScreen
+from sdd_tui.core.velocity import VelocityReport
+from sdd_tui.tui.velocity import VelocityView
 
 
 def _git_mock() -> MagicMock:
@@ -73,6 +75,16 @@ async def test_epics_h_navigates_to_spec_health(openspec_with_change: Path) -> N
         async with app.run_test() as pilot:
             await pilot.press("h")
             assert isinstance(app.screen, SpecHealthScreen)
+
+
+async def test_epics_V_navigates_to_velocity_view(openspec_with_change: Path) -> None:
+    """REQ-V01: pressing 'V' pushes VelocityView."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        with patch("sdd_tui.tui.velocity.compute_velocity", return_value=VelocityReport()):
+            app = SddTuiApp(openspec_with_change)
+            async with app.run_test() as pilot:
+                await pilot.press("V")
+                assert isinstance(app.screen, VelocityView)
 
 
 async def test_epics_r_stays_on_epics(openspec_with_change: Path) -> None:
