@@ -49,6 +49,8 @@ class Change:
     pipeline: Pipeline = field(default_factory=Pipeline)
     tasks: list[Task] = field(default_factory=list)
     archived: bool = False
+    project: str = ""
+    project_path: Path | None = None
 
 
 class OpenspecNotFoundError(Exception):
