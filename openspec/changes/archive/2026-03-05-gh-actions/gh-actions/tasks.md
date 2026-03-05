@@ -8,36 +8,36 @@
 
 ## Tareas de Implementación
 
-- [ ] **T01** Modificar `src/sdd_tui/core/github.py` — añadir `CiStatus`, `ReleaseInfo`, `get_ci_status()`, `get_releases()`
+- [x] **T01** Modificar `src/sdd_tui/core/github.py` — añadir `CiStatus`, `ReleaseInfo`, `get_ci_status()`, `get_releases()`
   - Commit: `[gh-actions] Add CiStatus, ReleaseInfo, get_ci_status, get_releases to github`
 
-- [ ] **T02** Modificar `tests/test_github.py` — tests para `get_ci_status` y `get_releases`
+- [x] **T02** Modificar `tests/test_github.py` — tests para `get_ci_status` y `get_releases`
   - Depende de: T01
   - Commit: `[gh-actions] Add tests for get_ci_status and get_releases`
 
-- [ ] **T03** Modificar `src/sdd_tui/tui/change_detail.py` — sentinel `_CI_LOADING`, extender `PipelinePanel` con CI row, worker `_load_ci_status_worker`, binding `W` + `action_ship_pr`
+- [x] **T03** Modificar `src/sdd_tui/tui/change_detail.py` — sentinel `_CI_LOADING`, extender `PipelinePanel` con CI row, worker `_load_ci_status_worker`, binding `W` + `action_ship_pr`
   - Depende de: T01
   - Commit: `[gh-actions] Add CI status and ship binding to ChangeDetailScreen`
 
-- [ ] **T04** Crear `src/sdd_tui/tui/releases.py` — `ReleasesScreen` con DataTable de releases
+- [x] **T04** Crear `src/sdd_tui/tui/releases.py` — `ReleasesScreen` con DataTable de releases
   - Depende de: T01
   - Commit: `[gh-actions] Add ReleasesScreen`
 
-- [ ] **T05** Modificar `src/sdd_tui/tui/epics.py` — binding `l` + `action_releases()`
+- [x] **T05** Modificar `src/sdd_tui/tui/epics.py` — binding `l` + `action_releases()`
   - Depende de: T04
   - Commit: `[gh-actions] Add L binding for ReleasesScreen in EpicsView`
 
-- [ ] **T06** Modificar `tests/test_tui_change_detail.py` — tests CI status en `PipelinePanel` + ship binding
+- [x] **T06** Modificar `tests/test_tui_change_detail.py` — tests CI status en `PipelinePanel` + ship binding
   - Depende de: T03
   - Commit: `[gh-actions] Add tests for CI status and ship binding`
 
-- [ ] **T07** Crear `tests/test_tui_releases.py` — tests de `ReleasesScreen`
+- [x] **T07** Crear `tests/test_tui_releases.py` — tests de `ReleasesScreen`
   - Depende de: T04, T05
   - Commit: `[gh-actions] Add tests for ReleasesScreen`
 
 ## Quality Gate Final
 
-- [ ] **QG** Ejecutar tests + lint
+- [x] **QG** Ejecutar tests + lint
   - `uv run pytest`
   - `~/.claude/scripts/sdd-tui-lint.sh`
 
