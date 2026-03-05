@@ -30,6 +30,26 @@ class SddTuiApp(App):
         self._parser = TaskParser()
         self._git = GitReader()
 
+    def on_mount(self) -> None:
+        from sdd_tui.core.deps import check_deps
+        from sdd_tui.tui.error_screen import ErrorScreen
+
+        missing_required, missing_optional = check_deps()
+
+        if missing_required:
+            self.push_screen(ErrorScreen(missing_required))
+            return
+
+        platform_key = "macOS" if sys.platform == "darwin" else "Ubuntu"
+        for dep in missing_optional:
+            hint = dep.install_hint.get(platform_key, "")
+            parts = [f"{dep.name} not found — {dep.feature} disabled"]
+            if hint:
+                parts.append(f"Install: {hint}")
+            if dep.docs_url:
+                parts.append(dep.docs_url)
+            self.notify("  |  ".join(parts), severity="warning", timeout=15)
+
     def action_help(self) -> None:
         from sdd_tui.tui.help import HelpScreen
 
