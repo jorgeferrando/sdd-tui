@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -78,16 +80,30 @@ class EpicsView(Widget):
         active = [c for c in self._changes if not c.archived]
         archived = [c for c in self._changes if c.archived]
 
-        if self._search_query:
-            active = self._filter_changes(active, self._search_query)
-            archived = self._filter_changes(archived, self._search_query)
+        active_projects = list(dict.fromkeys(c.project for c in active))
+        is_multi = len(active_projects) > 1
 
-        if not active and not archived and self._search_query:
-            table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "")
-            return
-
-        for change in active:
-            self._add_change_row(table, change)
+        if not is_multi:
+            if self._search_query:
+                active = self._filter_changes(active, self._search_query)
+                archived = self._filter_changes(archived, self._search_query)
+            if not active and not archived and self._search_query:
+                table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "")
+                return
+            for change in active:
+                self._add_change_row(table, change)
+        else:
+            for project_name in active_projects:
+                proj_changes = [c for c in active if c.project == project_name]
+                filtered = self._filter_changes(proj_changes, self._search_query) if self._search_query else proj_changes
+                table.add_row(f"─── {project_name} ───", "", "", "", "", "", "")
+                if not filtered:
+                    table.add_row("  (no active changes)", "", "", "", "", "", "")
+                else:
+                    for change in filtered:
+                        self._add_change_row(table, change)
+            if self._search_query:
+                archived = self._filter_changes(archived, self._search_query)
 
         if archived:
             table.add_row("── archived ──", "", "", "", "", "", "")
