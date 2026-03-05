@@ -12,6 +12,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Footer, Header, Static
 
 from sdd_tui.core.git_reader import GitReader
+from sdd_tui.core.github import PrStatus
 from sdd_tui.core.metrics import ChangeMetrics, parse_metrics
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task, TaskGitState
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen, SpecSelectorScreen
@@ -20,6 +21,9 @@ from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
 DONE = "✓"
 PENDING = "·"
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
+
+_PR_LOADING = object()  # sentinel: worker not yet finished
+_PR_STATE_SYMBOL: dict[str, str] = {"OPEN": "⧗", "MERGED": DONE, "CLOSED": "✗"}
 
 
 class TaskListPanel(Widget):
@@ -87,15 +91,25 @@ class PipelinePanel(Static):
         pipeline: Pipeline,
         tasks: list[Task],
         metrics: ChangeMetrics | None = None,
+        pr_status: PrStatus | None | object = _PR_LOADING,
     ) -> None:
-        content = self._build_content(pipeline, tasks, metrics)
+        self._pipeline = pipeline
+        self._tasks = tasks
+        self._metrics = metrics
+        self._pr_status: PrStatus | None | object = pr_status
+        content = self._build_content(pipeline, tasks, metrics, pr_status)
         super().__init__(content)
+
+    def update_pr(self, pr_status: PrStatus | None) -> None:
+        self._pr_status = pr_status
+        self.update(self._build_content(self._pipeline, self._tasks, self._metrics, pr_status))
 
     def _build_content(
         self,
         pipeline: Pipeline,
         tasks: list[Task],
         metrics: ChangeMetrics | None,
+        pr_status: PrStatus | None | object = _PR_LOADING,
     ) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
@@ -113,7 +127,26 @@ class PipelinePanel(Static):
             else:
                 pct = round(metrics.ears_count / metrics.req_count * 100)
                 lines.append(f"  REQ: {metrics.req_count} ({pct}%)")
+        lines.append("")
+        lines.append(self._build_pr_line(pr_status))
         return "\n".join(lines)
+
+    def _build_pr_line(self, pr_status: PrStatus | None | object) -> str:
+        if pr_status is _PR_LOADING:
+            return "  …    PR"
+        if pr_status is None:
+            return "  —    PR"
+        assert isinstance(pr_status, PrStatus)
+        symbol = _PR_STATE_SYMBOL.get(pr_status.state, "?")
+        parts = [f"  {symbol:<3}  PR #{pr_status.number}"]
+        review_parts = []
+        if pr_status.approvals > 0:
+            review_parts.append(f"{pr_status.approvals}✓")
+        if pr_status.changes_requested > 0:
+            review_parts.append(f"{pr_status.changes_requested}✗")
+        if review_parts:
+            parts.append("  " + " ".join(review_parts))
+        return "".join(parts)
 
 
 class DiffPanel(ScrollableContainer):
@@ -175,6 +208,16 @@ class ChangeDetailScreen(Screen):
     def on_mount(self) -> None:
         self.title = f"sdd-tui — {self._change.name}"
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
+        self._load_pr_status_worker()
+
+    @work(thread=True)
+    def _load_pr_status_worker(self) -> None:
+        from sdd_tui.core.github import get_pr_status
+
+        pr_status = get_pr_status(self._change.name, self._change.project_path)
+        self.app.call_from_thread(
+            lambda s=pr_status: self.query_one(PipelinePanel).update_pr(s)
+        )
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.row_key is None or event.row_key.value is None:
