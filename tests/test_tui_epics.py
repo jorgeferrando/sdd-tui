@@ -3,6 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from rich.text import Text
+from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Input
 
 from sdd_tui.core.models import Change
@@ -280,6 +281,78 @@ async def test_refresh_clears_filter(openspec_with_two_changes: Path) -> None:
             assert table.row_count == 2
             epics = app.query_one(EpicsView)
             assert epics._search_query == ""
+
+
+# ── Multi-project separators ──────────────────────────────────────────────────
+
+
+class _EpicsApp(App):
+    """Minimal app that mounts EpicsView with given changes."""
+
+    def __init__(self, changes: list[Change]) -> None:
+        super().__init__()
+        self._changes = changes
+
+    def compose(self) -> ComposeResult:
+        yield EpicsView(self._changes)
+
+
+def _change(name: str, project: str) -> Change:
+    return Change(name=name, path=Path("/tmp"), project=project, project_path=Path("/tmp") / project)
+
+
+async def test_epics_multi_project_shows_separators() -> None:
+    """Multi-project: one separator row per project is added to the table."""
+    changes = [
+        _change("change-a", "alpha"),
+        _change("change-b", "beta"),
+    ]
+    app = _EpicsApp(changes)
+    async with app.run_test():
+        table = app.query_one(DataTable)
+        # 2 changes + 2 separators (one per project)
+        assert table.row_count == 4
+
+
+async def test_epics_single_project_no_separators() -> None:
+    """Single project: no separator rows, one row per change."""
+    changes = [
+        _change("change-a", "alpha"),
+        _change("change-b", "alpha"),
+    ]
+    app = _EpicsApp(changes)
+    async with app.run_test():
+        table = app.query_one(DataTable)
+        assert table.row_count == 2
+
+
+async def test_epics_multi_project_no_project_field_no_separators() -> None:
+    """Legacy mode (empty project field): no separators rendered."""
+    changes = [
+        Change(name="change-a", path=Path("/tmp")),
+        Change(name="change-b", path=Path("/tmp")),
+    ]
+    app = _EpicsApp(changes)
+    async with app.run_test():
+        table = app.query_one(DataTable)
+        assert table.row_count == 2
+
+
+async def test_epics_multi_project_search_empty_group_shows_placeholder() -> None:
+    """Multi-project search: group with no matches shows '(no active changes)' row."""
+    changes = [
+        _change("alpha-feature", "alpha"),
+        _change("beta-work", "beta"),
+    ]
+    app = _EpicsApp(changes)
+    async with app.run_test():
+        epics = app.query_one(EpicsView)
+        table = app.query_one(DataTable)
+        epics._search_query = "alpha"
+        epics._populate()
+        # alpha: 1 separator + 1 match; beta: 1 separator + 1 placeholder = 4 rows
+        assert table.row_count == 4
+        assert "beta" not in epics._change_map
 
 
 async def test_search_persists_on_toggle_archived(openspec_with_archive: Path) -> None:
