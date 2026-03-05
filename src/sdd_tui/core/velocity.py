@@ -33,7 +33,7 @@ def compute_velocity(archive_dirs: list[Path], cwd: Path) -> VelocityReport:
         if not archive_dir.exists():
             continue
         # archive_dir = repo/openspec/changes/archive → parent×3 = repo root
-        project_path = archive_dir.parent.parent.parent
+        project_path = archive_dir.resolve().parent.parent.parent
 
         for entry in sorted(archive_dir.iterdir()):
             if not entry.is_dir():
