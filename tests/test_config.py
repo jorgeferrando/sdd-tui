@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from sdd_tui.core.config import AppConfig, _parse_config, load_config
 
 

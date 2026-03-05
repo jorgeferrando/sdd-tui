@@ -5,8 +5,6 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from sdd_tui.core.velocity import (
-    ChangeVelocity,
-    VelocityReport,
     _get_change_dates,
     compute_velocity,
 )
@@ -29,9 +27,7 @@ def _make_archive_entry(archive_dir: Path, date_prefix: str, change_name: str) -
 
 
 def test_get_change_dates_returns_none_when_git_missing(tmp_path: Path) -> None:
-    with patch(
-        "sdd_tui.core.velocity.subprocess.run", side_effect=FileNotFoundError
-    ):
+    with patch("sdd_tui.core.velocity.subprocess.run", side_effect=FileNotFoundError):
         assert _get_change_dates("my-change", tmp_path) == (None, None)
 
 

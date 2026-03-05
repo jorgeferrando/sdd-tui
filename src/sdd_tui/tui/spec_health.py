@@ -45,9 +45,7 @@ class SpecHealthScreen(Screen):
             table.add_row("No active changes")
             return
 
-        all_metrics = {
-            c.name: parse_metrics(c.path, c.project_path or Path.cwd()) for c in visible
-        }
+        all_metrics = {c.name: parse_metrics(c.path, c.project_path or Path.cwd()) for c in visible}
         has_research = any("research" in m.artifacts for m in all_metrics.values())
         has_requirements = any("requirements" in m.artifacts for m in all_metrics.values())
 
@@ -61,10 +59,14 @@ class SpecHealthScreen(Screen):
                 proj_changes = [c for c in active if c.project == project_name]
                 table.add_row(f"─── {project_name} ───", "", "", "", "", "")
                 for change in proj_changes:
-                    self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
+                    self._add_row(
+                        table, change, all_metrics[change.name], has_research, has_requirements
+                    )
         else:
             for change in active:
-                self._add_row(table, change, all_metrics[change.name], has_research, has_requirements)
+                self._add_row(
+                    table, change, all_metrics[change.name], has_research, has_requirements
+                )
 
         if self._include_archived and archived:
             table.add_row("── archived ──", "", "", "", "", "")
@@ -113,7 +115,6 @@ class SpecHealthScreen(Screen):
             key=change.name,
         )
         self._change_map[change.name] = change
-
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         from sdd_tui.tui.change_detail import ChangeDetailScreen

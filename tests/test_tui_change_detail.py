@@ -7,10 +7,10 @@ from sdd_tui.core.github import PrStatus
 from sdd_tui.core.models import PhaseState, Pipeline
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import (
+    _PR_LOADING,
     ChangeDetailScreen,
     DiffPanel,
     PipelinePanel,
-    _PR_LOADING,
 )
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen
 from sdd_tui.tui.spec_evolution import SpecEvolutionScreen

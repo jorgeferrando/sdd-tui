@@ -1,12 +1,12 @@
+from datetime import date
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from textual.widgets import Static
 
+from sdd_tui.core.velocity import ChangeVelocity, VelocityReport
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.velocity import VelocityView, _build_content, _build_markdown_report
-from sdd_tui.core.velocity import VelocityReport, ChangeVelocity
-from datetime import date
 
 
 def _git_mock() -> MagicMock:
@@ -35,6 +35,7 @@ def test_build_content_with_data() -> None:
         lead_time_days=4,
     )
     from sdd_tui.core.velocity import _compute_throughput
+
     wt = _compute_throughput([cv])
     report = VelocityReport(
         changes=[cv],

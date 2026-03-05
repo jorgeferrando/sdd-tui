@@ -7,11 +7,11 @@ from textual.app import App, ComposeResult
 from textual.widgets import DataTable, Input
 
 from sdd_tui.core.models import Change
+from sdd_tui.core.velocity import VelocityReport
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 from sdd_tui.tui.epics import EpicsView
 from sdd_tui.tui.spec_health import SpecHealthScreen
-from sdd_tui.core.velocity import VelocityReport
 from sdd_tui.tui.velocity import VelocityView
 
 
@@ -310,7 +310,9 @@ class _EpicsApp(App):
 
 
 def _change(name: str, project: str) -> Change:
-    return Change(name=name, path=Path("/tmp"), project=project, project_path=Path("/tmp") / project)
+    return Change(
+        name=name, path=Path("/tmp"), project=project, project_path=Path("/tmp") / project
+    )
 
 
 async def test_epics_multi_project_shows_separators() -> None:

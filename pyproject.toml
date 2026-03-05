@@ -6,6 +6,7 @@ dependencies = ["textual>=0.70.0"]
 
 [project.scripts]
 sdd-tui = "sdd_tui.tui.app:main"
+sdd-setup = "sdd_tui.setup:main"
 
 [build-system]
 requires = ["hatchling"]

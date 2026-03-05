@@ -96,7 +96,11 @@ class EpicsView(Widget):
         else:
             for project_name in active_projects:
                 proj_changes = [c for c in active if c.project == project_name]
-                filtered = self._filter_changes(proj_changes, self._search_query) if self._search_query else proj_changes
+                filtered = (
+                    self._filter_changes(proj_changes, self._search_query)
+                    if self._search_query
+                    else proj_changes
+                )
                 table.add_row(f"─── {project_name} ───", "", "", "", "", "", "")
                 if not filtered:
                     table.add_row("  (no active changes)", "", "", "", "", "", "")
