@@ -2,8 +2,9 @@ from pathlib import Path
 
 import pytest
 
+from sdd_tui.core.config import AppConfig, ProjectConfig
 from sdd_tui.core.models import OpenspecNotFoundError
-from sdd_tui.core.reader import OpenspecReader, load_spec_json, load_steering
+from sdd_tui.core.reader import OpenspecReader, load_all_changes, load_spec_json, load_steering
 
 
 @pytest.fixture
@@ -130,3 +131,93 @@ def test_load_spec_json_malformed(tmp_path: Path) -> None:
     result = load_spec_json(change_path)
 
     assert result is None
+
+
+# --- project fields ---
+
+
+def test_load_sets_project_fields(openspec_dir: Path, reader: OpenspecReader) -> None:
+    (openspec_dir / "changes" / "my-change").mkdir()
+    project_root = openspec_dir.parent
+
+    changes = reader.load(openspec_dir, project_path=project_root)
+
+    assert len(changes) == 1
+    assert changes[0].project == project_root.name
+    assert changes[0].project_path == project_root
+
+
+def test_load_default_project_path_is_parent(openspec_dir: Path, reader: OpenspecReader) -> None:
+    (openspec_dir / "changes" / "my-change").mkdir()
+
+    changes = reader.load(openspec_dir)
+
+    assert changes[0].project_path == openspec_dir.parent
+
+
+def test_load_archived_has_project_fields(openspec_dir: Path, reader: OpenspecReader) -> None:
+    (openspec_dir / "changes" / "archive" / "old-change").mkdir()
+    project_root = openspec_dir.parent
+
+    changes = reader.load(openspec_dir, include_archived=True, project_path=project_root)
+
+    archived = [c for c in changes if c.archived]
+    assert len(archived) == 1
+    assert archived[0].project == project_root.name
+    assert archived[0].project_path == project_root
+
+
+# --- load_all_changes ---
+
+
+def _make_project(base: Path, name: str) -> Path:
+    """Create a minimal openspec structure under base/name/."""
+    proj = base / name
+    (proj / "openspec" / "changes").mkdir(parents=True)
+    (proj / "openspec" / "changes" / "archive").mkdir()
+    return proj
+
+
+def test_load_all_changes_legacy_uses_cwd(tmp_path: Path) -> None:
+    proj = _make_project(tmp_path, "myproject")
+    (proj / "openspec" / "changes" / "my-change").mkdir()
+
+    changes = load_all_changes(AppConfig(), proj)
+
+    assert len(changes) == 1
+    assert changes[0].project == "myproject"
+    assert changes[0].project_path == proj
+
+
+def test_load_all_changes_multi_project(tmp_path: Path) -> None:
+    proj_a = _make_project(tmp_path, "alpha")
+    proj_b = _make_project(tmp_path, "beta")
+    (proj_a / "openspec" / "changes" / "change-a").mkdir()
+    (proj_b / "openspec" / "changes" / "change-b").mkdir()
+
+    config = AppConfig(projects=[ProjectConfig(path=proj_a), ProjectConfig(path=proj_b)])
+    changes = load_all_changes(config, tmp_path)
+
+    assert len(changes) == 2
+    names = {c.name for c in changes}
+    assert names == {"change-a", "change-b"}
+    projects = {c.project for c in changes}
+    assert projects == {"alpha", "beta"}
+
+
+def test_load_all_changes_skips_missing_project(tmp_path: Path) -> None:
+    proj_a = _make_project(tmp_path, "alpha")
+    (proj_a / "openspec" / "changes" / "change-a").mkdir()
+    missing = tmp_path / "ghost"  # does not exist
+
+    config = AppConfig(projects=[ProjectConfig(path=proj_a), ProjectConfig(path=missing)])
+    changes = load_all_changes(config, tmp_path)
+
+    assert len(changes) == 1
+    assert changes[0].name == "change-a"
+
+
+def test_load_all_changes_all_missing_returns_empty(tmp_path: Path) -> None:
+    config = AppConfig(projects=[ProjectConfig(path=tmp_path / "ghost")])
+    changes = load_all_changes(config, tmp_path)
+    assert changes == []
