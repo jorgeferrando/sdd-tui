@@ -190,6 +190,7 @@ class ChangeDetailScreen(Screen):
         Binding("q", "view_requirements", "Requirements"),
         Binding("space", "copy_next_command", "Copy cmd", priority=True),
         Binding("e", "spec_evolution", "Spec evolution"),
+        Binding("g", "git_log", "Git log"),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -216,9 +217,7 @@ class ChangeDetailScreen(Screen):
         from sdd_tui.core.github import get_pr_status
 
         pr_status = get_pr_status(self._change.name, self._change.project_path)
-        self.app.call_from_thread(
-            lambda s=pr_status: self.query_one(PipelinePanel).update_pr(s)
-        )
+        self.app.call_from_thread(lambda s=pr_status: self.query_one(PipelinePanel).update_pr(s))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.row_key is None or event.row_key.value is None:
@@ -244,7 +243,16 @@ class ChangeDetailScreen(Screen):
         else:
             diff = GitReader().get_working_diff(Path.cwd())
             if diff:
-                self.app.call_from_thread(self._update_diff_panel, diff, True)
+                status = GitReader().get_status_short(Path.cwd())
+                if status:
+                    header = (
+                        "# Modified files:\n"
+                        + "\n".join(f"# {line}" for line in status.splitlines())
+                        + "\n#\n"
+                    )
+                else:
+                    header = "# Staged changes:\n#\n"
+                self.app.call_from_thread(self._update_diff_panel, header + diff, True)
             else:
                 self.app.call_from_thread(self._update_diff_panel, "No uncommitted changes", False)
 
@@ -309,6 +317,11 @@ class ChangeDetailScreen(Screen):
 
     def action_spec_evolution(self) -> None:
         self.app.push_screen(SpecEvolutionScreen(self._change))
+
+    def action_git_log(self) -> None:
+        from sdd_tui.tui.git_log import GitLogScreen
+
+        self.app.push_screen(GitLogScreen(self._change))
 
     def _open_doc(self, filename: str, label: str) -> None:
         path = self._change.path / filename
