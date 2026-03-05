@@ -14,6 +14,8 @@ class PhaseState(Enum):
 class CommitInfo:
     hash: str
     message: str
+    author: str | None = None
+    date_relative: str | None = None
 
 
 class TaskGitState(Enum):
