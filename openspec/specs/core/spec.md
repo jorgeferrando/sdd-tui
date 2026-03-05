@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** observatory-v1
+- **Change:** velocity-metrics
 - **Fecha:** 2026-03-05
-- **Versión:** 0.9
+- **Versión:** 1.0
 - **Estado:** approved
 
 ## Contexto
@@ -294,6 +294,77 @@ class TaskGitState(Enum):
 ## Abierto / Pendiente
 
 Ninguno.
+
+---
+
+## 12. Velocity — Throughput y Lead Time
+
+### Propósito
+
+Módulo `core/velocity.py` — infiere métricas de throughput y lead time del proceso SDD
+a partir de `git log` sobre los changes archivados. Sin estado propio, sin dependencias nuevas.
+
+### Modelo de Datos
+
+```python
+@dataclass
+class ChangeVelocity:
+    name: str                      # nombre del change (sin prefijo de fecha)
+    project: str                   # basename del proyecto (resuelto de archive_dir)
+    start_date: date | None        # fecha del primer commit del change
+    end_date: date | None          # fecha del último commit del change
+    lead_time_days: int | None     # end_date - start_date en días
+
+@dataclass
+class VelocityReport:
+    changes: list[ChangeVelocity] = field(default_factory=list)
+    weekly_throughput: list[tuple[date, int]] = field(default_factory=list)
+    median_lead_time: float | None = None
+    p90_lead_time: float | None = None
+    slowest_change: ChangeVelocity | None = None
+```
+
+### `compute_velocity(archive_dirs, cwd) -> VelocityReport`
+
+Para cada `archive_dir`:
+1. `project_path = archive_dir.resolve().parent.parent.parent`
+2. Iterar subdirectorios con prefijo `YYYY-MM-DD-`; extraer `change_name = dir.name.split("-", 3)[3]`
+3. `git log --format=%ad --date=short -F --grep=[{change_name}]` — primera línea = end, última = start
+4. `lead_time = (end - start).days`
+
+Throughput: últimas 8 semanas ISO (lunes de cada semana); contar changes con `end_date` en el rango.
+
+### Requisitos
+
+- **REQ-VM01** `[Event]` When `compute_velocity(archive_dirs, cwd)` is called, the system SHALL return a `VelocityReport` aggregated from all archive dirs.
+- **REQ-VM02** `[Ubiquitous]` The system SHALL infer start_date as the first git commit containing `[{change_name}]`.
+- **REQ-VM03** `[Ubiquitous]` The system SHALL infer end_date as the last git commit containing `[{change_name}]`.
+- **REQ-VM04** `[Ubiquitous]` The lead time SHALL be `end_date - start_date` in days.
+- **REQ-VM05** `[Unwanted]` If no commits found, the system SHALL set all dates to `None` without raising.
+- **REQ-VM06** `[Ubiquitous]` Throughput SHALL be computed per ISO week for the last 8 weeks.
+- **REQ-VM07** `[Unwanted]` If a change has no `end_date`, it SHALL be excluded from calculations.
+- **REQ-VM08** `[Ubiquitous]` `median_lead_time` and `p90_lead_time` SHALL aggregate across all projects.
+- **REQ-VM09** `[Unwanted]` If fewer than 2 changes have lead time data, both SHALL be `None`.
+- **REQ-VM10** `[Optional]` Where multi-project, the system SHALL aggregate all archive_dirs.
+- **REQ-VM11** `[Unwanted]` If git fails, the system SHALL return an empty `VelocityReport` without raising.
+- **REQ-VM12** `[Ubiquitous]` git queries SHALL use `-F` (fixed-strings).
+
+### Casos Alternativos
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| archive/ vacío | Sin subdirectorios fecha | `VelocityReport` vacío |
+| Subdirectorio sin prefijo fecha | Nombre inválido | Ignorado silenciosamente |
+| Change sin commits | `git log` vacío | `ChangeVelocity` con fechas `None` |
+| Un solo change con datos | `len(lead_times) == 1` | `median=None`, `p90=None` |
+| git no instalado | `FileNotFoundError` | `VelocityReport` vacío |
+| archive_dir no existe | Path ausente | Omitido silenciosamente |
+
+### Reglas de negocio
+
+- **RB-VL1:** `project_path = archive_dir.resolve().parent.parent.parent` — usa `.resolve()` para manejar rutas relativas.
+- **RB-VL2:** `statistics.median` (stdlib) para median; P90 manual: `sorted[int(0.9 * len)]`.
+- **RB-VL3:** `compute_velocity` no lanza excepciones — todos los errores se degradan silenciosamente.
 
 ---
 

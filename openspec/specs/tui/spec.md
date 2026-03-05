@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** observatory-v1
+- **Change:** velocity-metrics
 - **Fecha:** 2026-03-05
-- **Versión:** 1.6
+- **Versión:** 1.8
 - **Estado:** approved
 
 ## Contexto
@@ -814,3 +814,135 @@ Multi-proyecto detectado cuando `len(active_projects) > 1` donde `active_project
 ### Fuera de scope
 
 - Binding `s` (steering) sigue usando `_openspec_path` single-project — extensión diferida a v2.
+
+---
+
+## 19. View 2 — GitHub PR Status en PipelinePanel
+
+### Fila PR en PipelinePanel
+
+`PipelinePanel` añade una fila extra al final del panel con el estado del PR de GitHub
+asociado al change actual.
+
+```
+  PIPELINE
+
+  ✓  propose
+  ✓  spec
+  ✓  design
+  ✓  tasks
+  ✓  apply
+  ✓  verify
+
+  ⧗  PR #1234  2✓ 1✗
+```
+
+| Símbolo | Condición |
+|---------|-----------|
+| `…` | Worker en curso (estado inicial al abrir View 2) |
+| `—` | Sin PR o `gh` no disponible |
+| `⧗` | PR abierto (`state == "OPEN"`) |
+| `✓` | PR mergeado (`state == "MERGED"`) |
+| `✗` | PR cerrado sin merge (`state == "CLOSED"`) |
+
+El conteo de reviews solo muestra valores > 0:
+- `2✓ 1✗` → 2 approvals, 1 changes_requested
+- `3✓` → solo approvals
+- `1✗` → solo changes_requested
+- Sin conteo si ambos son 0
+
+### `core/github.py` — módulo
+
+`get_pr_status(change_name, cwd) -> PrStatus | None`
+
+- Ejecuta `gh pr list --json number,headRefName,state,reviews --state all --limit 20`
+- Filtra por `headRefName` que contenga `change_name` (substring)
+- Retorna `None` en: `FileNotFoundError`, `returncode != 0`, sin match, JSON inválido
+- Degradación silenciosa total — no lanza excepciones
+
+### Carga asíncrona
+
+- **REQ-PR01** `[Event]` When View 2 mounts, the system SHALL launch `_load_pr_status_worker()`.
+- **REQ-PR02** `[State]` While the worker is running, PipelinePanel SHALL show `…  PR`.
+- **REQ-PR03** `[Event]` When the worker completes with a result, PipelinePanel SHALL update with state symbol, number, and review counts.
+- **REQ-PR04** `[Event]` When the worker completes with no result, PipelinePanel SHALL show `—  PR`.
+- **REQ-PR05** `[Unwanted]` If `gh` is unavailable, `get_pr_status` SHALL return `None` without raising.
+- **REQ-PR06** `[Unwanted]` If `gh` returns non-zero exit code, `get_pr_status` SHALL return `None` without raising.
+- **REQ-PR07** `[Event]` When the user presses `r`, the PR status SHALL reload (worker relaunched with fresh panels).
+- **REQ-PR08** `[Ubiquitous]` The review count SHALL only show non-zero values.
+
+### Reglas de negocio
+
+- **RB-PR01:** `get_pr_status` es puro — sin efectos secundarios ni estado global.
+- **RB-PR02:** Worker usa `@work(thread=True)` sin `exclusive` — coexiste con el diff worker.
+- **RB-PR03:** `self.app.call_from_thread` (no `self.call_from_thread`) — patrón establecido.
+- **RB-PR04:** `PipelinePanel._text` almacena el contenido actual (necesario para tests unitarios sin mount).
+- **RB-PR05:** `_PR_LOADING = object()` sentinel en `change_detail.py` — distingue "cargando" de `None`.
+- **RB-PR06:** `--state all` en `gh pr list` incluye MERGED y CLOSED.
+- **RB-PR07:** Import local de `get_pr_status` en el worker — patrón establecido para deps opcionales.
+
+---
+
+## 20. VelocityView — Métricas de Velocidad
+
+### Navegación
+
+| Tecla | Desde | Acción |
+|-------|-------|--------|
+| `V` | View 1 (EpicsView) | Abre `VelocityView` via `push_screen` |
+| `Esc` | VelocityView | Vuelve a View 1 |
+| `j/k` | VelocityView | Scroll arriba/abajo |
+| `E` | VelocityView | Exporta reporte Markdown al portapapeles |
+
+### Layout
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ sdd-tui — velocity                                               │
+├─────────────────────────────────────────────────────────────────┤
+│ THROUGHPUT (últimas 8 semanas)                                   │
+│                                                                  │
+│  2026-W03   ██████  3 changes                                    │
+│  2026-W10   ████████████████████  16 changes                     │
+│  ...                                                             │
+│                                                                  │
+│ LEAD TIME                                                        │
+│                                                                  │
+│  Changes with data: 23                                           │
+│  Median: 8.0d                                                    │
+│  P90:   14.2d                                                    │
+│  Slowest: view-3-commit-diff (21d)                               │
+│                                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ [E] export   [j/k] scroll   [Esc] ← changes                     │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Requisitos
+
+- **REQ-V01** `[Event]` When el usuario pulsa `V` en View 1, the app SHALL hacer `push_screen(VelocityView)`.
+- **REQ-V02** `[Event]` When el usuario pulsa `Esc`, the app SHALL hacer `pop_screen`.
+- **REQ-V03** `[Event]` When el usuario pulsa `j/k`, the screen SHALL hacer scroll.
+- **REQ-V05** `[Ubiquitous]` VelocityView SHALL mostrar una sección `THROUGHPUT` con una barra Unicode por semana (últimas 8 semanas ISO).
+- **REQ-V06** `[Ubiquitous]` Cada barra SHALL escalar proporcionalmente al máximo del período.
+- **REQ-V08** `[Ubiquitous]` VelocityView SHALL mostrar una sección `LEAD TIME` con Median, P90, total de changes y el más lento.
+- **REQ-V09** `[Unwanted]` If `median_lead_time is None`, the section SHALL mostrar `Not enough data`.
+- **REQ-V10** `[Event]` When el usuario pulsa `E`, the app SHALL copiar un reporte Markdown al portapapeles.
+- **REQ-V11** `[Event]` When export completes, the app SHALL mostrar toast `Report copied to clipboard`.
+- **REQ-V12** `[Unwanted]` If `compute_velocity` returns empty, VelocityView SHALL mostrar `No data available`.
+
+### Implementación
+
+- `VelocityView` en `tui/velocity.py` — `Screen` + `ScrollableContainer(Static)`
+- `archive_dirs` construidos en `action_velocity` de `EpicsView` (mismo patrón que `action_decisions_timeline`)
+- Carga síncrona en `on_mount` — operación ligera
+- `_build_content(report) -> rich.Text` — función módulo privada, testable de forma aislada
+- `_build_markdown_report(report) -> str` — función módulo privada, sin deps externas
+
+### Reglas de negocio
+
+- **RB-VV01:** `VelocityView` recibe `archive_dirs: list[Path]` al construirse.
+- **RB-VV02:** `archive_dirs` deduplicados por path real en `action_velocity`.
+- **RB-VV03:** El reporte exportado siempre incluye la fecha del día en el header.
+- **RB-VV04:** `V` mayúscula — consistente con `H` (SpecHealth) y `X` (DecisionsTimeline).
+- **RB-VV05:** `action_scroll_down/up` delegan a `ScrollableContainer` — patrón establecido.
