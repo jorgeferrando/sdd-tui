@@ -19,6 +19,34 @@ description: SDD Apply - Implement the change following tasks.md. One task = one
 
 - `tasks.md` approved with task list
 - Correct git branch created
+- `openspec/steering/conventions.md` must exist (run `/sdd-init` first if missing)
+
+## Step 0: Bootstrap verification + load steering
+
+**Verify bootstrap:**
+
+```bash
+ls openspec/steering/conventions.md
+```
+
+If missing:
+```
+⚠️  openspec/steering/conventions.md not found.
+
+Run /sdd-init first to set up your project context.
+This ensures Claude has the conventions and rules needed to implement correctly.
+```
+**STOP** — do not proceed without conventions.md.
+
+**Load steering silently** (no output to user unless something relevant is found):
+
+- If `openspec/steering/project-skill.md` exists → read it (it's the index, references the rest)
+- Otherwise → read in parallel:
+  - `openspec/steering/conventions.md`
+  - `openspec/steering/project-rules.md` (if exists)
+  - `openspec/steering/tech.md` (if exists)
+
+Apply all rules from these files throughout the implementation.
 
 ## Step 1: Load current state
 
