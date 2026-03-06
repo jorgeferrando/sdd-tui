@@ -9,6 +9,7 @@ from textual.events import Key
 from textual.widget import Widget
 from textual.widgets import DataTable, Footer, Header, Input
 
+from sdd_tui.core.metrics import parse_metrics
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 from sdd_tui.tui.spec_evolution import DecisionsTimeline
@@ -77,7 +78,7 @@ class EpicsView(Widget):
     def _populate(self) -> None:
         table = self.query_one(DataTable)
         table.clear(columns=True)
-        table.add_columns("change", *PHASES)
+        table.add_columns("change", "SIZE", *PHASES)
         self._change_map = {}
 
         active = [c for c in self._changes if not c.archived]
@@ -91,7 +92,7 @@ class EpicsView(Widget):
                 active = self._filter_changes(active, self._search_query)
                 archived = self._filter_changes(archived, self._search_query)
             if not active and not archived and self._search_query:
-                table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "")
+                table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "", "")
                 return
             for change in active:
                 self._add_change_row(table, change)
@@ -103,9 +104,9 @@ class EpicsView(Widget):
                     if self._search_query
                     else proj_changes
                 )
-                table.add_row(f"─── {project_name} ───", "", "", "", "", "", "")
+                table.add_row(f"─── {project_name} ───", "", "", "", "", "", "", "")
                 if not filtered:
-                    table.add_row("  (no active changes)", "", "", "", "", "", "")
+                    table.add_row("  (no active changes)", "", "", "", "", "", "", "")
                 else:
                     for change in filtered:
                         self._add_change_row(table, change)
@@ -113,7 +114,7 @@ class EpicsView(Widget):
                 archived = self._filter_changes(archived, self._search_query)
 
         if archived:
-            table.add_row("── archived ──", "", "", "", "", "", "")
+            table.add_row("── archived ──", "", "", "", "", "", "", "")
             for change in archived:
                 self._add_change_row(table, change)
 
@@ -134,6 +135,13 @@ class EpicsView(Widget):
         return text
 
     def _add_change_row(self, table: DataTable, change: Change) -> None:
+        try:
+            metrics = parse_metrics(change.path, change.project_path or Path.cwd())
+            label = metrics.complexity_label
+            size_cell: str | Text = Text(label, style="yellow" if label == "XL" else "")
+        except Exception:
+            size_cell = "?"
+
         pipeline = change.pipeline
         name_cell: str | Text = (
             self._highlight_match(change.name, self._search_query)
@@ -142,6 +150,7 @@ class EpicsView(Widget):
         )
         row = (
             name_cell,
+            size_cell,
             _phase_symbol(pipeline.propose),
             _phase_symbol(pipeline.spec),
             _phase_symbol(pipeline.design),
