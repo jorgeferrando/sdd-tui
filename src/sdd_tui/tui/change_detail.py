@@ -127,14 +127,16 @@ class PipelinePanel(Static):
     def update_pr(self, pr_status: PrStatus | None) -> None:
         self._pr_status = pr_status
         self._text = self._build_content(
-            self._pipeline, self._tasks, self._metrics, pr_status, self._ci_status, self._change_name
+            self._pipeline, self._tasks, self._metrics,
+            pr_status, self._ci_status, self._change_name,
         )
         self.update(self._text)
 
     def update_ci(self, ci_status: CiStatus | None) -> None:
         self._ci_status = ci_status
         self._text = self._build_content(
-            self._pipeline, self._tasks, self._metrics, self._pr_status, ci_status, self._change_name
+            self._pipeline, self._tasks, self._metrics,
+            self._pr_status, ci_status, self._change_name,
         )
         self.update(self._text)
 
@@ -256,7 +258,10 @@ class ChangeDetailScreen(Screen):
         with Vertical():
             with Horizontal(classes="top-panel"):
                 yield TaskListPanel(self._change.tasks)
-                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics, name=self._change.name)
+                yield PipelinePanel(
+                    self._change.pipeline, self._change.tasks, self._metrics,
+                    name=self._change.name,
+                )
             yield DiffPanel()
         yield Footer()
 
@@ -343,7 +348,10 @@ class ChangeDetailScreen(Screen):
         self.query_one(PipelinePanel).remove()
         top.mount(
             TaskListPanel(self._change.tasks),
-            PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics, name=self._change.name),
+            PipelinePanel(
+                self._change.pipeline, self._change.tasks, self._metrics,
+                name=self._change.name,
+            ),
         )
         self.query_one(DiffPanel).show_message("Select a task to view its diff")
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
