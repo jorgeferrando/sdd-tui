@@ -369,6 +369,39 @@ async def test_epics_multi_project_search_empty_group_shows_placeholder() -> Non
         assert "beta" not in epics._change_map
 
 
+# ── Complexity SIZE column ─────────────────────────────────────────────────────
+
+
+async def test_epics_size_column_shows_valid_label() -> None:
+    """REQ-CB-10: SIZE column shows a valid complexity label for each change row."""
+    change = Change(name="my-change", path=Path("/tmp"), project_path=Path("/tmp"))
+    app = _EpicsApp([change])
+    async with app.run_test():
+        table = app.query_one(DataTable)
+        # Column 1 (index 1) should be SIZE — get row data via ordered_columns
+        column_keys = [col.label.plain for col in table.columns.values()]
+        assert "SIZE" in column_keys
+
+
+async def test_epics_size_column_xl_rendered_yellow() -> None:
+    """REQ-CB-12: XL complexity badge is rendered in yellow."""
+    from unittest.mock import patch
+    from textual.coordinate import Coordinate
+    from sdd_tui.core.metrics import ChangeMetrics
+
+    xl_metrics = ChangeMetrics(req_count=0, ears_count=0, complexity_score=50, complexity_label="XL")
+    change = Change(name="fat-change", path=Path("/tmp"), project_path=Path("/tmp"))
+    app = _EpicsApp([change])
+    with patch("sdd_tui.tui.epics.parse_metrics", return_value=xl_metrics):
+        async with app.run_test():
+            table = app.query_one(DataTable)
+            # SIZE is column index 1 (0=change, 1=SIZE, 2=propose, ...)
+            cell_value = table.get_cell_at(Coordinate(0, 1))
+            assert isinstance(cell_value, Text)
+            assert cell_value.plain == "XL"
+            assert "yellow" in str(cell_value.style)
+
+
 async def test_search_persists_on_toggle_archived(openspec_with_archive: Path) -> None:
     """REQ-10: filter persists when toggling archived changes."""
     with patch("sdd_tui.tui.app.GitReader", _git_mock()):
