@@ -14,6 +14,17 @@ from textual.widgets import Footer, Header, Label, ListItem, ListView, Static
 from sdd_tui.core.models import Change
 from sdd_tui.core.spec_parser import collect_archived_decisions, parse_delta
 
+_STATUS_STYLES: dict[str, tuple[str, str]] = {
+    "locked": ("[locked]", "dim"),
+    "open": ("[open]", "yellow"),
+    "deferred": ("[deferred]", "cyan"),
+}
+
+
+def _status_badge(status: str) -> tuple[str, str]:
+    """Return (badge_text, rich_style) for a decision status."""
+    return _STATUS_STYLES.get(status, (f"[{status}]", "dim"))
+
 
 class SpecEvolutionScreen(Screen):
     BINDINGS = [
@@ -167,7 +178,10 @@ class DecisionsTimeline(Screen):
             header = f"── {cd.change_name} ({cd.archive_date}) ──"
             content.append(header + "\n", style="bold cyan")
             for decision in cd.decisions:
-                content.append(f"  • {decision.decision}\n", style="white")
+                badge, badge_style = _status_badge(decision.status)
+                content.append("  • ", style="white")
+                content.append(f"{badge} ", style=badge_style)
+                content.append(f"{decision.decision}\n", style="white")
                 content.append(f"    vs: {decision.alternative}\n", style="dim")
                 content.append(f"    why: {decision.reason}\n", style="italic")
             content.append("\n")
