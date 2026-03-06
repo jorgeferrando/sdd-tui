@@ -218,6 +218,7 @@ class ChangeDetailScreen(Screen):
         Binding("e", "spec_evolution", "Spec evolution"),
         Binding("g", "git_log", "Git log"),
         Binding("shift+w", "ship_pr", "Ship PR"),
+        Binding("K", "skill_palette", "Skills"),
     ]
 
     def __init__(self, change: Change) -> None:
@@ -359,6 +360,11 @@ class ChangeDetailScreen(Screen):
         from sdd_tui.tui.git_log import GitLogScreen
 
         self.app.push_screen(GitLogScreen(self._change))
+
+    def action_skill_palette(self) -> None:
+        from sdd_tui.tui.skill_palette import SkillPaletteScreen
+
+        self.app.push_screen(SkillPaletteScreen(change_name=self._change.name))
 
     def action_ship_pr(self) -> None:
         desc = self._extract_proposal_description()
