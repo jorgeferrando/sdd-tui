@@ -104,7 +104,8 @@ class EpicsView(Widget):
                     active = self._filter_changes(active, self._search_query)
                     archived = self._filter_changes(archived, self._search_query)
                 if not active and not archived and self._search_query:
-                    table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "", "")
+                    no_match = f'No matches for "{self._search_query}"'
+                    table.add_row(no_match, "", "", "", "", "", "", "")
                     return
                 for change in active:
                     self._add_change_row(table, change)
