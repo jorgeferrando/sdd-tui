@@ -10,6 +10,8 @@ INACTIVE_THRESHOLD_DAYS = 7
 
 _EARS_TAGS = frozenset({"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"})
 _REQ_PATTERN = re.compile(r"\*\*(REQ-\d+)\*\*")
+_TASK_LINE = re.compile(r"^\s*-\s+\[[ x]\]")
+_COMPLEXITY_THRESHOLDS = [(41, "XL"), (25, "L"), (13, "M"), (6, "S"), (0, "XS")]
 
 _ARTIFACT_FILES = [
     ("proposal", "proposal.md"),
@@ -27,17 +29,22 @@ class ChangeMetrics:
     ears_count: int
     artifacts: list[str] = field(default_factory=list)
     inactive_days: int | None = None
+    complexity_score: int = 0
+    complexity_label: str = "XS"
 
 
 def parse_metrics(change_path: Path, repo_cwd: Path) -> ChangeMetrics:
     req_count, ears_count = _count_reqs(change_path)
     artifacts = _get_artifacts(change_path)
     inactive_days = _get_inactive_days(change_path.name, repo_cwd)
+    complexity_score, complexity_label = _get_complexity(change_path, repo_cwd)
     return ChangeMetrics(
         req_count=req_count,
         ears_count=ears_count,
         artifacts=artifacts,
         inactive_days=inactive_days,
+        complexity_score=complexity_score,
+        complexity_label=complexity_label,
     )
 
 
@@ -81,6 +88,52 @@ def _get_artifacts(change_path: Path) -> list[str]:
             if (change_path / filename).exists():
                 result.append(name)
     return result
+
+
+def _get_complexity(change_path: Path, repo_cwd: Path) -> tuple[int, str]:
+    task_count = _count_tasks(change_path)
+    spec_lines = _count_spec_lines(change_path)
+    git_files = _count_git_files(change_path.name, repo_cwd)
+    score = task_count * 3 + spec_lines // 50 + git_files
+    label = next(lbl for threshold, lbl in _COMPLEXITY_THRESHOLDS if score >= threshold)
+    return score, label
+
+
+def _count_tasks(change_path: Path) -> int:
+    tasks_file = change_path / "tasks.md"
+    if not tasks_file.exists():
+        return 0
+    return sum(
+        1
+        for line in tasks_file.read_text(errors="replace").splitlines()
+        if _TASK_LINE.match(line)
+    )
+
+
+def _count_spec_lines(change_path: Path) -> int:
+    specs_dir = change_path / "specs"
+    if not specs_dir.exists():
+        return 0
+    total = 0
+    for md in specs_dir.rglob("*.md"):
+        total += len(md.read_text(errors="replace").splitlines())
+    return total
+
+
+def _count_git_files(change_name: str, repo_cwd: Path) -> int:
+    try:
+        result = subprocess.run(
+            ["git", "log", "--name-only", "--format=", "-F", f"--grep=[{change_name}]"],
+            cwd=repo_cwd,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            return 0
+        files = {line.strip() for line in result.stdout.splitlines() if line.strip()}
+        return len(files)
+    except FileNotFoundError:
+        return 0
 
 
 def _get_inactive_days(change_name: str, repo_cwd: Path) -> int | None:
