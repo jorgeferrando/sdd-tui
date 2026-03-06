@@ -116,7 +116,7 @@ async def test_progress_dashboard_mounts(openspec_with_change: Path) -> None:
 async def test_progress_dashboard_empty_shows_message(openspec_with_change: Path) -> None:
     """ProgressDashboard shows 'No changes to display' when no changes."""
     with patch("sdd_tui.tui.app.GitReader", _git_mock()):
-        with patch("sdd_tui.core.reader.load_all_changes", return_value=[]):
+        with patch("sdd_tui.tui.app.load_all_changes", return_value=[]):
             app = SddTuiApp(openspec_with_change)
             async with app.run_test() as pilot:
                 await pilot.press("P")
