@@ -12,6 +12,7 @@ from sdd_tui.tui.change_detail import (
     ChangeDetailScreen,
     DiffPanel,
     PipelinePanel,
+    next_command,
 )
 from sdd_tui.tui.doc_viewer import DocumentViewerScreen
 from sdd_tui.tui.spec_evolution import SpecEvolutionScreen
@@ -298,6 +299,103 @@ async def test_ship_binding_copies_command(openspec_with_change: Path) -> None:
             assert len(copied) == 1
             assert "gh pr create" in copied[0]
             assert "my-change" in copied[0]
+
+
+# --- next_command unit tests (REQ-NA-02, REQ-NA-06) ---
+
+
+def _pipeline(**kwargs) -> Pipeline:
+    defaults = dict(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+    defaults.update(kwargs)
+    return Pipeline(**defaults)
+
+
+def test_next_command_propose_pending() -> None:
+    """REQ-NA-02: propose PENDING → /sdd-propose."""
+    p = _pipeline(propose=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == '/sdd-propose "foo"'
+
+
+def test_next_command_spec_pending() -> None:
+    """REQ-NA-02: spec PENDING → /sdd-spec."""
+    p = _pipeline(spec=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == "/sdd-spec foo"
+
+
+def test_next_command_design_pending() -> None:
+    """REQ-NA-02: design PENDING → /sdd-design."""
+    p = _pipeline(design=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == "/sdd-design foo"
+
+
+def test_next_command_tasks_pending() -> None:
+    """REQ-NA-02: tasks PENDING → /sdd-tasks."""
+    p = _pipeline(tasks=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == "/sdd-tasks foo"
+
+
+def test_next_command_apply_pending_with_task(minimal_change) -> None:
+    """REQ-NA-06: apply PENDING with a pending task → /sdd-apply {task_id}."""
+    from sdd_tui.core.models import Task, TaskGitState
+
+    p = _pipeline(apply=PhaseState.PENDING, verify=PhaseState.PENDING)
+    tasks = [
+        Task(id="T01", description="done", done=True, git_state=TaskGitState.PENDING),
+        Task(id="T02", description="pending", done=False, git_state=TaskGitState.PENDING),
+    ]
+    assert next_command(p, tasks, "foo") == "/sdd-apply T02"
+
+
+def test_next_command_apply_pending_no_task() -> None:
+    """REQ-NA-06: apply PENDING with no tasks → /sdd-apply {name}."""
+    p = _pipeline(apply=PhaseState.PENDING, verify=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == "/sdd-apply foo"
+
+
+def test_next_command_verify_pending() -> None:
+    """REQ-NA-02: verify PENDING → /sdd-verify."""
+    p = _pipeline(verify=PhaseState.PENDING)
+    assert next_command(p, [], "foo") == "/sdd-verify foo"
+
+
+def test_next_command_all_done() -> None:
+    """REQ-NA-05: all phases DONE → /sdd-archive."""
+    p = _pipeline()
+    assert next_command(p, [], "foo") == "/sdd-archive foo"
+
+
+# --- PipelinePanel NEXT line tests (REQ-NA-01, REQ-NA-03, REQ-NA-04, REQ-NA-08) ---
+
+
+def test_pipeline_panel_shows_next_line(minimal_change) -> None:
+    """REQ-NA-01: PipelinePanel._text contains 'NEXT'."""
+    pipeline = _pipeline(spec=PhaseState.PENDING)
+    panel = PipelinePanel(pipeline, [], name="foo")
+    assert "NEXT" in panel._text
+
+
+def test_pipeline_panel_next_shows_correct_command(minimal_change) -> None:
+    """REQ-NA-04: NEXT line contains the resolved command."""
+    pipeline = _pipeline(spec=PhaseState.PENDING)
+    panel = PipelinePanel(pipeline, [], name="foo")
+    assert "/sdd-spec foo" in panel._text
+
+
+def test_pipeline_panel_next_not_updated_on_pr(minimal_change) -> None:
+    """REQ-NA-08: NEXT line does not change after update_pr()."""
+    pipeline = _pipeline(spec=PhaseState.PENDING)
+    panel = PipelinePanel(pipeline, [], name="foo", pr_status=_PR_LOADING)
+    next_before = [line for line in panel._text.splitlines() if "NEXT" in line]
+    panel.update_pr(None)
+    next_after = [line for line in panel._text.splitlines() if "NEXT" in line]
+    assert next_before == next_after
 
 
 async def test_open_missing_doc_no_notify_in_detail(tmp_path: Path) -> None:
