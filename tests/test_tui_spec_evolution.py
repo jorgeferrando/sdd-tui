@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.change_detail import ChangeDetailScreen
-from sdd_tui.tui.spec_evolution import DecisionsTimeline, SpecEvolutionScreen
+from sdd_tui.tui.spec_evolution import DecisionsTimeline, SpecEvolutionScreen, _status_badge
 
 
 def _git_mock() -> MagicMock:
@@ -62,3 +62,31 @@ def test_decisions_timeline_jk_bindings() -> None:
     keys = {b.key for b in DecisionsTimeline.BINDINGS}
     assert "j" in keys
     assert "k" in keys
+
+
+def test_status_badge_locked() -> None:
+    """REQ-DSB-06: locked status returns dim badge."""
+    badge, style = _status_badge("locked")
+    assert badge == "[locked]"
+    assert style == "dim"
+
+
+def test_status_badge_open() -> None:
+    """REQ-DSB-07: open status returns yellow badge."""
+    badge, style = _status_badge("open")
+    assert badge == "[open]"
+    assert style == "yellow"
+
+
+def test_status_badge_deferred() -> None:
+    """REQ-DSB-08: deferred status returns cyan badge."""
+    badge, style = _status_badge("deferred")
+    assert badge == "[deferred]"
+    assert style == "cyan"
+
+
+def test_status_badge_unknown() -> None:
+    """REQ-DSB-09: unknown status returns dim badge with value as text."""
+    badge, style = _status_badge("experimental")
+    assert badge == "[experimental]"
+    assert style == "dim"
