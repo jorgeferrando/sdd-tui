@@ -10,7 +10,28 @@ from sdd_tui.core.metrics import (
     _count_tasks,
     _get_complexity,
     parse_metrics,
+    repair_hints,
 )
+from sdd_tui.core.models import Change, PhaseState, Pipeline
+
+
+def _make_change(name: str = "my-change", pipeline: Pipeline | None = None) -> Change:
+    return Change(name=name, path=Path("/tmp/fake"), pipeline=pipeline or Pipeline())
+
+
+def _all_done() -> Pipeline:
+    return Pipeline(
+        propose=PhaseState.DONE,
+        spec=PhaseState.DONE,
+        design=PhaseState.DONE,
+        tasks=PhaseState.DONE,
+        apply=PhaseState.DONE,
+        verify=PhaseState.DONE,
+    )
+
+
+def _metrics(req_count: int = 0, ears_count: int = 0) -> ChangeMetrics:
+    return ChangeMetrics(req_count=req_count, ears_count=ears_count)
 
 
 def _make_spec(change_dir: Path, domain: str, content: str) -> None:
@@ -366,3 +387,139 @@ def test_reqs_deduped_across_requirements_and_specs(tmp_path: Path) -> None:
 
     assert metrics.req_count == 2  # REQ-01 deduplicated, REQ-02 from spec
     assert metrics.ears_count == 2
+
+
+# --- repair_hints ---
+
+
+def test_repair_hints_propose_pending() -> None:
+    """REQ-RH-01/02: propose PENDING → first hint is /sdd-propose."""
+    change = _make_change("my-change", Pipeline(propose=PhaseState.PENDING))
+    hints = repair_hints(_metrics(), change)
+    assert hints[0] == "/sdd-propose my-change"
+
+
+def test_repair_hints_spec_pending() -> None:
+    """REQ-RH-02: spec PENDING → /sdd-spec hint present."""
+    change = _make_change(
+        "my-change",
+        Pipeline(propose=PhaseState.DONE, spec=PhaseState.PENDING),
+    )
+    hints = repair_hints(_metrics(), change)
+    assert "/sdd-spec my-change" in hints
+
+
+def test_repair_hints_spec_pending_no_quality_hints() -> None:
+    """REQ-RH-05: if spec is PENDING, quality hints must not appear."""
+    change = _make_change(
+        "my-change",
+        Pipeline(propose=PhaseState.DONE, spec=PhaseState.PENDING),
+    )
+    hints = repair_hints(_metrics(req_count=0), change)
+    assert "add REQ-XX tags" not in hints
+    assert "add EARS tags" not in hints
+
+
+def test_repair_hints_design_pending() -> None:
+    """REQ-RH-02: design PENDING → /sdd-design."""
+    change = _make_change(
+        "my-change",
+        Pipeline(
+            propose=PhaseState.DONE,
+            spec=PhaseState.DONE,
+            design=PhaseState.PENDING,
+        ),
+    )
+    hints = repair_hints(_metrics(), change)
+    assert hints[0] == "/sdd-design my-change"
+
+
+def test_repair_hints_tasks_pending() -> None:
+    """REQ-RH-02: tasks PENDING → /sdd-tasks."""
+    change = _make_change(
+        "my-change",
+        Pipeline(
+            propose=PhaseState.DONE,
+            spec=PhaseState.DONE,
+            design=PhaseState.DONE,
+            tasks=PhaseState.PENDING,
+        ),
+    )
+    hints = repair_hints(_metrics(), change)
+    assert hints[0] == "/sdd-tasks my-change"
+
+
+def test_repair_hints_apply_pending() -> None:
+    """REQ-RH-02: apply PENDING → /sdd-apply."""
+    change = _make_change(
+        "my-change",
+        Pipeline(
+            propose=PhaseState.DONE,
+            spec=PhaseState.DONE,
+            design=PhaseState.DONE,
+            tasks=PhaseState.DONE,
+            apply=PhaseState.PENDING,
+        ),
+    )
+    hints = repair_hints(_metrics(), change)
+    assert hints[0] == "/sdd-apply my-change"
+
+
+def test_repair_hints_verify_pending() -> None:
+    """REQ-RH-02: verify PENDING → /sdd-verify."""
+    change = _make_change(
+        "my-change",
+        Pipeline(
+            propose=PhaseState.DONE,
+            spec=PhaseState.DONE,
+            design=PhaseState.DONE,
+            tasks=PhaseState.DONE,
+            apply=PhaseState.DONE,
+            verify=PhaseState.PENDING,
+        ),
+    )
+    hints = repair_hints(_metrics(), change)
+    assert hints[0] == "/sdd-verify my-change"
+
+
+def test_repair_hints_no_reqs() -> None:
+    """REQ-RH-02: all pipeline DONE, req_count=0 → add REQ-XX tags."""
+    change = _make_change("my-change", _all_done())
+    hints = repair_hints(_metrics(req_count=0), change)
+    assert hints[0] == "add REQ-XX tags"
+
+
+def test_repair_hints_partial_ears() -> None:
+    """REQ-RH-02: all pipeline DONE, ears incomplete → add EARS tags."""
+    change = _make_change("my-change", _all_done())
+    hints = repair_hints(_metrics(req_count=3, ears_count=2), change)
+    assert hints[0] == "add EARS tags"
+
+
+def test_repair_hints_all_ok() -> None:
+    """REQ-RH-04: all DONE + full EARS → returns ['✓']."""
+    change = _make_change("my-change", _all_done())
+    hints = repair_hints(_metrics(req_count=5, ears_count=5), change)
+    assert hints == ["✓"]
+
+
+def test_repair_hints_returns_nonempty() -> None:
+    """REQ-RH-01: always returns at least one hint."""
+    change = _make_change("my-change", Pipeline())
+    hints = repair_hints(_metrics(), change)
+    assert len(hints) >= 1
+
+
+def test_repair_hints_pipeline_priority_over_quality() -> None:
+    """REQ-RH-03: pipeline hints before quality hints even if req_count=0."""
+    change = _make_change(
+        "my-change",
+        Pipeline(
+            propose=PhaseState.DONE,
+            spec=PhaseState.DONE,
+            design=PhaseState.PENDING,
+        ),
+    )
+    hints = repair_hints(_metrics(req_count=0), change)
+    assert hints[0] == "/sdd-design my-change"
+    assert "add REQ-XX tags" not in hints[:1]
