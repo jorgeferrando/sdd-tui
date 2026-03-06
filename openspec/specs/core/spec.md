@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** complexity-badge
+- **Change:** spec-health-hints
 - **Fecha:** 2026-03-06
-- **Versión:** 1.2
+- **Versión:** 1.3
 - **Estado:** approved
 
 ## Contexto
@@ -773,4 +773,53 @@ def load_skills(skills_dir: Path) -> list[SkillInfo]: ...
 - **RB-SK-01:** Front matter parseado con regex (sin PyYAML) — consistente con `config.py`.
 - **RB-SK-02:** `_CONTEXT_AWARE` es `frozenset` — importable por tests sin instanciar TUI.
 - **RB-SK-03:** `iterdir()` iterado sobre `sorted()` para orden determinista.
+
+---
+
+## 13. Metrics — repair_hints
+
+### Propósito
+
+`repair_hints(metrics, change) -> list[str]` en `core/metrics.py` — función pura
+que infiere el hint de acción más urgente para un change. Consumida por
+`SpecHealthScreen` para mostrar la columna `HINT`.
+
+### Interfaz
+
+```python
+def repair_hints(metrics: ChangeMetrics, change: Change) -> list[str]: ...
+```
+
+Retorna lista ordenada por prioridad (el primero es el más urgente). Siempre
+retorna al menos un elemento.
+
+### Lógica de prioridad
+
+| Prioridad | Condición | Hint |
+|-----------|-----------|------|
+| 1 | `pipeline.propose == PENDING` | `/sdd-propose {name}` |
+| 2 | `pipeline.spec == PENDING` | `/sdd-spec {name}` |
+| 3 | `pipeline.design == PENDING` | `/sdd-design {name}` |
+| 4 | `pipeline.tasks == PENDING` | `/sdd-tasks {name}` |
+| 5 | `pipeline.apply == PENDING` | `/sdd-apply {name}` |
+| 6 | `pipeline.verify == PENDING` | `/sdd-verify {name}` |
+| 7 | spec existe y `req_count == 0` | `add REQ-XX tags` |
+| 8 | `req_count > 0` y `ears_count < req_count` | `add EARS tags` |
+| 9 | Ninguno anterior | `✓` |
+
+### Requisitos (EARS)
+
+- **REQ-RH-01** `[Event]` When `repair_hints(metrics, change)` is called, the function SHALL return a non-empty list with at least one hint string.
+- **REQ-RH-02** `[Ubiquitous]` The function SHALL evaluate hints in priority order 1→9; each hint that applies SHALL appear before any lower-priority hint.
+- **REQ-RH-03** `[Ubiquitous]` Pipeline hints (1–6) SHALL take precedence over spec quality hints (7–8).
+- **REQ-RH-04** `[Ubiquitous]` When all pipeline phases are DONE and all quality checks pass, the function SHALL return `["✓"]`.
+- **REQ-RH-05** `[Unwanted]` If `pipeline.spec == PENDING`, the function SHALL NOT include spec quality hints (7–8).
+- **REQ-RH-06** `[Ubiquitous]` Hint strings for pipeline phases SHALL include the change name: `/sdd-{phase} {change.name}`.
+- **REQ-RH-07** `[Unwanted]` If any error occurs, the function SHALL NOT raise exceptions.
+
+### Reglas de negocio
+
+- **RB-RH-01:** Early return cuando `spec == PENDING` — los hints de calidad son irrelevantes sin spec.
+- **RB-RH-02:** Retorna `["✓"]` (nunca lista vacía) cuando no hay hints aplicables.
+- **RB-RH-03:** Función pura — sin efectos secundarios ni I/O.
 

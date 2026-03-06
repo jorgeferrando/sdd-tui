@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** complexity-badge
+- **Change:** spec-health-hints
 - **Fecha:** 2026-03-06
-- **Versión:** 2.0
+- **Versión:** 2.1
 - **Estado:** approved
 
 ## Contexto
@@ -380,15 +380,16 @@ La resolución es secuencial — se evalúa la primera fase con `PhaseState.PEND
 ### Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│ sdd-tui — spec health                                                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│ CHANGE              REQ  EARS%  TASKS   ARTIFACTS    INACTIVE            │
-│ view-8-spec-health   19  100%   6/6    P S D T       0d                 │
-│ view-9-delta-specs    0   —     0/4    P . . .       —                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│ [H] health   [Esc] ← changes                                            │
-└─────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ sdd-tui — spec health                                                            │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ CHANGE              REQ  EARS%  TASKS   ARTIFACTS    INACTIVE  HINT             │
+│ view-8-spec-health   19  100%   6/6    P S D T       0d        ✓                │
+│ view-9-delta-specs    0   —     0/4    P . . .       —         add REQ-XX tags  │
+│ my-feature            3   66%   2/5    P S . D T     2d        /sdd-apply my-.. │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ [H] health   [Esc] ← changes                                                    │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Columnas
@@ -401,8 +402,17 @@ La resolución es secuencial — se evalúa la primera fase con `PhaseState.PEND
 | `TASKS` | `done/total`, `—` si sin tasks | `change.tasks` |
 | `ARTIFACTS` | Iniciales P/S/R/D/T (`.` si ausente) | `ChangeMetrics.artifacts` |
 | `INACTIVE` | `{N}d`, `!{N}d` si > 7, `—` si None | `ChangeMetrics.inactive_days` |
+| `HINT` | Hint más urgente inferido de `repair_hints()` | `core/metrics.repair_hints` |
 
 **Columna R (research):** solo aparece si al menos un change tiene `research.md`.
+
+### Colores de HINT
+
+| Tipo de hint | Color |
+|-------------|-------|
+| `✓` | `green` |
+| `/sdd-*` | `cyan` |
+| `add ...` | `yellow` |
 
 ### Alertas
 
@@ -417,6 +427,14 @@ La resolución es secuencial — se evalúa la primera fase con `PhaseState.PEND
 | Archivados visibles | Separador `── archived ──` sin key (igual que View 1) |
 | Change sin tasks | `TASKS = —` |
 | git no disponible | `INACTIVE = —` (sin alerta) |
+| Separador de proyecto/archivo | `HINT = ""` (string vacío) |
+
+### Requisitos HINT (EARS)
+
+- **REQ-SH-01** `[Event]` When `SpecHealthScreen` renders a change row, the system SHALL call `repair_hints(metrics, change)` and display the first element in the `HINT` column.
+- **REQ-SH-02** `[Ubiquitous]` The `HINT` column SHALL be the last column in the table.
+- **REQ-SH-03** `[Ubiquitous]` Separator rows SHALL display an empty string in the `HINT` column.
+- **REQ-SH-04** `[Ubiquitous]` The hint `✓` SHALL be rendered in `green`; pipeline hints SHALL be `cyan`; quality hints SHALL be `yellow`.
 
 ### Reglas de negocio
 
@@ -424,6 +442,7 @@ La resolución es secuencial — se evalúa la primera fase con `PhaseState.PEND
 - **RB-V8-02:** `DataTable` con `cursor_type="row"` y `show_header=True`.
 - **RB-V8-03:** Métricas computadas en `on_mount` — una llamada a `parse_metrics()` por change.
 - **RB-V8-04:** El separador `── archived ──` no tiene key → Enter no hace nada.
+- **RB-V8-05:** `_hint_cell(hint)` es helper module-level — consistente con `_inactive_cell`, `_tasks_cell`.
 
 ---
 
