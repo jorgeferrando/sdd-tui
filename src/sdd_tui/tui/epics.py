@@ -10,6 +10,7 @@ from textual.widget import Widget
 from textual.widgets import DataTable, Footer, Header, Input
 
 from sdd_tui.core.metrics import parse_metrics
+from sdd_tui.core.milestones import Milestone, load_milestones
 from sdd_tui.core.models import Change, PhaseState, Task
 from sdd_tui.tui.change_detail import ChangeDetailScreen
 from sdd_tui.tui.spec_evolution import DecisionsTimeline
@@ -89,14 +90,24 @@ class EpicsView(Widget):
         is_multi = len(active_projects) > 1
 
         if not is_multi:
-            if self._search_query:
-                active = self._filter_changes(active, self._search_query)
-                archived = self._filter_changes(archived, self._search_query)
-            if not active and not archived and self._search_query:
-                table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "", "")
-                return
-            for change in active:
-                self._add_change_row(table, change)
+            openspec_path = getattr(self.app, "_openspec_path", None)
+            milestones = load_milestones(openspec_path) if openspec_path else []
+            if milestones:
+                archived = (
+                    self._filter_changes(archived, self._search_query)
+                    if self._search_query
+                    else archived
+                )
+                self._populate_by_milestone(table, active, milestones)
+            else:
+                if self._search_query:
+                    active = self._filter_changes(active, self._search_query)
+                    archived = self._filter_changes(archived, self._search_query)
+                if not active and not archived and self._search_query:
+                    table.add_row(f'No matches for "{self._search_query}"', "", "", "", "", "", "", "")
+                    return
+                for change in active:
+                    self._add_change_row(table, change)
         else:
             for project_name in active_projects:
                 proj_changes = [c for c in active if c.project == project_name]
@@ -117,6 +128,32 @@ class EpicsView(Widget):
         if archived:
             table.add_row("── archived ──", "", "", "", "", "", "", "")
             for change in archived:
+                self._add_change_row(table, change)
+
+    def _populate_by_milestone(
+        self, table: DataTable, active: list[Change], milestones: list[Milestone]
+    ) -> None:
+        assigned: set[str] = set()
+        for milestone in milestones:
+            # Preserve YAML declaration order within milestone
+            milestone_changes = [
+                c for name in milestone.changes for c in active if c.name == name
+            ]
+            if self._search_query:
+                milestone_changes = self._filter_changes(milestone_changes, self._search_query)
+            if not milestone_changes:
+                continue
+            table.add_row(f"── {milestone.name} ──", "", "", "", "", "", "", "")
+            for change in milestone_changes:
+                self._add_change_row(table, change)
+                assigned.add(change.name)
+
+        unassigned = [c for c in active if c.name not in assigned]
+        if self._search_query:
+            unassigned = self._filter_changes(unassigned, self._search_query)
+        if unassigned:
+            table.add_row("── unassigned ──", "", "", "", "", "", "", "")
+            for change in unassigned:
                 self._add_change_row(table, change)
 
     def _filter_changes(self, changes: list[Change], query: str) -> list[Change]:
