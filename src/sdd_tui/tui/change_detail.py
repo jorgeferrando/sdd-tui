@@ -22,6 +22,25 @@ DONE = "✓"
 PENDING = "·"
 PHASES = ["propose", "spec", "design", "tasks", "apply", "verify"]
 
+
+def next_command(pipeline: Pipeline, tasks: list[Task], name: str) -> str:
+    if pipeline.propose == PhaseState.PENDING:
+        return f'/sdd-propose "{name}"'
+    if pipeline.spec == PhaseState.PENDING:
+        return f"/sdd-spec {name}"
+    if pipeline.design == PhaseState.PENDING:
+        return f"/sdd-design {name}"
+    if pipeline.tasks == PhaseState.PENDING:
+        return f"/sdd-tasks {name}"
+    if pipeline.apply == PhaseState.PENDING:
+        next_task = next((t for t in tasks if not t.done), None)
+        if next_task:
+            return f"/sdd-apply {next_task.id}"
+        return f"/sdd-apply {name}"
+    if pipeline.verify == PhaseState.PENDING:
+        return f"/sdd-verify {name}"
+    return f"/sdd-archive {name}"
+
 _PR_LOADING = object()  # sentinel: worker not yet finished
 _CI_LOADING = object()  # sentinel: worker not yet finished
 _PR_STATE_SYMBOL: dict[str, str] = {"OPEN": "⧗", "MERGED": DONE, "CLOSED": "✗"}
@@ -94,26 +113,28 @@ class PipelinePanel(Static):
         metrics: ChangeMetrics | None = None,
         pr_status: PrStatus | None | object = _PR_LOADING,
         ci_status: CiStatus | None | object = _CI_LOADING,
+        name: str = "",
     ) -> None:
         self._pipeline = pipeline
         self._tasks = tasks
         self._metrics = metrics
         self._pr_status: PrStatus | None | object = pr_status
         self._ci_status: CiStatus | None | object = ci_status
-        self._text = self._build_content(pipeline, tasks, metrics, pr_status, ci_status)
+        self._change_name = name
+        self._text = self._build_content(pipeline, tasks, metrics, pr_status, ci_status, name)
         super().__init__(self._text)
 
     def update_pr(self, pr_status: PrStatus | None) -> None:
         self._pr_status = pr_status
         self._text = self._build_content(
-            self._pipeline, self._tasks, self._metrics, pr_status, self._ci_status
+            self._pipeline, self._tasks, self._metrics, pr_status, self._ci_status, self._change_name
         )
         self.update(self._text)
 
     def update_ci(self, ci_status: CiStatus | None) -> None:
         self._ci_status = ci_status
         self._text = self._build_content(
-            self._pipeline, self._tasks, self._metrics, self._pr_status, ci_status
+            self._pipeline, self._tasks, self._metrics, self._pr_status, ci_status, self._change_name
         )
         self.update(self._text)
 
@@ -124,6 +145,7 @@ class PipelinePanel(Static):
         metrics: ChangeMetrics | None,
         pr_status: PrStatus | None | object = _PR_LOADING,
         ci_status: CiStatus | None | object = _CI_LOADING,
+        name: str = "",
     ) -> str:
         lines = ["PIPELINE", ""]
         for phase in PHASES:
@@ -144,6 +166,9 @@ class PipelinePanel(Static):
         lines.append("")
         lines.append(self._build_pr_line(pr_status))
         lines.append(self._build_ci_line(ci_status))
+        if name:
+            lines.append("")
+            lines.append(f"  NEXT  {next_command(pipeline, tasks, name)}")
         return "\n".join(lines)
 
     def _build_pr_line(self, pr_status: PrStatus | None | object) -> str:
@@ -231,7 +256,7 @@ class ChangeDetailScreen(Screen):
         with Vertical():
             with Horizontal(classes="top-panel"):
                 yield TaskListPanel(self._change.tasks)
-                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics)
+                yield PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics, name=self._change.name)
             yield DiffPanel()
         yield Footer()
 
@@ -318,7 +343,7 @@ class ChangeDetailScreen(Screen):
         self.query_one(PipelinePanel).remove()
         top.mount(
             TaskListPanel(self._change.tasks),
-            PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics),
+            PipelinePanel(self._change.pipeline, self._change.tasks, self._metrics, name=self._change.name),
         )
         self.query_one(DiffPanel).show_message("Select a task to view its diff")
         self.call_after_refresh(lambda: self.query_one(DataTable).focus())
@@ -398,26 +423,6 @@ class ChangeDetailScreen(Screen):
         self.app.push_screen(DocumentViewerScreen(path, title))
 
     def action_copy_next_command(self) -> None:
-        cmd = self._build_next_command()
+        cmd = next_command(self._change.pipeline, self._change.tasks, self._change.name)
         self.app.copy_to_clipboard(cmd)
         self.notify(f"Copied: {cmd}")
-
-    def _build_next_command(self) -> str:
-        p = self._change.pipeline
-        name = self._change.name
-        if p.propose == PhaseState.PENDING:
-            return f'/sdd-propose "{name}"'
-        if p.spec == PhaseState.PENDING:
-            return f"/sdd-spec {name}"
-        if p.design == PhaseState.PENDING:
-            return f"/sdd-design {name}"
-        if p.tasks == PhaseState.PENDING:
-            return f"/sdd-tasks {name}"
-        if p.apply == PhaseState.PENDING:
-            next_task = next((t for t in self._change.tasks if not t.done), None)
-            if next_task:
-                return f"/sdd-apply {next_task.id}"
-            return f"/sdd-apply {name}"
-        if p.verify == PhaseState.PENDING:
-            return f"/sdd-verify {name}"
-        return f"/sdd-archive {name}"
