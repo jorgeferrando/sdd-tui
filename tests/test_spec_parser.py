@@ -111,6 +111,53 @@ def test_extract_decisions_missing_file(tmp_path: Path) -> None:
     assert cd.decisions == []
 
 
+def test_extract_decisions_three_cols_defaults_locked(tmp_path: Path) -> None:
+    """REQ-DSB-03: 3-col table rows get status='locked' by default."""
+    design = tmp_path / "design.md"
+    design.write_text(
+        "## Decisiones Tomadas\n"
+        "\n"
+        "| Decisión | Alternativa | Motivo |\n"
+        "|---------|------------|--------|\n"
+        "| Use X | Use Y | simpler |\n"
+    )
+    cd = extract_decisions(design, "my-change")
+    assert cd.decisions[0].status == "locked"
+
+
+def test_extract_decisions_with_status_column(tmp_path: Path) -> None:
+    """REQ-DSB-02: 4-col table rows parse status from 4th column."""
+    design = tmp_path / "design.md"
+    design.write_text(
+        "## Decisiones Tomadas\n"
+        "\n"
+        "| Decisión | Alternativa | Motivo | Estado |\n"
+        "|---------|------------|--------|--------|\n"
+        "| Use X | Use Y | simpler | locked |\n"
+        "| Schema v2 | Schema v1 | perf | open |\n"
+        "| Add cache | No cache | TBD | deferred |\n"
+    )
+    cd = extract_decisions(design, "my-change")
+    assert len(cd.decisions) == 3
+    assert cd.decisions[0].status == "locked"
+    assert cd.decisions[1].status == "open"
+    assert cd.decisions[2].status == "deferred"
+
+
+def test_extract_decisions_unknown_status_stored_as_is(tmp_path: Path) -> None:
+    """REQ-DSB-04: unknown status values are stored without error."""
+    design = tmp_path / "design.md"
+    design.write_text(
+        "## Decisiones Tomadas\n"
+        "\n"
+        "| Decisión | Alternativa | Motivo | Estado |\n"
+        "|---------|------------|--------|--------|\n"
+        "| Use X | Use Y | simpler | experimental |\n"
+    )
+    cd = extract_decisions(design, "my-change")
+    assert cd.decisions[0].status == "experimental"
+
+
 # ---------------------------------------------------------------------------
 # collect_archived_decisions
 # ---------------------------------------------------------------------------
