@@ -65,6 +65,29 @@ async def test_spec_health_enter_opens_change_detail(openspec_with_change: Path)
             assert isinstance(app.screen, ChangeDetailScreen)
 
 
+async def test_spec_health_hint_column_visible(openspec_with_change: Path) -> None:
+    """REQ-SH-01: each row has 7 cells (HINT is the last column)."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            await pilot.press("h")
+            table = app.screen.query_one(DataTable)
+            row = table.get_row_at(0)
+            assert len(row) == 7
+
+
+async def test_spec_health_hint_sdd_spec(openspec_with_change: Path) -> None:
+    """REQ-SH-01: my-change has proposal but no spec → hint is /sdd-spec."""
+    with patch("sdd_tui.tui.app.GitReader", _git_mock()):
+        app = SddTuiApp(openspec_with_change)
+        async with app.run_test() as pilot:
+            await pilot.press("h")
+            table = app.screen.query_one(DataTable)
+            row = table.get_row_at(0)
+            hint_cell = row[6]
+            assert "/sdd-spec" in str(hint_cell)
+
+
 async def test_spec_health_separator_no_drill_down(tmp_path: Path) -> None:
     """REQ-05: pressing Enter on the archived separator row does nothing."""
 
