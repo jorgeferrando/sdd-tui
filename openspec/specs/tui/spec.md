@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** spec-health-hints
+- **Change:** progress-dashboard
 - **Fecha:** 2026-03-06
-- **Versión:** 2.1
+- **Versión:** 2.3
 - **Estado:** approved
 
 ## Contexto
@@ -249,7 +249,7 @@ Pantalla de selección cuando hay múltiples dominios de spec.
 | `@work(thread=True, exclusive=True)` para diff | `subprocess` síncrono | Desbloquea event loop; `exclusive=True` cancela workers anteriores en nav rápida |
 | `self.app.call_from_thread` | `self.call_from_thread` | `Screen` no hereda `call_from_thread`; solo `App` lo expone en Textual 8.x |
 | Pasar `Task` al worker (no `task_id`) | Lookup `query_one` desde hilo | Evita acceso a widgets fuera del event loop — más thread-safe |
-| `_build_next_command` separado de la action | Lógica inline | Testable de forma aislada |
+| `next_command(pipeline, tasks, name)` como función pura module-level | Método privado de Screen | Testable sin TUI, reutilizada por PipelinePanel y ChangeDetailScreen |
 | `copy_to_clipboard` nativo de Textual | `pyperclip` / `subprocess pbcopy` | Sin deps nuevas; API nativa ≥ 0.70.0 |
 | `.remove()` + `.mount()` para refresh | Re-compose completa | Quirúrgico; Textual soporta mount/remove en widgets montados |
 | `refresh_changes()` retorna `list[Change]` | Segunda llamada a `_load_changes()` | Evita doble carga del filesystem |
@@ -282,7 +282,10 @@ El binding usa `priority=True` para que el `Screen` lo capture antes que el `Dat
 - El comando se copia al portapapeles (`self.app.copy_to_clipboard`)
 - Aparece una notificación `Copied: {cmd}` (toast nativo de Textual)
 
-### `_build_next_command` — lógica de resolución
+### `next_command(pipeline, tasks, name) -> str` — lógica de resolución
+
+Función pura module-level en `tui/change_detail.py`. Usada por `action_copy_next_command`
+y por `PipelinePanel._build_content()`.
 
 | Fase pendiente | Comando generado |
 |----------------|-----------------|
@@ -303,6 +306,22 @@ La resolución es secuencial — se evalúa la primera fase con `PhaseState.PEND
 - **RB-V5-02:** El comando usa el ID de la primera tarea pendiente (no del change) cuando `apply` está pendiente.
 - **RB-V5-03:** La notificación desaparece sola (toast nativo de Textual, sin timeout custom).
 - **RB-V5-04:** Cuando todas las fases están DONE, el comando es `/sdd-archive` (cierre del ciclo).
+
+### `PipelinePanel` — línea NEXT (REQ-NA-01..08)
+
+`PipelinePanel` acepta `name: str = ""` y muestra al final del panel:
+
+```
+  NEXT  /sdd-apply T04
+```
+
+- **REQ-NA-01** `[Ubiquitous]` The `PipelinePanel` SHALL display a `NEXT` line when `name` is non-empty.
+- **REQ-NA-02** `[Ubiquitous]` The `NEXT` line SHALL use `next_command(pipeline, tasks, name)` for resolution.
+- **REQ-NA-03** `[Ubiquitous]` The `NEXT` line SHALL be positioned after the CI line, separated by a blank line.
+- **REQ-NA-04** `[Ubiquitous]` The `NEXT` line format SHALL be `  NEXT  {command}`.
+- **REQ-NA-08** `[Unwanted]` The `NEXT` line SHALL NOT update when PR or CI status loads — it only depends on pipeline state and tasks.
+
+**Nota de implementación:** `PipelinePanel` usa `self._change_name` (no `self._name`) para evitar colisión con el atributo interno `_name` de `Widget` en Textual.
 
 ---
 
@@ -1048,3 +1067,43 @@ view-1-epics        S     ✓        ✓     ✓       ✓      3/3    ✓
 - **RB-CB-01:** `parse_metrics` se llama en `_add_change_row` envuelto en `try/except Exception`.
 - **RB-CB-02:** Los separadores de proyecto, "no active changes" y "archived" pasan `""` en la posición SIZE.
 - **RB-CB-03:** `Text(label, style="yellow")` para XL; `Text(label)` sin estilo para el resto.
+
+---
+
+## Progress Dashboard (change: progress-dashboard)
+
+Pantalla global de progreso accesible con `P` desde EpicsView.
+
+### Acceso y navegación
+
+- **REQ-PD-01** `[Event]` When el usuario pulsa `P` en EpicsView, the app SHALL navegar a ProgressDashboard mostrando los changes actualmente visibles.
+- **REQ-PD-02** `[Event]` When el usuario pulsa `Escape` en ProgressDashboard, the app SHALL volver a EpicsView sin modificar su estado.
+
+### Contenido — Sección GLOBAL
+
+- **REQ-PD-03** `[Ubiquitous]` The ProgressDashboard SHALL mostrar una sección GLOBAL con: número de changes, total de tareas (done + pending), porcentaje completado (done / total × 100, redondeado) y barra de progreso visual proporcional.
+- **REQ-PD-04** `[Unwanted]` If no hay changes, the ProgressDashboard SHALL mostrar "No changes to display".
+- **REQ-PD-05** `[Unwanted]` If el total de tareas es 0, the ProgressDashboard SHALL mostrar 0% sin dividir por cero.
+
+### Contenido — Sección BY CHANGE
+
+- **REQ-PD-06** `[Ubiquitous]` The ProgressDashboard SHALL mostrar una sección BY CHANGE con una línea por change: nombre, barra de progreso, ratio done/total, y fase más avanzada completada (o `—` si ninguna).
+- **REQ-PD-07** `[Ubiquitous]` The ProgressDashboard SHALL mostrar `0/0` para un change sin `tasks.md`.
+
+### Contenido — Sección PIPELINE DISTRIBUTION
+
+- **REQ-PD-08** `[Ubiquitous]` The ProgressDashboard SHALL mostrar una sección PIPELINE DISTRIBUTION contando, para cada fase, cuántos changes la tienen como su fase más avanzada completada (última DONE).
+- **REQ-PD-09** `[Ubiquitous]` The ProgressDashboard SHALL mostrar una barra visual proporcional al número de changes en cada fase.
+- **REQ-PD-10** `[Unwanted]` If ningún change tiene una fase como la más avanzada, the ProgressDashboard SHALL mostrar `·` para esa fase.
+
+### Export y scroll
+
+- **REQ-PD-11** `[Event]` When el usuario pulsa `e`, the app SHALL copiar el reporte en Markdown al clipboard y notificar "Report copied to clipboard".
+- **REQ-PD-12** `[Event]` When el usuario pulsa `j`, the app SHALL hacer scroll hacia abajo.
+- **REQ-PD-13** `[Event]` When el usuario pulsa `k`, the app SHALL hacer scroll hacia arriba.
+
+### Arquitectura
+
+- `core/progress.py` — `ProgressReport`, `ChangeProgress`, `compute_progress(list[Change]) -> ProgressReport` (función pura, sin I/O)
+- `tui/progress.py` — `ProgressDashboard(Screen)` con `ScrollableContainer + Static`
+- `furthest_phase` = última fase DONE en orden propose→spec→design→tasks→apply→verify
