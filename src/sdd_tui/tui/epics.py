@@ -43,6 +43,7 @@ class EpicsView(Widget):
         Binding("x", "decisions_timeline", "Decisions"),
         Binding("V", "velocity", "Velocity"),
         Binding("l", "releases", "Releases"),
+        Binding("K", "skill_palette", "Skills"),
         Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
@@ -264,6 +265,11 @@ class EpicsView(Widget):
         from sdd_tui.tui.releases import ReleasesScreen
 
         self.app.push_screen(ReleasesScreen())
+
+    def action_skill_palette(self) -> None:
+        from sdd_tui.tui.skill_palette import SkillPaletteScreen
+
+        self.app.push_screen(SkillPaletteScreen())
 
     def action_quit(self) -> None:
         self.app.exit()
