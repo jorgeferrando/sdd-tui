@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** velocity-metrics
-- **Fecha:** 2026-03-05
-- **Versión:** 1.8
+- **Change:** complexity-badge
+- **Fecha:** 2026-03-06
+- **Versión:** 2.0
 - **Estado:** approved
 
 ## Contexto
@@ -946,3 +946,86 @@ El conteo de reviews solo muestra valores > 0:
 - **RB-VV03:** El reporte exportado siempre incluye la fecha del día en el header.
 - **RB-VV04:** `V` mayúscula — consistente con `H` (SpecHealth) y `X` (DecisionsTimeline).
 - **RB-VV05:** `action_scroll_down/up` delegan a `ScrollableContainer` — patrón establecido.
+
+---
+
+## 10. SkillPaletteScreen (View 10)
+
+### Contexto
+
+Paleta de comandos que lista los skills de `~/.claude/skills/` con filtrado
+incremental y copia al portapapeles del comando de invocación. Accesible desde
+cualquier pantalla via `ctrl+p` (global) o con `K` desde View 1 y View 2.
+
+### Layout
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ sdd-tui — Skill Palette                                      │
+├───────────────────┬─────────────────────────────────────────┤
+│ COMMAND           │ DESCRIPTION                             │
+├───────────────────┼─────────────────────────────────────────┤
+│ /sdd-apply        │ SDD Apply - Implementación del cambio…  │
+│ /sdd-new          │ SDD New - Inicio de un cambio nuevo…    │
+│ /build            │ Vertical BUILD - Code implementation…   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Requisitos (EARS)
+
+- **REQ-SP-01** `[Event]` When `SkillPaletteScreen` se monta, the screen SHALL cargar skills via `load_skills` y poblar el DataTable.
+- **REQ-SP-02** `[Unwanted]` If no hay skills disponibles, the screen SHALL mostrar `No skills found`.
+- **REQ-SP-03** `[Event]` When el usuario pulsa Enter sobre una fila, the screen SHALL copiar el comando y mostrar `notify("Copied: {cmd}")`.
+- **REQ-SP-04** `[Event]` When el usuario pulsa `/`, the screen SHALL activar el Input de filtrado.
+- **REQ-SP-05** `[Event]` When el texto del Input cambia, the screen SHALL filtrar filas (case-insensitive) por command o description.
+- **REQ-SP-06** `[Event]` When el filtro está activo y el usuario pulsa Esc, the screen SHALL limpiar el filtro y devolver foco al DataTable.
+- **REQ-SP-07** `[Event]` When el filtro está vacío y el usuario pulsa Esc, the screen SHALL hacer `pop_screen`.
+- **REQ-SP-08** `[Event]` When hay `change_name` en contexto y el skill está en `_CONTEXT_AWARE`, the screen SHALL copiar `/{skill-name} {change_name}`.
+- **REQ-SP-09** `[Event]` When el skill no es context-aware o no hay contexto, the screen SHALL copiar `/{skill-name}` sin argumentos.
+- **REQ-SP-10** `[Event]` When el usuario pulsa `K` en EpicsView, the app SHALL abrir `SkillPaletteScreen` sin contexto.
+- **REQ-SP-11** `[Event]` When el usuario pulsa `K` en ChangeDetailScreen, the app SHALL abrir `SkillPaletteScreen` con `change_name` del change activo.
+- **REQ-SP-12** `[Event]` When el usuario pulsa `ctrl+p` desde cualquier pantalla, the app SHALL abrir `SkillPaletteScreen` sin contexto.
+
+### Reglas de negocio
+
+- **RB-SP-01:** `SkillPaletteScreen(change_name: str | None = None)` — param explícito.
+- **RB-SP-02:** Filtro con patrón idéntico a EpicsView (`Input` oculto, highlight `bold cyan`).
+- **RB-SP-03:** `push_screen` — la pantalla previa conserva su estado.
+- **RB-SP-04:** `ctrl+p` en App con `priority=True` — captura desde cualquier pantalla.
+- **RB-SP-05:** DataTable `cursor_type="row"`, `show_header=True`, columnas `COMMAND` + `DESCRIPTION`.
+- **RB-SP-06:** Row key = `skill.name` para lookup en `on_data_table_row_selected`.
+
+---
+
+## 21. View 1 — Columna SIZE (Complexity Badge)
+
+### Contexto
+
+`EpicsView` muestra una columna `SIZE` con el `complexity_label` (XS/S/M/L/XL)
+de cada change, calculado por `parse_metrics`. Permite identificar visualmente
+changes sobredimensionados antes de empezar la implementación.
+
+### Layout
+
+```
+change              SIZE  propose  spec  design  tasks  apply  verify
+skill-palette       M     ✓        ✓     ✓       ✓      8/8    ✓
+complexity-badge    XS    ✓        ✓     ✓       ✓      4/4    ✓
+── archived ──            ──       ──    ──      ──     ──     ──
+view-1-epics        S     ✓        ✓     ✓       ✓      3/3    ✓
+```
+
+### Requisitos
+
+- **REQ-CB-10** `[Event]` When EpicsView renders the change list, the system SHALL display a `SIZE` column showing `complexity_label` (XS/S/M/L/XL) for each change row.
+- **REQ-CB-11** `[Ubiquitous]` The `SIZE` column SHALL be positioned between `change` and `propose`.
+- **REQ-CB-12** `[State]` While `complexity_label == "XL"`, the system SHALL render the badge in yellow.
+- **REQ-CB-13** `[Ubiquitous]` Separator rows SHALL show an empty string in the `SIZE` column.
+- **REQ-CB-14** `[Ubiquitous]` The system SHALL compute `ChangeMetrics` for each visible change during `_populate`.
+- **REQ-CB-15** `[Unwanted]` If `parse_metrics` raises, the system SHALL show `"?"` in the `SIZE` column without crashing.
+
+### Reglas de negocio
+
+- **RB-CB-01:** `parse_metrics` se llama en `_add_change_row` envuelto en `try/except Exception`.
+- **RB-CB-02:** Los separadores de proyecto, "no active changes" y "archived" pasan `""` en la posición SIZE.
+- **RB-CB-03:** `Text(label, style="yellow")` para XL; `Text(label)` sin estilo para el resto.

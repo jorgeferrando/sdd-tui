@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** velocity-metrics
-- **Fecha:** 2026-03-05
-- **Versión:** 1.0
+- **Change:** complexity-badge
+- **Fecha:** 2026-03-06
+- **Versión:** 1.2
 - **Estado:** approved
 
 ## Contexto
@@ -524,7 +524,7 @@ Extrae métricas de calidad de un change: requisitos EARS, artefactos presentes,
 
 **Dado** un `change_path` y un `repo_cwd`
 **Cuando** se llama a `parse_metrics(change_path, repo_cwd)`
-**Entonces** se retorna un `ChangeMetrics` con `req_count`, `ears_count`, `artifacts` e `inactive_days`
+**Entonces** se retorna un `ChangeMetrics` con `req_count`, `ears_count`, `artifacts`, `inactive_days`, `complexity_score` y `complexity_label`
 
 ```python
 @dataclass
@@ -533,6 +533,8 @@ class ChangeMetrics:
     ears_count: int           # REQ únicos con tipo EARS válido
     artifacts: list[str]      # orden fijo: proposal, spec, research, design, tasks
     inactive_days: int | None # días desde último commit del change (None si no hay o falla git)
+    complexity_score: int = 0       # puntuación ponderada: tasks*3 + spec_lines//50 + git_files
+    complexity_label: str = "XS"   # XS/S/M/L/XL según rangos
 
 INACTIVE_THRESHOLD_DAYS: int = 7
 ```
@@ -577,6 +579,33 @@ Orden fijo; `research` solo si el archivo existe:
 | git no disponible | `FileNotFoundError` | `None` |
 | No es repo git | returncode != 0 | `None` |
 
+### Complexity Score
+
+**Dado** un `change_path` y un `repo_cwd`
+**Cuando** se calcula la complejidad
+**Entonces** `complexity_score = task_count * 3 + spec_lines // 50 + git_files`
+
+| Input | Fuente |
+|-------|--------|
+| `task_count` | líneas `- [x]`/`- [ ]` en `tasks.md` |
+| `spec_lines` | total de líneas en `specs/*/spec.md` |
+| `git_files` | archivos únicos en `git log --name-only -F --grep=[{change_name}]` |
+
+| Score | Label |
+|-------|-------|
+| 0–5   | XS    |
+| 6–12  | S     |
+| 13–24 | M     |
+| 25–40 | L     |
+| 41+   | XL    |
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Sin tasks.md | Archivo ausente | `task_count=0` |
+| Sin specs/ | Directorio ausente | `spec_lines=0` |
+| git no disponible | `FileNotFoundError` | `git_files=0`, sin excepción |
+| No es repo git | returncode != 0 | `git_files=0` |
+
 ### Reglas de negocio
 
 - **RB-M1:** `parse_metrics` no lanza excepciones — todos los errores se degradan silenciosamente.
@@ -585,6 +614,8 @@ Orden fijo; `research` solo si el archivo existe:
 - **RB-M4:** `git log` usa `-F` (fixed-strings) para que `[view-8]` no se interprete como regex.
 - **RB-M5:** Si existe `requirements.md` en el change, `parse_metrics` lo escanea además de `specs/*/spec.md` para conteo de REQs (IDs únicos — union de ambas fuentes).
 - **RB-M6:** El orden de artefactos es fijo: `proposal`, `spec`, `research`, `requirements`, `design`, `tasks`.
+- **RB-M7:** `complexity_score` y `complexity_label` tienen defaults (`0` y `"XS"`) — retrocompatibilidad con código que construye `ChangeMetrics` directamente.
+- **RB-M8:** `git_files` usa `git log --name-only` sobre el historial completo del change — funciona tanto para changes activos como archivados.
 
 ---
 
@@ -692,4 +723,54 @@ Retorna `(missing_required, missing_optional)`.
 - **RB-D1:** `check_deps()` captura `FileNotFoundError` — nunca lanza excepción.
 - **RB-D2:** Los checks usan `capture_output=True` — no contaminan stdout/stderr.
 - **RB-D3:** `DEPS` es la única fuente de verdad — ningún check de deps existe fuera de `core/deps.py`.
+
+---
+
+## Skills Reader
+
+### Contexto
+
+`core/skills.py` escanea `~/.claude/skills/` para que la `SkillPaletteScreen`
+pueda listar los skills disponibles. Es agnóstico a la TUI.
+
+### Modelo de Datos
+
+```python
+@dataclass
+class SkillInfo:
+    name: str           # ej: "sdd-apply"
+    description: str    # ej: "SDD Apply - Implementación del cambio..."
+```
+
+### Requisitos (EARS)
+
+- **REQ-SK-01** `[Event]` When `load_skills(skills_dir)` es llamado, the reader SHALL escanear todos los subdirectorios de `skills_dir` y retornar `list[SkillInfo]` ordenada.
+- **REQ-SK-02** `[Event]` When se procesa un subdirectorio, the reader SHALL leer el front matter YAML de `{subdir}/SKILL.md` y extraer `name` y `description`.
+- **REQ-SK-03** `[Unwanted]` If `skills_dir` no existe, the reader SHALL retornar `[]` sin excepción.
+- **REQ-SK-04** `[Unwanted]` If un subdirectorio no tiene `SKILL.md` o su front matter es inválido/incompleto, the reader SHALL ignorarlo silenciosamente.
+- **REQ-SK-05** `[Ubiquitous]` The reader SHALL retornar los skills con prefijo `sdd-` primero (alfabético), seguidos del resto también alfabéticamente.
+
+### Context-Aware Set
+
+```python
+_CONTEXT_AWARE: frozenset[str] = frozenset({
+    "sdd-apply", "sdd-archive", "sdd-audit", "sdd-continue",
+    "sdd-design", "sdd-spec", "sdd-steer", "sdd-tasks", "sdd-verify",
+})
+```
+
+Skills con prefijo `sdd-` que aceptan `{change_name}` como argumento.
+Excepciones (sin change): `sdd-new`, `sdd-explore`, `sdd-ff`, `sdd-init`, `sdd-propose`.
+
+### Interfaz pública
+
+```python
+def load_skills(skills_dir: Path) -> list[SkillInfo]: ...
+```
+
+### Reglas de negocio
+
+- **RB-SK-01:** Front matter parseado con regex (sin PyYAML) — consistente con `config.py`.
+- **RB-SK-02:** `_CONTEXT_AWARE` es `frozenset` — importable por tests sin instanciar TUI.
+- **RB-SK-03:** `iterdir()` iterado sobre `sorted()` para orden determinista.
 
