@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 
+from sdd_tui.core.models import Change, PhaseState
+
 INACTIVE_THRESHOLD_DAYS = 7
 
 _EARS_TAGS = frozenset({"[Event]", "[State]", "[Unwanted]", "[Optional]", "[Ubiquitous]"})
@@ -31,6 +33,37 @@ class ChangeMetrics:
     inactive_days: int | None = None
     complexity_score: int = 0
     complexity_label: str = "XS"
+
+
+def repair_hints(metrics: ChangeMetrics, change: Change) -> list[str]:
+    """Return hints ordered by priority (most urgent first).
+
+    The TUI displays hints[0]; the full list is available for testing.
+    """
+    hints: list[str] = []
+    p = change.pipeline
+
+    if p.propose == PhaseState.PENDING:
+        hints.append(f"/sdd-propose {change.name}")
+    if p.spec == PhaseState.PENDING:
+        hints.append(f"/sdd-spec {change.name}")
+        return hints  # REQ-RH-05: skip quality hints when spec is missing
+
+    if p.design == PhaseState.PENDING:
+        hints.append(f"/sdd-design {change.name}")
+    if p.tasks == PhaseState.PENDING:
+        hints.append(f"/sdd-tasks {change.name}")
+    if p.apply == PhaseState.PENDING:
+        hints.append(f"/sdd-apply {change.name}")
+    if p.verify == PhaseState.PENDING:
+        hints.append(f"/sdd-verify {change.name}")
+
+    if metrics.req_count == 0:
+        hints.append("add REQ-XX tags")
+    elif metrics.ears_count < metrics.req_count:
+        hints.append("add EARS tags")
+
+    return hints if hints else ["✓"]
 
 
 def parse_metrics(change_path: Path, repo_cwd: Path) -> ChangeMetrics:
