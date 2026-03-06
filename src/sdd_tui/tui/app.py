@@ -15,7 +15,10 @@ from sdd_tui.tui.epics import EpicsView
 
 
 class SddTuiApp(App):
-    BINDINGS = [Binding("question_mark", "help", "Help", priority=True)]
+    BINDINGS = [
+        Binding("question_mark", "help", "Help", priority=True),
+        Binding("ctrl+p", "skill_palette", "Skills", priority=True),
+    ]
 
     CSS = """
     EpicsView {
@@ -57,6 +60,11 @@ class SddTuiApp(App):
         from sdd_tui.tui.help import HelpScreen
 
         self.push_screen(HelpScreen())
+
+    def action_skill_palette(self) -> None:
+        from sdd_tui.tui.skill_palette import SkillPaletteScreen
+
+        self.push_screen(SkillPaletteScreen())
 
     @property
     def changes(self) -> list[Change]:
