@@ -7,7 +7,6 @@ from pathlib import Path
 
 _SECTION_PATTERN = re.compile(r"^##\s+(added|modified|removed)\b", re.IGNORECASE)
 _DATE_PREFIX = re.compile(r"^(\d{4}-\d{2}-\d{2})-(.+)$")
-_TABLE_ROW = re.compile(r"^\|\s*(.+?)\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|$")
 _SEPARATOR_ROW = re.compile(r"^\|[-| :]+\|$")
 
 
@@ -24,6 +23,7 @@ class Decision:
     decision: str
     alternative: str
     reason: str
+    status: str = "locked"
 
 
 @dataclass
@@ -84,14 +84,17 @@ def extract_decisions(design_path: Path, change_name: str) -> ChangeDecisions:
             if _SEPARATOR_ROW.match(line):
                 header_seen = True
                 continue
-            if header_seen:
-                m = _TABLE_ROW.match(line)
-                if m:
+            if header_seen and line.startswith("|") and line.endswith("|"):
+                if _SEPARATOR_ROW.match(line):
+                    continue
+                cols = [c.strip() for c in line.split("|")[1:-1]]
+                if len(cols) >= 3:
                     result.decisions.append(
                         Decision(
-                            decision=m.group(1).strip(),
-                            alternative=m.group(2).strip(),
-                            reason=m.group(3).strip(),
+                            decision=cols[0],
+                            alternative=cols[1],
+                            reason=cols[2],
+                            status=cols[3] if len(cols) >= 4 else "locked",
                         )
                     )
 
