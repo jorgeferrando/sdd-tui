@@ -8,7 +8,7 @@ from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import DataTable, Footer, Header
 
-from sdd_tui.core.metrics import INACTIVE_THRESHOLD_DAYS, ChangeMetrics, parse_metrics
+from sdd_tui.core.metrics import INACTIVE_THRESHOLD_DAYS, ChangeMetrics, parse_metrics, repair_hints
 from sdd_tui.core.models import Change
 
 
@@ -49,7 +49,7 @@ class SpecHealthScreen(Screen):
         has_research = any("research" in m.artifacts for m in all_metrics.values())
         has_requirements = any("requirements" in m.artifacts for m in all_metrics.values())
 
-        table.add_columns("CHANGE", "REQ", "EARS%", "TASKS", "ARTIFACTS", "INACTIVE")
+        table.add_columns("CHANGE", "REQ", "EARS%", "TASKS", "ARTIFACTS", "INACTIVE", "HINT")
 
         active_projects = list(dict.fromkeys(c.project for c in active))
         is_multi = len(active_projects) > 1
@@ -57,7 +57,7 @@ class SpecHealthScreen(Screen):
         if is_multi:
             for project_name in active_projects:
                 proj_changes = [c for c in active if c.project == project_name]
-                table.add_row(f"─── {project_name} ───", "", "", "", "", "")
+                table.add_row(f"─── {project_name} ───", "", "", "", "", "", "")
                 for change in proj_changes:
                     self._add_row(
                         table, change, all_metrics[change.name], has_research, has_requirements
@@ -69,7 +69,7 @@ class SpecHealthScreen(Screen):
                 )
 
         if self._include_archived and archived:
-            table.add_row("── archived ──", "", "", "", "", "")
+            table.add_row("── archived ──", "", "", "", "", "", "")
             for change in archived:
                 self._add_row(
                     table,
@@ -104,6 +104,7 @@ class SpecHealthScreen(Screen):
         tasks_cell = _tasks_cell(change)
         artifacts_cell = Text(_artifacts_str(metrics.artifacts, has_research, has_requirements))
         inactive_cell = _inactive_cell(metrics.inactive_days)
+        hint_cell = _hint_cell(repair_hints(metrics, change)[0])
 
         table.add_row(
             name_cell,
@@ -112,6 +113,7 @@ class SpecHealthScreen(Screen):
             tasks_cell,
             artifacts_cell,
             inactive_cell,
+            hint_cell,
             key=change.name,
         )
         self._change_map[change.name] = change
@@ -158,3 +160,11 @@ def _inactive_cell(inactive_days: int | None) -> Text:
     if inactive_days > INACTIVE_THRESHOLD_DAYS:
         return Text(f"!{inactive_days}d", style="yellow")
     return Text(f"{inactive_days}d")
+
+
+def _hint_cell(hint: str) -> Text:
+    if hint == "✓":
+        return Text(hint, style="green")
+    if hint.startswith("/sdd-"):
+        return Text(hint, style="cyan")
+    return Text(hint, style="yellow")
