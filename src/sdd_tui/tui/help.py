@@ -24,6 +24,7 @@ def _build_help_content() -> Text:
     row("s", "Open steering.md")
     row("H", "Spec health dashboard")
     row("X", "Decisions timeline")
+    row("K", "Skill palette")
     row("q", "Quit")
 
     section("VIEW 2 — Change detail")
@@ -34,6 +35,7 @@ def _build_help_content() -> Text:
     row("q", "Open requirements.md")
     row("Space", "Copy next SDD command")
     row("E", "Spec evolution viewer")
+    row("K", "Skill palette (with change context)")
     row("r", "Refresh in place")
     row("Esc", "Back to changes")
 
@@ -52,6 +54,7 @@ def _build_help_content() -> Text:
 
     section("GLOBAL")
     row("?", "This help screen")
+    row("ctrl+p", "Skill palette")
 
     content.append("\n")
     return content
