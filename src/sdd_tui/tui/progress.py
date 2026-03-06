@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import date
-from pathlib import Path
 
 from rich.text import Text
 from textual.app import ComposeResult

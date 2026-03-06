@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sdd_tui.core.models import Change, PhaseState, Pipeline, Task
-from sdd_tui.core.progress import ChangeProgress, ProgressReport, compute_progress
+from sdd_tui.core.progress import ProgressReport, compute_progress
 
 
 def _make_change(

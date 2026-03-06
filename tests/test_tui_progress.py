@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from textual.widgets import Static
 
-from sdd_tui.core.models import Change, PhaseState, Pipeline, Task
+from sdd_tui.core.models import Change, Pipeline, Task
 from sdd_tui.core.progress import ChangeProgress, ProgressReport
 from sdd_tui.tui.app import SddTuiApp
 from sdd_tui.tui.progress import ProgressDashboard, _build_content, _build_markdown_report
@@ -46,7 +46,9 @@ def test_build_content_shows_global_section() -> None:
         total_done=2,
         total_tasks=4,
         percent=50,
-        pipeline_distribution={"propose": 0, "spec": 1, "design": 0, "tasks": 0, "apply": 0, "verify": 0},
+        pipeline_distribution={
+            "propose": 0, "spec": 1, "design": 0, "tasks": 0, "apply": 0, "verify": 0
+        },
     )
     content = str(_build_content(report))
     assert "GLOBAL" in content
@@ -55,11 +57,15 @@ def test_build_content_shows_global_section() -> None:
 
 def test_build_content_shows_by_change_section() -> None:
     report = ProgressReport(
-        changes=[ChangeProgress(name="my-change", tasks_done=1, tasks_total=3, furthest_phase="design")],
+        changes=[
+            ChangeProgress(name="my-change", tasks_done=1, tasks_total=3, furthest_phase="design")
+        ],
         total_done=1,
         total_tasks=3,
         percent=33,
-        pipeline_distribution={"propose": 0, "spec": 0, "design": 1, "tasks": 0, "apply": 0, "verify": 0},
+        pipeline_distribution={
+            "propose": 0, "spec": 0, "design": 1, "tasks": 0, "apply": 0, "verify": 0
+        },
     )
     content = str(_build_content(report))
     assert "BY CHANGE" in content
@@ -72,7 +78,9 @@ def test_build_content_shows_pipeline_distribution() -> None:
         total_done=0,
         total_tasks=0,
         percent=0,
-        pipeline_distribution={"propose": 0, "spec": 0, "design": 0, "tasks": 1, "apply": 0, "verify": 0},
+        pipeline_distribution={
+            "propose": 0, "spec": 0, "design": 0, "tasks": 1, "apply": 0, "verify": 0
+        },
     )
     content = str(_build_content(report))
     assert "PIPELINE" in content
@@ -94,7 +102,9 @@ def test_build_markdown_report_with_data() -> None:
         total_done=3,
         total_tasks=5,
         percent=60,
-        pipeline_distribution={"propose": 0, "spec": 0, "design": 0, "tasks": 0, "apply": 1, "verify": 0},
+        pipeline_distribution={
+            "propose": 0, "spec": 0, "design": 0, "tasks": 0, "apply": 1, "verify": 0
+        },
     )
     md = _build_markdown_report(report)
     assert "60%" in md
