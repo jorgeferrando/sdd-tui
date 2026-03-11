@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tooling
-- **Change:** sdd-init-onboarding
-- **Fecha:** 2026-03-05
-- **Versión:** 3.0
+- **Change:** mermaid-diagrams
+- **Fecha:** 2026-03-11
+- **Versión:** 4.0
 - **Estado:** approved
 
 ## Contexto
@@ -210,3 +210,33 @@ openspec/steering/
 - **RB-LIVE01:** Si el usuario corrige lo mismo dos veces, la segunda vez Claude guarda sin preguntar.
 - **RB-LIVE02:** `project-rules.md` se organiza por secciones temáticas (## Style, ## Tests, etc.).
 - **RB-LIVE03:** Las reglas guardadas se aplican en la misma sesión desde el momento en que se guardan.
+
+---
+
+## 7. Mermaid Diagrams — Convención para SDD Docs
+
+### Skill `/sdd-design` (ampliado) + `/sdd-propose` (ampliado)
+
+- **REQ-MD-01** `[Ubiquitous]` When generating `design.md`, the `## Arquitectura` section SHALL
+  include a Mermaid diagram when the design involves ≥3 components with relationships between them.
+  For designs with < 3 components, the diagram is optional.
+- **REQ-MD-02** `[Ubiquitous]` The diagram type SHALL be chosen according to the situation:
+  `classDiagram` for modules/classes/Protocols/inheritance; `sequenceDiagram` for temporal flows
+  (wizard steps, async workers, request/response); `flowchart LR` for screen navigation, system
+  context, file dependencies; `stateDiagram-v2` for object lifecycle or pipeline states.
+- **REQ-MD-03** `[Ubiquitous]` The diagram SHALL be placed within the `## Arquitectura` section,
+  after any prose summary. It complements text — does not replace it.
+- **REQ-MD-04** `[Optional]` When generating `proposal.md`, the `## Solución Propuesta` section
+  MAY include a `flowchart LR` context diagram when the scope involves ≥2 external systems or
+  actors interacting. For internal single-module changes, the diagram SHOULD be omitted.
+- **REQ-MD-05** `[Ubiquitous]` Mermaid blocks in TUI render as code blocks (rich.Markdown fallback).
+  This is acceptable — diagrams are design documentation, not runtime display.
+- **REQ-MD-06** `[Ubiquitous]` Diagrams are snapshots of the design at authoring time. If the
+  implementation diverges, the code is the source of truth. Post-implementation diagram updates
+  are NOT required.
+
+### Reglas de negocio
+
+- **RB-MD01:** La regla "≥3 componentes" previene diagramas triviales en changes de 1-2 archivos.
+- **RB-MD02:** El tipo de diagrama se elige por situación (REQ-MD-02) — no hay un tipo por defecto.
+- **RB-MD03:** Los diagramas no son fuente de verdad — el código lo es.
