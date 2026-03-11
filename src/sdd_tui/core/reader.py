@@ -60,7 +60,7 @@ def _write_git_workflow_config(openspec_path: Path, cfg: GitWorkflowConfig) -> N
 
     if not config_file.exists():
         openspec_path.mkdir(parents=True, exist_ok=True)
-        config_file.write_text("# openspec config\n" + block)
+        config_file.write_text("# Añadir jira_prefix: si usas SDD\n" + block)
         return
 
     existing = config_file.read_text(errors="replace")
