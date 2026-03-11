@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tooling
-- **Change:** mermaid-diagrams
+- **Change:** openspec-index
 - **Fecha:** 2026-03-11
-- **Versión:** 4.0
+- **Versión:** 5.0
 - **Estado:** approved
 
 ## Contexto
@@ -240,3 +240,74 @@ openspec/steering/
 - **RB-MD01:** La regla "≥3 componentes" previene diagramas triviales en changes de 1-2 archivos.
 - **RB-MD02:** El tipo de diagrama se elige por situación (REQ-MD-02) — no hay un tipo por defecto.
 - **RB-MD03:** Los diagramas no son fuente de verdad — el código lo es.
+
+---
+
+## 8. OpenSpec Index — Two-Level Lookup
+
+### Contexto
+
+A medida que `openspec/specs/` crece, los skills SDD consumen cada vez más tokens para
+orientarse. `openspec/INDEX.md` actúa como nivel 1 (orientación rápida, ~300 tokens);
+los spec files individuales son el nivel 2 (detalle solo cuando es relevante).
+
+### Requisitos
+
+#### INDEX.md — Estructura y contenido
+
+- **REQ-IDX-01** `[Ubiquitous]` The `openspec/INDEX.md` SHALL exist at the root of `openspec/`
+  and cover all canonical domains present in `openspec/specs/`.
+
+- **REQ-IDX-02** `[Ubiquitous]` Each domain entry SHALL contain:
+  path to spec file, one-paragraph summary (≤ 2 lines), key entities/symbols, and keywords.
+
+- **REQ-IDX-03** `[Ubiquitous]` The INDEX.md SHALL include a header note explaining its purpose
+  and instructing readers to use it for orientation before loading individual specs.
+
+- **REQ-IDX-04** `[Ubiquitous]` The INDEX.md SHALL remain under 400 lines regardless of the
+  number of domains, enforcing conciseness per entry.
+
+- **REQ-IDX-05** `[Unwanted]` If a domain in `openspec/specs/` has no entry in INDEX.md,
+  the skill sdd-archive SHALL warn the user after closing a change.
+
+#### sdd-archive — Mantenimiento
+
+- **REQ-ARC-01** `[Event]` When closing a change that adds or modifies a canonical spec,
+  sdd-archive SHALL update the corresponding entries in `openspec/INDEX.md`.
+
+- **REQ-ARC-02** `[Event]` When closing a change that adds a new domain,
+  sdd-archive SHALL add a new entry to `openspec/INDEX.md`.
+
+- **REQ-ARC-03** `[Ubiquitous]` The INDEX.md update SHALL happen after merging delta specs
+  into canonical specs (Step 2) and before moving the change to archive (Step 3).
+
+#### sdd-explore — Uso
+
+- **REQ-EXP-01** `[Event]` When `openspec/INDEX.md` exists, sdd-explore SHALL read it
+  before loading any individual spec file.
+
+- **REQ-EXP-02** `[Event]` When INDEX.md is available, sdd-explore SHALL use it to identify
+  1-3 relevant domains and load only those spec files.
+
+- **REQ-EXP-03** `[Unwanted]` If `openspec/INDEX.md` does not exist, sdd-explore SHALL
+  fall back to scanning `openspec/specs/` directly without error.
+
+- **REQ-EXP-04** `[Ubiquitous]` Domain selection SHALL be based on keyword matching between
+  the change description and the `Keywords` field of each INDEX.md entry.
+
+### Formato de entrada en INDEX.md
+
+```markdown
+## {domain} (`specs/{domain}/spec.md`)
+{Descripción 1-2 líneas}
+**Entidades:** {Symbol1}, {function()}, ...
+**Keywords:** {kw1}, {kw2}, ...
+```
+
+### Reglas de negocio
+
+- **RB-IDX01:** Formato Markdown plano — sin SQLite, JSON ni infraestructura. Legible por humanos y Claude.
+- **RB-IDX02:** Mantenimiento manual + auto por sdd-archive — el auto-generado preserva contexto semántico.
+- **RB-IDX03:** Fallback silencioso si no existe INDEX.md — compatibilidad con repos sin índice.
+- **RB-IDX04:** Keywords como campo libre (sin taxonomía formal) — menor coste de mantenimiento.
+- **RB-IDX05:** Límite de 400 líneas — el índice no puede convertirse en el problema que resuelve.
