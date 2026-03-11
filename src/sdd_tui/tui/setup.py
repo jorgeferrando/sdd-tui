@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Callable
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -8,8 +9,10 @@ from textual.screen import Screen
 from textual.widgets import Input, OptionList, Static
 from textual.widgets.option_list import Option
 
-from sdd_tui.core.providers.protocol import GitWorkflowConfig
-from sdd_tui.core.reader import _write_git_workflow_config
+from sdd_tui.core.providers.protocol import GitWorkflowConfig, ReleaseWorkflowConfig
+from sdd_tui.core.reader import _write_git_workflow_config, _write_release_config
+
+_GIT_WORKFLOW_KEYS = {"issue_tracker", "git_host", "branching_model", "change_prefix", "changelog_format"}
 
 _QUESTIONS: list[dict] = [
     {
@@ -58,6 +61,34 @@ _QUESTIONS: list[dict] = [
             ("labels", "Labels only"),
             ("commit-prefix", "Commit prefix only  (feat:, fix:, …)"),
         ],
+    },
+    # Release workflow steps
+    {
+        "key": "releases_enabled",
+        "title": "Does this project publish releases?",
+        "options": [
+            ("yes", "Yes — tags, GitHub Releases"),
+            ("no", "No — track versions in openspec/ only"),
+        ],
+    },
+    {
+        "key": "versioning",
+        "title": "Which versioning scheme?",
+        "options": [
+            ("semver", "Semantic versioning  (1.2.3)"),
+            ("calver", "Calendar versioning  (2026.03.11)"),
+            ("none", "No versioning"),
+        ],
+        "skip_if": lambda answers: answers.get("releases_enabled") == "no",
+    },
+    {
+        "key": "homebrew_formula",
+        "title": "Homebrew formula path? (relative to repo root)",
+        "options": [
+            ("__default__", "Formula/{project}.rb  (default)"),
+            ("none", "No Homebrew formula"),
+        ],
+        "skip_if": lambda answers: answers.get("releases_enabled") == "no",
     },
 ]
 
@@ -148,17 +179,59 @@ class GitWorkflowSetupScreen(Screen):
     def _record_answer(self, value: str) -> None:
         key = _QUESTIONS[self._step]["key"]
         self._answers[key] = value
+        self._advance()
+
+    def _advance(self) -> None:
         self._step += 1
-        if self._step == len(_QUESTIONS):
+        # Skip conditional steps whose skip_if condition is met
+        while self._step < len(_QUESTIONS):
+            skip_if: Callable | None = _QUESTIONS[self._step].get("skip_if")
+            if skip_if is None or not skip_if(self._answers):
+                break
+            self._step += 1
+        if self._step >= len(_QUESTIONS):
             self._save_and_dismiss()
         else:
             self._render_step()
 
     def _save_and_dismiss(self) -> None:
-        cfg = GitWorkflowConfig(**self._answers)
+        # Build GitWorkflowConfig from git workflow answers
+        gw_answers = {k: v for k, v in self._answers.items() if k in _GIT_WORKFLOW_KEYS}
+        cfg = GitWorkflowConfig(**gw_answers)
         _write_git_workflow_config(self._openspec_path, cfg)
-        self.app.notify("Git workflow configured ✓")
+
+        # Build ReleaseWorkflowConfig from release answers
+        releases_enabled = self._answers.get("releases_enabled", "no") == "yes"
+        versioning = self._answers.get("versioning", "semver")
+        raw_formula = self._answers.get("homebrew_formula", "none")
+        if raw_formula == "__default__":
+            # Derive default formula path from project name in config.yaml
+            project = self._read_project_name()
+            homebrew_formula: str | None = f"Formula/{project}.rb" if project else None
+        elif raw_formula == "none":
+            homebrew_formula = None
+        else:
+            homebrew_formula = raw_formula
+
+        rel_cfg = ReleaseWorkflowConfig(
+            enabled=releases_enabled,
+            versioning=versioning if releases_enabled else "semver",
+            changelog_source="openspec",
+            homebrew_formula=homebrew_formula if releases_enabled else None,
+        )
+        _write_release_config(self._openspec_path, rel_cfg)
+
+        self.app.notify("Workflow configured ✓")
         self.app.pop_screen()
+
+    def _read_project_name(self) -> str:
+        config_file = self._openspec_path / "config.yaml"
+        if not config_file.exists():
+            return ""
+        for line in config_file.read_text(errors="replace").splitlines():
+            if line.startswith("project:"):
+                return line.split(":", 1)[1].strip()
+        return ""
 
     def action_cancel(self) -> None:
         self.app.pop_screen()
