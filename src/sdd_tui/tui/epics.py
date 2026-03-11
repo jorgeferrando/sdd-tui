@@ -47,6 +47,7 @@ class EpicsView(Widget):
         Binding("l", "releases", "Releases"),
         Binding("K", "skill_palette", "Skills"),
         Binding("P", "progress", "Progress"),
+        Binding("T", "todos", "Todos"),
         Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
@@ -323,6 +324,11 @@ class EpicsView(Widget):
         from sdd_tui.tui.progress import ProgressDashboard
 
         self.app.push_screen(ProgressDashboard(self._changes))
+
+    def action_todos(self) -> None:
+        from sdd_tui.tui.todos import TodosScreen
+
+        self.app.push_screen(TodosScreen())
 
     def action_quit(self) -> None:
         self.app.exit()
