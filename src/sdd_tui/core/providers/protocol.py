@@ -55,6 +55,14 @@ class GitWorkflowConfig:
     changelog_format: str = "both"  # "labels" | "commit-prefix" | "both"
 
 
+@dataclass
+class ReleaseWorkflowConfig:
+    enabled: bool = False
+    versioning: str = "semver"          # "semver" | "calver" | "none"
+    changelog_source: str = "openspec"  # "openspec" | "manual" | "none"
+    homebrew_formula: str | None = None  # relative path to formula, or None
+
+
 @runtime_checkable
 class IssueTracker(Protocol):
     def get_issues(self, state: str = "open", cwd: Path = Path(".")) -> list[Issue]: ...
