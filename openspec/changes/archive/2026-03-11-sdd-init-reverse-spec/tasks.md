@@ -8,18 +8,18 @@
 
 ## Tareas de Implementación
 
-- [ ] **T01** Crear `~/.claude/skills/sdd-discover/SKILL.md` — nuevo skill de reverse-spec con patrón orquestador + subagentes
+- [x] **T01** Crear `~/.claude/skills/sdd-discover/SKILL.md` — nuevo skill de reverse-spec con patrón orquestador + subagentes
   - Commit: `[sdd-init-reverse-spec] Add sdd-discover skill for codebase reverse-spec`
 
-- [ ] **T02** Modificar `~/.claude/skills/sdd-init/SKILL.md` — añadir hint en Paso 6 cuando `openspec/specs/` está vacío
+- [x] **T02** Modificar `~/.claude/skills/sdd-init/SKILL.md` — añadir hint en Paso 6 cuando `openspec/specs/` está vacío
   - Commit: `[sdd-init-reverse-spec] Add sdd-discover hint to sdd-init when specs/ is empty`
   - Depende de: T01 (el hint referencia un skill que ya debe existir)
 
-- [ ] **T03** Modificar `openspec/specs/tooling/spec.md` — merge delta, añadir secciones 9 y 10, bump a v5.2
+- [x] **T03** Modificar `openspec/specs/tooling/spec.md` — merge delta, añadir secciones 9 y 10, bump a v5.2
   - Commit: `[sdd-init-reverse-spec] Update tooling spec to v5.2 with sdd-discover requirements`
   - Depende de: T01, T02 (se documenta lo ya implementado)
 
-- [ ] **T04** Modificar `openspec/INDEX.md` — actualizar entrada `tooling` con nuevos skills documentados
+- [x] **T04** Modificar `openspec/INDEX.md` — actualizar entrada `tooling` con nuevos skills documentados
   - Commit: `[sdd-init-reverse-spec] Update INDEX.md tooling entry for v5.2`
   - Depende de: T03
 
