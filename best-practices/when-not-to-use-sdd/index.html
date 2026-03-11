@@ -1279,6 +1279,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When Not to Use SDD
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1295,6 +1313,119 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cases-where-sdd-is-overkill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cases where SDD is overkill
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cases where SDD is overkill">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hotfixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hotfixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#config-only-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config-only changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#obvious-3-file-patches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obvious &lt; 3 file patches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploratory-throwaway-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploratory / throwaway work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pure-refactors-with-no-behavior-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pure refactors with no behavior change
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-real-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The real question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-in-doubt-start-with-a-proposal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When in doubt, start with a proposal
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1328,6 +1459,108 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cases-where-sdd-is-overkill" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cases where SDD is overkill
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cases where SDD is overkill">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#hotfixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hotfixes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#config-only-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Config-only changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#obvious-3-file-patches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Obvious &lt; 3 file patches
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#exploratory-throwaway-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exploratory / throwaway work
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pure-refactors-with-no-behavior-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pure refactors with no behavior change
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-real-question" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The real question
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#when-in-doubt-start-with-a-proposal" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        When in doubt, start with a proposal
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1347,10 +1580,39 @@
 
 
 <h1 id="when-not-to-use-sdd">When Not to Use SDD<a class="headerlink" href="#when-not-to-use-sdd" title="Permanent link">&para;</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Coming soon</p>
-<p>This page is part of the next documentation update.</p>
-</div>
+<p>SDD adds value when a change is complex enough to benefit from a documented proposal, spec, and design. For small, routine changes, the ceremony adds friction without payoff.</p>
+<hr />
+<h2 id="cases-where-sdd-is-overkill">Cases where SDD is overkill<a class="headerlink" href="#cases-where-sdd-is-overkill" title="Permanent link">&para;</a></h2>
+<h3 id="hotfixes">Hotfixes<a class="headerlink" href="#hotfixes" title="Permanent link">&para;</a></h3>
+<p>A production bug that needs to be fixed in the next 30 minutes is not the time for a proposal and spec review.</p>
+<p><strong>Do instead:</strong> Fix it, commit with a clear message, merge. If the fix reveals a systemic issue, open an SDD change for the root cause.</p>
+<hr />
+<h3 id="config-only-changes">Config-only changes<a class="headerlink" href="#config-only-changes" title="Permanent link">&para;</a></h3>
+<p>Updating environment variables, CI workflow tweaks, dependency version bumps, or <code>.gitignore</code> additions don't need a spec.</p>
+<p><strong>Do instead:</strong> Commit directly with a descriptive message. If the config change is part of a larger feature, include it in that feature's <code>tasks.md</code>.</p>
+<hr />
+<h3 id="obvious-3-file-patches">Obvious &lt; 3 file patches<a class="headerlink" href="#obvious-3-file-patches" title="Permanent link">&para;</a></h3>
+<p>If the change is "add one field to a form and its test" and the design is unambiguous, the overhead of proposal + spec + design + tasks &gt; the value of the documentation.</p>
+<p><strong>Rule of thumb:</strong> If you can explain the change in one sentence and it touches ≤ 2 files, skip SDD.</p>
+<hr />
+<h3 id="exploratory-throwaway-work">Exploratory / throwaway work<a class="headerlink" href="#exploratory-throwaway-work" title="Permanent link">&para;</a></h3>
+<p>Prototypes, spikes, and experiments aren't candidates for SDD — they may be discarded entirely. Run the experiment first, and if it proves the approach, <em>then</em> open a proper change to implement it cleanly.</p>
+<hr />
+<h3 id="pure-refactors-with-no-behavior-change">Pure refactors with no behavior change<a class="headerlink" href="#pure-refactors-with-no-behavior-change" title="Permanent link">&para;</a></h3>
+<p>Renaming variables, extracting a method, reorganizing imports — these don't change behavior and don't benefit from a spec. They may benefit from <code>tasks.md</code> if the scope is large, but the full ceremony is unnecessary.</p>
+<hr />
+<h2 id="the-real-question">The real question<a class="headerlink" href="#the-real-question" title="Permanent link">&para;</a></h2>
+<p>Ask: <em>"Would I want to find this decision in the archive six months from now?"</em></p>
+<ul>
+<li>New feature → yes → use SDD</li>
+<li>Bug fix with architectural implications → yes → use SDD</li>
+<li>Typo in a comment → no → commit directly</li>
+<li>Dependency bump → no → commit directly</li>
+<li>New integration with a third-party service → yes → use SDD</li>
+</ul>
+<hr />
+<h2 id="when-in-doubt-start-with-a-proposal">When in doubt, start with a proposal<a class="headerlink" href="#when-in-doubt-start-with-a-proposal" title="Permanent link">&para;</a></h2>
+<p>If you're not sure whether a change warrants SDD, write a <code>proposal.md</code> in 5 minutes. If the proposal is trivial ("update X to Y, no alternatives, no decisions"), that's a signal to skip the rest. If it surfaces real decisions, the ceremony is worth it.</p>
 
 
 

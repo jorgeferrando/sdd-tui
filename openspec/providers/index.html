@@ -995,6 +995,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1011,6 +1029,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#null-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Null Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-project-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-project setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-setup-wizard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the setup wizard
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1330,6 +1422,69 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#github-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GitHub Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#null-provider" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Null Provider
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-project-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-project setup
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#running-the-setup-wizard" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Running the setup wizard
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1349,10 +1504,90 @@
 
 
 <h1 id="providers">Providers<a class="headerlink" href="#providers" title="Permanent link">&para;</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Coming soon</p>
-<p>This page is part of the next documentation update.</p>
-</div>
+<p>sdd-tui integrates with external services (GitHub, issue trackers) through a provider abstraction. This allows the TUI to work without any external services configured, and to support different platforms without changing core code.</p>
+<hr />
+<h2 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h2>
+<p>Providers are configured via the <strong>Git Workflow Setup wizard</strong>, accessible from EpicsView with the <code>S</code> key.</p>
+<p>The wizard generates <code>openspec/config.yaml</code> with a <code>git_workflow</code> section:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-app</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nt">git_workflow</span><span class="p">:</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">git_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">issue_tracker</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">default_branch</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">main</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">owner/repo-name</span>
+</code></pre></div>
+<hr />
+<h2 id="github-provider">GitHub Provider<a class="headerlink" href="#github-provider" title="Permanent link">&para;</a></h2>
+<p>When <code>git_host: github</code> and <code>issue_tracker: github</code>, sdd-tui uses the <code>gh</code> CLI to fetch:</p>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Data shown</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PR status</td>
+<td>Open/merged/closed, review state, URL</td>
+</tr>
+<tr>
+<td>CI status</td>
+<td>Last workflow run result (pass/fail/running)</td>
+</tr>
+<tr>
+<td>Releases</td>
+<td>Latest tag, publish date</td>
+</tr>
+<tr>
+<td>Issues</td>
+<td>Open issues list (via Todos screen)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Requirement:</strong> <code>gh</code> must be installed and authenticated (<code>gh auth login</code>).</p>
+<p>If <code>gh</code> is not found or a command fails, the TUI degrades gracefully — the affected panel shows a loading indicator or empty state, never an error crash.</p>
+<hr />
+<h2 id="null-provider">Null Provider<a class="headerlink" href="#null-provider" title="Permanent link">&para;</a></h2>
+<p>When no provider is configured, sdd-tui uses the <strong>Null provider</strong>: all external calls return empty results silently. The TUI works fully for local <code>openspec/</code> browsing — pipeline, spec health, decisions, diffs — without any network access.</p>
+<p>This is the default for projects that:
+- Don't use GitHub
+- Use a private Git host without <code>gh</code> CLI support
+- Prefer to keep the TUI fully offline</p>
+<hr />
+<h2 id="multi-project-setup">Multi-project setup<a class="headerlink" href="#multi-project-setup" title="Permanent link">&para;</a></h2>
+<p>sdd-tui can monitor multiple projects simultaneously. Configure them in <code>openspec/config.yaml</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nt">projects</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">frontend</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/frontend/openspec</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">git_workflow</span><span class="p">:</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">git_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">owner/frontend</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">backend</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/backend/openspec</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="nt">git_workflow</span><span class="p">:</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nt">git_host</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">github</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">owner/backend</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">infra</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">    </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/path/to/infra/openspec</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="c1"># no git_workflow → uses Null provider for this project</span>
+</code></pre></div>
+<p>EpicsView shows changes from all projects, with visual separators between them.</p>
+<hr />
+<h2 id="running-the-setup-wizard">Running the setup wizard<a class="headerlink" href="#running-the-setup-wizard" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sdd-tui
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="c1"># Press S from EpicsView to open the Git Workflow Setup wizard</span>
+</code></pre></div>
+<p>The wizard walks through 5 steps:</p>
+<ol>
+<li>Choose git host (GitHub / None)</li>
+<li>Choose issue tracker (GitHub / None)</li>
+<li>Enter repository name (<code>owner/repo</code>)</li>
+<li>Enter default branch (<code>main</code> / <code>dev</code> / other)</li>
+<li>Confirm and write <code>config.yaml</code></li>
+</ol>
 
 
 

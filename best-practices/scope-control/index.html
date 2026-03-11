@@ -1225,6 +1225,24 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope Control
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -1241,6 +1259,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-20-file-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 20-file rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-split-a-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to split a change
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-seams-for-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common seams for splitting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-scope-creep-during-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detecting scope creep during apply
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-small-changes-compound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why small changes compound
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1330,6 +1422,69 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-20-file-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The 20-file rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-split-a-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to split a change
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-seams-for-splitting" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Common seams for splitting
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detecting-scope-creep-during-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detecting scope creep during apply
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#why-small-changes-compound" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why small changes compound
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1349,10 +1504,94 @@
 
 
 <h1 id="scope-control">Scope Control<a class="headerlink" href="#scope-control" title="Permanent link">&para;</a></h1>
-<div class="admonition note">
-<p class="admonition-title">Coming soon</p>
-<p>This page is part of the next documentation update.</p>
-</div>
+<p>The most common SDD mistake is making a change too large. Large changes are hard to review, risky to merge, and slow to archive. Scope control is the discipline of keeping changes small and independently valuable.</p>
+<hr />
+<h2 id="the-20-file-rule">The 20-file rule<a class="headerlink" href="#the-20-file-rule" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>File count</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>&lt; 10 files</td>
+<td>Ideal — proceed</td>
+</tr>
+<tr>
+<td>10–20 files</td>
+<td>Evaluate — split if there's a logical seam</td>
+</tr>
+<tr>
+<td>&gt; 20 files</td>
+<td>Mandatory split</td>
+</tr>
+</tbody>
+</table>
+<p>This rule applies to <em>code files</em>. Documentation-only changes (Markdown, config) are more lenient since the review risk is lower.</p>
+<hr />
+<h2 id="how-to-split-a-change">How to split a change<a class="headerlink" href="#how-to-split-a-change" title="Permanent link">&para;</a></h2>
+<p>A good split produces two changes that each have <strong>independent business value</strong> — not "part 1" and "part 2".</p>
+<p><strong>Bad split</strong> (no independent value):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>payment-integration-part1  ← models + repository
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>payment-integration-part2  ← handler + controller
+</code></pre></div>
+<p>Part 1 is useless without part 2. If part 1 merges and part 2 is delayed, the codebase is broken.</p>
+<p><strong>Good split</strong> (independent value):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>payment-read-only    ← display payment status in UI (no mutation)
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>payment-create       ← create payment via form (adds mutation)
+</code></pre></div>
+<p>Either change can ship independently and provide value.</p>
+<hr />
+<h2 id="common-seams-for-splitting">Common seams for splitting<a class="headerlink" href="#common-seams-for-splitting" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Seam</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Read vs write</td>
+<td>List/show before create/update/delete</td>
+</tr>
+<tr>
+<td>Domain vs UI</td>
+<td>Backend endpoint before frontend integration</td>
+</tr>
+<tr>
+<td>Core vs edge cases</td>
+<td>Happy path before error handling</td>
+</tr>
+<tr>
+<td>Migration vs feature</td>
+<td>Schema change before the feature that uses it</td>
+</tr>
+<tr>
+<td>Config vs behavior</td>
+<td>Feature flag before the flagged feature</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="detecting-scope-creep-during-apply">Detecting scope creep during apply<a class="headerlink" href="#detecting-scope-creep-during-apply" title="Permanent link">&para;</a></h2>
+<p>If <code>/sdd-apply</code> touches more files than <code>tasks.md</code> planned, stop. Options:</p>
+<ol>
+<li><strong>The extra file is necessary</strong> → add a <code>MEJxx</code> task in <code>tasks.md</code> before touching it</li>
+<li><strong>The extra file is a new change</strong> → pause, archive current progress, start a new change for it</li>
+<li><strong>The design was wrong</strong> → update <code>design.md</code> and <code>tasks.md</code> before continuing</li>
+</ol>
+<p>Never implement something that isn't in <code>tasks.md</code>. The task list is the contract.</p>
+<hr />
+<h2 id="why-small-changes-compound">Why small changes compound<a class="headerlink" href="#why-small-changes-compound" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Each archived change updates the canonical spec — future changes inherit accurate context</li>
+<li>Small commits are independently revertible</li>
+<li>Reviewers can give focused feedback</li>
+<li>Velocity metrics become meaningful (you can see actual throughput, not just big batch releases)</li>
+</ul>
 
 
 
