@@ -17,10 +17,9 @@ import argparse
 import re
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
-
 
 # ---------------------------------------------------------------------------
 # Data types
@@ -200,7 +199,8 @@ def _boundaries_from_git_tags(root: Path) -> list[VersionBoundary]:
         if not re.match(r"^\d+\.\d+", version):
             continue
         try:
-            boundaries.append(VersionBoundary(version=version, date=date.fromisoformat(date_str), source="git-tag"))
+            d = date.fromisoformat(date_str)
+            boundaries.append(VersionBoundary(version=version, date=d, source="git-tag"))
         except ValueError:
             continue
     return boundaries
@@ -291,7 +291,10 @@ def render_changelog(
 
     # Versioned sections, newest first
     boundary_map = {b.version: b for b in boundaries}
-    for version in sorted(assignments.keys(), key=lambda v: _version_sort_key(v, boundary_map), reverse=True):
+    sorted_keys = sorted(
+        assignments.keys(), key=lambda v: _version_sort_key(v, boundary_map), reverse=True
+    )
+    for version in sorted_keys:
         if version == "[Unreleased]":
             continue
         boundary = boundary_map.get(version)
@@ -368,8 +371,12 @@ def mark_version(root: Path, version: str) -> Path:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate CHANGELOG.md from openspec/")
-    parser.add_argument("--version", metavar="X.Y.Z", help="Print release notes for this version to stdout")
-    parser.add_argument("--mark-version", metavar="X.Y.Z", help="Create openspec/versions/X.Y.Z.yaml")
+    parser.add_argument(
+        "--version", metavar="X.Y.Z", help="Print release notes for this version to stdout"
+    )
+    parser.add_argument(
+        "--mark-version", metavar="X.Y.Z", help="Create openspec/versions/X.Y.Z.yaml"
+    )
     args = parser.parse_args()
 
     try:
