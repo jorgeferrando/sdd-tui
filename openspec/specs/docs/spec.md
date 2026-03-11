@@ -4,7 +4,7 @@
 - **Dominio:** docs
 - **Change:** docs-site
 - **Fecha:** 2026-03-11
-- **Versión:** 1.0
+- **Versión:** 1.1
 - **Estado:** canonical
 
 ## Contexto
