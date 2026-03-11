@@ -5,7 +5,7 @@
 - **Change:** sdd-docs-generator
 - **Fecha:** 2026-03-11
 - **Versión:** 1.0
-- **Estado:** canonical
+- **Estado:** draft
 
 ## Contexto
 
