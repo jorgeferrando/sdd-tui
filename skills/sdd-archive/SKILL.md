@@ -48,6 +48,30 @@ mkdir -p openspec/specs/{domain}
 cp openspec/changes/{change}/specs/{domain}/spec.md openspec/specs/{domain}/spec.md
 ```
 
+## Step 2b: Update openspec/INDEX.md
+
+If `openspec/INDEX.md` exists:
+
+1. For each domain modified in this change, update its entry in INDEX.md:
+   - Refresh the summary if the domain's scope changed significantly
+   - Add any new entities introduced by this change to `**Entidades:**` / `**Entities:**`
+   - Add new keywords if relevant new concepts were introduced
+
+2. If this change adds a **new domain** (new entry under `openspec/specs/`):
+   - Add a new entry to INDEX.md following the existing format:
+     ```
+     ## {domain} (`specs/{domain}/spec.md`)
+     {1-2 line summary}
+     **Entities:** {Symbol1}, {function()}, ...
+     **Keywords:** {kw1}, {kw2}, ...
+     ```
+
+3. After updating, verify that every directory in `openspec/specs/` has an entry in INDEX.md.
+   If any domain is missing, warn the user:
+   > ⚠️ Domain `{domain}` exists in openspec/specs/ but has no entry in INDEX.md. Add it before continuing.
+
+If `openspec/INDEX.md` does not exist → skip this step silently.
+
 ## Step 3: Move to archive
 
 ```bash
