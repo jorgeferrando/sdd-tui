@@ -45,7 +45,8 @@ _QUESTIONS: list[dict] = [
         "title": "What prefix do you use for change branches?",
         "options": [
             ("issue", "issue  (e.g. issue-42-fix-bug)"),
-            ("feature", "feature  (e.g. feature/add-auth)"),
+            ("#", "#  (e.g. #42-fix-bug)"),
+            ("none", "No prefix  (e.g. 42-fix-bug)"),
             ("custom", "Custom prefix…"),
         ],
     },
