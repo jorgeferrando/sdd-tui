@@ -1,10 +1,10 @@
-# Spec: Distribution — Setup Experience
+# Spec: Distribution — Setup Experience + Release Workflow
 
 ## Metadata
 - **Dominio:** distribution
-- **Change:** sdd-setup-experience (initial)
-- **Fecha:** 2026-03-05
-- **Versión:** 1.0
+- **Change:** release-workflow
+- **Fecha:** 2026-03-11
+- **Versión:** 2.0
 - **Estado:** canonical
 
 ## Contexto
@@ -169,16 +169,83 @@ copia los skills al destino, y limpia el temporal
 | 0 | Éxito (incluyendo "claude not found" — solo aviso) |
 | 1 | Error de permisos, package manager no encontrado, o error inesperado |
 
+---
+
+## Release Workflow (v2.0 — release-workflow)
+
+### Configuración en `config.yaml`
+
+- **REQ-CFG01** `[Ubiquitous]` `openspec/config.yaml` SHALL support a `release_workflow:` section with fields: `enabled`, `versioning`, `changelog_source`, `homebrew_formula`.
+- **REQ-CFG02** `[Ubiquitous]` Default values when absent: `enabled=false`, `versioning="semver"`, `changelog_source="openspec"`, `homebrew_formula=null`.
+- **REQ-CFG03** `[Ubiquitous]` `ReleaseWorkflowConfig` SHALL be a dataclass loaded by `load_release_config` from `config.yaml`.
+
+### Setup Wizard
+
+- **REQ-WZ06** `[Event]` When the user reaches the release step in `GitWorkflowSetupScreen`, the system SHALL ask: "Does this project publish releases?" (yes / no).
+- **REQ-WZ07** `[Event]` When `yes`, the wizard SHALL ask versioning scheme: semver / calver / none.
+- **REQ-WZ08** `[Event]` When `yes`, the wizard SHALL ask for Homebrew formula path.
+- **REQ-WZ09** `[Event]` When the wizard completes, the system SHALL write `release_workflow:` to `openspec/config.yaml`.
+
+### Startup check
+
+- **REQ-OB01** `[Event]` When the app mounts and `release_workflow:` is absent, the system SHALL display: `"Release workflow not configured — press S to set up"`.
+- **REQ-OB03** `[Unwanted]` If `release_workflow.enabled = false`, the system SHALL NOT show the notification.
+
+### Version markers (`openspec/versions/`)
+
+- **REQ-VM01** `[Ubiquitous]` `openspec/versions/X.Y.Z.yaml` represents a version marker with `date: YYYY-MM-DD`.
+- **REQ-VM02** `[Event]` When `scripts/changelog.py --mark-version X.Y.Z` is invoked, the script SHALL create `openspec/versions/X.Y.Z.yaml` with today's date.
+- **REQ-VM03** `[Ubiquitous]` `changelog.py` SHALL use version markers as primary source when `release_workflow.enabled = false`.
+- **REQ-VM04** `[State]` While `release_workflow.enabled = true`, git tags take precedence; markers are fallback.
+
+### Scripts
+
+- **REQ-REL01-13** `scripts/release.sh <version>`: validate semver → tests → git clean → bump pyproject.toml → changelog → tag → push → gh release → formula SHA256 → push.
+- **REQ-CL01-08** `scripts/changelog.py`: generates CHANGELOG.md from openspec/archive using version boundaries (git tags or markers). Flags: `--version X.Y.Z`, `--mark-version X.Y.Z`.
+
+### Versionado semántico
+
+- `PATCH`: bugfixes, UI tweaks
+- `MINOR`: new features (screens, bindings, providers)
+- `MAJOR`: breaking changes in openspec/ structure or config format
+
+### `config.yaml` — sección `release_workflow`
+
+```yaml
+release_workflow:
+  enabled: true                        # false = proyecto no hace releases
+  versioning: semver                   # semver | calver | none
+  changelog_source: openspec           # openspec | manual | none
+  homebrew_formula: Formula/sdd-tui.rb # ruta relativa al root, o null
+```
+
+### `ReleaseWorkflowConfig` dataclass
+
+```python
+@dataclass
+class ReleaseWorkflowConfig:
+    enabled: bool = False
+    versioning: str = "semver"
+    changelog_source: str = "openspec"
+    homebrew_formula: str | None = None
+```
+
 ## Decisiones Tomadas
 
 | Decisión | Alternativa Descartada | Motivo |
 |---------|----------------------|--------|
-| Skills descargados de GitHub en el momento | Bundlear en el wheel | Skills y TUI evolucionan a ritmos distintos; actualizar skills no requiere reinstalar el paquete |
-| Skills existentes → preguntar (update/skip/per-skill) | Saltar silenciosamente | El usuario puede tener customizaciones; sobreescribir silenciosamente sería destructivo |
-| Claude Code → solo avisar, no bloquear | Bloquear si no está | El usuario puede instalar Claude Code después; el setup de skills es independiente |
-| Formula en el mismo repo (`Formula/sdd-tui.rb`) | Repo separado `homebrew-sdd-tui` | Menos overhead; tap funciona igual (`brew tap jorgeferrando/sdd-tui`) |
-| PyPI fuera de scope | Publicar ahora | Requiere cuenta + tokens + CI/CD; no resuelve skills; candidate para change futuro |
+| Skills descargados de GitHub en el momento | Bundlear en el wheel | Skills y TUI evolucionan a ritmos distintos |
+| Skills existentes → preguntar (update/skip/per-skill) | Saltar silenciosamente | El usuario puede tener customizaciones |
+| Claude Code → solo avisar, no bloquear | Bloquear si no está | El usuario puede instalar Claude Code después |
+| Formula en el mismo repo (`Formula/sdd-tui.rb`) | Repo separado `homebrew-sdd-tui` | Menos overhead; tap funciona igual |
+| PyPI fuera de scope | Publicar ahora | Requiere cuenta + tokens + CI/CD |
+| Release workflow optativo via config.yaml | Siempre activo | No todos los proyectos publican releases formales |
+| Sin releases → historial en openspec/ | Sin historial | openspec/archive ya es el registro canónico |
+| `openspec/versions/X.Y.Z.yaml` como marcador | Campo en config.yaml o milestones | Un fichero por versión, no mezcla conceptos |
+| Auto-bump pyproject.toml en release.sh | Pre-bump manual | Menos pasos, menos error-prone |
+| CHANGELOG regenerado completo | Append sección nueva | Siempre consistente con openspec/ |
+| Changelog desde openspec/archive | Desde git log | openspec contiene el "por qué", no solo el "qué" |
 
 ## Abierto / Pendiente
 
-_(ninguno — todos los puntos resueltos)_
+_(ninguno)_
