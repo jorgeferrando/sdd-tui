@@ -1,10 +1,94 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from sdd_tui.core.config import AppConfig
 from sdd_tui.core.models import Change, OpenspecNotFoundError
+from sdd_tui.core.providers.protocol import GitWorkflowConfig
+
+
+def load_git_workflow_config(openspec_path: Path) -> GitWorkflowConfig:
+    """Read the git_workflow: section from openspec/config.yaml, returning defaults on any error."""
+    config_file = openspec_path / "config.yaml"
+    if not config_file.exists():
+        return GitWorkflowConfig()
+    try:
+        return _parse_git_workflow(config_file.read_text(errors="replace"))
+    except Exception:
+        return GitWorkflowConfig()
+
+
+def _parse_git_workflow(text: str) -> GitWorkflowConfig:
+    defaults = GitWorkflowConfig()
+    kwargs: dict[str, str] = {}
+    in_section = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == "git_workflow:":
+            in_section = True
+            continue
+        if in_section:
+            if not stripped or stripped.startswith("#"):
+                continue
+            # End of section when a new top-level key appears (no leading whitespace)
+            if line and not line[0].isspace():
+                break
+            m = re.match(r"\s+(\w+):\s*(.+)", line)
+            if m:
+                kwargs[m.group(1)] = m.group(2).strip()
+    # Only set fields that exist on GitWorkflowConfig
+    valid = {f for f in defaults.__dataclass_fields__}
+    filtered = {k: v for k, v in kwargs.items() if k in valid}
+    return GitWorkflowConfig(**filtered)
+
+
+def _write_git_workflow_config(openspec_path: Path, cfg: GitWorkflowConfig) -> None:
+    """Write or replace the git_workflow: section in openspec/config.yaml."""
+    config_file = openspec_path / "config.yaml"
+
+    block_lines = [
+        "git_workflow:",
+        f"  issue_tracker: {cfg.issue_tracker}",
+        f"  git_host: {cfg.git_host}",
+        f"  branching_model: {cfg.branching_model}",
+        f"  change_prefix: {cfg.change_prefix}",
+        f"  changelog_format: {cfg.changelog_format}",
+    ]
+    block = "\n".join(block_lines) + "\n"
+
+    if not config_file.exists():
+        openspec_path.mkdir(parents=True, exist_ok=True)
+        config_file.write_text("# openspec config\n" + block)
+        return
+
+    existing = config_file.read_text(errors="replace")
+    lines = existing.splitlines(keepends=True)
+
+    # Find start and end of existing git_workflow: section
+    start = None
+    end = len(lines)
+    for i, line in enumerate(lines):
+        if line.strip() == "git_workflow:":
+            start = i
+            continue
+        if start is not None and i > start:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if line and not line[0].isspace():
+                end = i
+                break
+
+    if start is not None:
+        new_lines = lines[:start] + [block] + lines[end:]
+        config_file.write_text("".join(new_lines))
+    else:
+        # Append at the end, ensuring a newline separator
+        if existing and not existing.endswith("\n"):
+            existing += "\n"
+        config_file.write_text(existing + block)
 
 
 def load_steering(openspec_path: Path) -> str | None:
