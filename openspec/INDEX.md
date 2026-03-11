@@ -31,10 +31,10 @@ release workflow con changelog automático desde openspec/archive y version mark
 ---
 
 ## tooling (`specs/tooling/spec.md`)
-Quality gates Python (ruff), skills SDD (steer, audit, init onboarding, apply bootstrap, living rules)
-y convención de diagramas Mermaid en design.md.
-**Entidades:** `ruff`, `sdd-steer`, `sdd-audit`, `sdd-init`, `openspec/steering/`, `conventions.md`, `project-rules.md`, `environment.md`, `project-skill.md`; Mermaid en `design.md`
-**Keywords:** linting, ruff, steering, audit, conventions, init, onboarding, bootstrap, mermaid, diagram, project-rules, living-rules, rfc2119, quality-gate, index, openspec-index, two-level-lookup, sdd-explore, sdd-archive, index-bootstrap
+Quality gates Python (ruff), skills SDD (steer, audit, init onboarding, apply bootstrap, living rules,
+discover reverse-spec) y convención de diagramas Mermaid en design.md.
+**Entidades:** `ruff`, `sdd-steer`, `sdd-audit`, `sdd-init`, `sdd-discover`, `openspec/steering/`, `conventions.md`, `project-rules.md`, `environment.md`, `project-skill.md`; Mermaid en `design.md`
+**Keywords:** linting, ruff, steering, audit, conventions, init, onboarding, bootstrap, mermaid, diagram, project-rules, living-rules, rfc2119, quality-gate, index, openspec-index, two-level-lookup, sdd-explore, sdd-archive, index-bootstrap, discover, reverse-spec, inferred, canon-inicial, subagent
 
 ---
 
