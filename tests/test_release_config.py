@@ -3,7 +3,6 @@ from pathlib import Path
 from sdd_tui.core.providers.protocol import ReleaseWorkflowConfig
 from sdd_tui.core.reader import _write_release_config, load_release_config
 
-
 # --- load_release_config ---
 
 

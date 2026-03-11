@@ -12,7 +12,9 @@ from textual.widgets.option_list import Option
 from sdd_tui.core.providers.protocol import GitWorkflowConfig, ReleaseWorkflowConfig
 from sdd_tui.core.reader import _write_git_workflow_config, _write_release_config
 
-_GIT_WORKFLOW_KEYS = {"issue_tracker", "git_host", "branching_model", "change_prefix", "changelog_format"}
+_GIT_WORKFLOW_KEYS = {
+    "issue_tracker", "git_host", "branching_model", "change_prefix", "changelog_format"
+}
 
 _QUESTIONS: list[dict] = [
     {

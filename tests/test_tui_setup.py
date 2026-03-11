@@ -4,7 +4,7 @@ import pytest
 from textual.widgets import Input, OptionList, Static
 from textual.widgets.option_list import Option
 
-from sdd_tui.tui.setup import GitWorkflowSetupScreen, _QUESTIONS
+from sdd_tui.tui.setup import _QUESTIONS, GitWorkflowSetupScreen
 
 # Number of git-workflow-only questions (steps 1-5)
 _GIT_QUESTIONS_COUNT = 5
@@ -179,7 +179,6 @@ async def test_custom_prefix_shows_input(tmp_path: Path) -> None:
 
 def _answer_git_steps(screen: GitWorkflowSetupScreen, ol_getter, pilot_pause) -> None:
     """Helper: answer all 5 git-workflow steps with the first non-disabled option."""
-    import asyncio
 
     async def _run():
         for _ in range(_GIT_QUESTIONS_COUNT):
@@ -308,7 +307,6 @@ async def test_wizard_release_yes_writes_enabled_true(tmp_path: Path) -> None:
 
 @pytest.mark.asyncio
 async def test_on_mount_notifies_when_release_workflow_absent(tmp_path: Path) -> None:
-    from pathlib import Path as _Path
 
     from sdd_tui.tui.app import SddTuiApp
 

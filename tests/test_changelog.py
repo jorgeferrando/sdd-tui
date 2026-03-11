@@ -5,8 +5,6 @@ import sys
 from datetime import date
 from pathlib import Path
 
-import pytest
-
 # Make scripts/ importable
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from changelog import (  # noqa: E402
@@ -19,7 +17,6 @@ from changelog import (  # noqa: E402
     mark_version,
     render_changelog,
 )
-
 
 # ---------------------------------------------------------------------------
 # collect_archived_changes
@@ -253,7 +250,7 @@ def test_mark_version_creates_versions_dir_if_missing(tmp_path: Path) -> None:
     # tmp_path has no openspec/versions/ yet
     root = tmp_path / "repo"
     root.mkdir()
-    marker = mark_version(root, "1.0.0")
+    mark_version(root, "1.0.0")
     assert (root / "openspec" / "versions" / "1.0.0.yaml").exists()
 
 
