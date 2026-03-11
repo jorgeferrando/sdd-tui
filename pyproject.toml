@@ -7,6 +7,7 @@ dependencies = ["textual>=0.70.0"]
 [project.scripts]
 sdd-tui = "sdd_tui.tui.app:main"
 sdd-setup = "sdd_tui.setup:main"
+sdd-docs = "sdd_tui.docs_gen:main"
 
 [project.optional-dependencies]
 docs = ["mkdocs-material>=9.0"]
