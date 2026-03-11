@@ -49,6 +49,40 @@ A structured review of the implementation against the spec:
 
 ---
 
+## Example output
+
+When everything passes:
+
+```
+VERIFY REPORT: csv-export
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tests:         42/42 PASS
+Quality:       ruff PASS (0 errors)
+Self-review:   10/10 ✓
+Spec:          all requirements covered
+
+Status: READY FOR PR
+```
+
+When issues are found:
+
+```
+VERIFY REPORT: csv-export — ISSUES FOUND
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Tests:         41/42 FAIL
+  FAIL: test_csv_export_empty_table — AssertionError line 34
+
+Self-review:
+  PENDING: Error path not tested (empty dataset)
+  PENDING: REQ-03 not covered by any test
+
+Fixing issues before continuing...
+```
+
+The skill fixes and re-runs until the report is clean.
+
+---
+
 ## Prerequisite
 
 All tasks in `tasks.md` must be marked `[x]` before running verify. If the apply is partial, complete it first.
