@@ -6,6 +6,9 @@ from textual.widgets.option_list import Option
 
 from sdd_tui.tui.setup import GitWorkflowSetupScreen, _QUESTIONS
 
+# Number of git-workflow-only questions (steps 1-5)
+_GIT_QUESTIONS_COUNT = 5
+
 
 def _make_screen(tmp_path: Path) -> GitWorkflowSetupScreen:
     openspec = tmp_path / "openspec"
@@ -169,3 +172,187 @@ async def test_custom_prefix_shows_input(tmp_path: Path) -> None:
 
         custom_input = screen.query_one("#wz-custom", Input)
         assert custom_input.display is True
+
+
+# --- Release workflow wizard steps ---
+
+
+def _answer_git_steps(screen: GitWorkflowSetupScreen, ol_getter, pilot_pause) -> None:
+    """Helper: answer all 5 git-workflow steps with the first non-disabled option."""
+    import asyncio
+
+    async def _run():
+        for _ in range(_GIT_QUESTIONS_COUNT):
+            ol = screen.query_one("#wz-options", OptionList)
+            for idx in range(ol.option_count):
+                opt = ol.get_option_at_index(idx)
+                if not str(opt.id).startswith("_disabled_"):
+                    _select_option(screen, ol, opt, idx)
+                    await pilot_pause()
+                    break
+
+    return _run()
+
+
+@pytest.mark.asyncio
+async def test_wizard_release_yes_shows_versioning_step(tmp_path: Path) -> None:
+    from textual.app import App, ComposeResult
+
+    class TestApp(App):
+        def compose(self) -> ComposeResult:
+            return iter([])
+
+        def on_mount(self) -> None:
+            self.push_screen(_make_screen(tmp_path))
+
+    async with TestApp().run_test() as pilot:
+        screen = pilot.app.screen
+
+        # Answer git workflow steps (1-5)
+        for _ in range(_GIT_QUESTIONS_COUNT):
+            ol = screen.query_one("#wz-options", OptionList)
+            for idx in range(ol.option_count):
+                opt = ol.get_option_at_index(idx)
+                if not str(opt.id).startswith("_disabled_"):
+                    _select_option(screen, ol, opt, idx)
+                    await pilot.pause()
+                    break
+
+        # Step 6: releases_enabled — select "yes"
+        ol = screen.query_one("#wz-options", OptionList)
+        for idx in range(ol.option_count):
+            opt = ol.get_option_at_index(idx)
+            if str(opt.id) == "yes":
+                _select_option(screen, ol, opt, idx)
+                await pilot.pause()
+                break
+
+        # Should now be on versioning step
+        title = str(screen.query_one("#wz-title", Static).render())
+        assert "versioning" in title.lower()
+
+
+@pytest.mark.asyncio
+async def test_wizard_release_no_skips_to_completion(tmp_path: Path) -> None:
+    from textual.app import App, ComposeResult
+
+    class TestApp(App):
+        def compose(self) -> ComposeResult:
+            return iter([])
+
+        def on_mount(self) -> None:
+            self.push_screen(_make_screen(tmp_path))
+
+    openspec = tmp_path / "openspec"
+    async with TestApp().run_test() as pilot:
+        screen = pilot.app.screen
+
+        # Answer git workflow steps (1-5)
+        for _ in range(_GIT_QUESTIONS_COUNT):
+            ol = screen.query_one("#wz-options", OptionList)
+            for idx in range(ol.option_count):
+                opt = ol.get_option_at_index(idx)
+                if not str(opt.id).startswith("_disabled_"):
+                    _select_option(screen, ol, opt, idx)
+                    await pilot.pause()
+                    break
+
+        # Step 6: releases_enabled — select "no"
+        ol = screen.query_one("#wz-options", OptionList)
+        for idx in range(ol.option_count):
+            opt = ol.get_option_at_index(idx)
+            if str(opt.id) == "no":
+                _select_option(screen, ol, opt, idx)
+                await pilot.pause()
+                break
+
+        # Wizard should have completed — config.yaml written
+        assert (openspec / "config.yaml").exists()
+        content = (openspec / "config.yaml").read_text()
+        assert "release_workflow:" in content
+        assert "enabled: false" in content
+
+
+@pytest.mark.asyncio
+async def test_wizard_release_yes_writes_enabled_true(tmp_path: Path) -> None:
+    from textual.app import App, ComposeResult
+
+    class TestApp(App):
+        def compose(self) -> ComposeResult:
+            return iter([])
+
+        def on_mount(self) -> None:
+            self.push_screen(_make_screen(tmp_path))
+
+    openspec = tmp_path / "openspec"
+    # Pre-create config.yaml with project name for default formula path
+    openspec.mkdir()
+    (openspec / "config.yaml").write_text("project: my-project\n")
+
+    async with TestApp().run_test() as pilot:
+        screen = pilot.app.screen
+
+        for _ in range(len(_QUESTIONS)):
+            ol = screen.query_one("#wz-options", OptionList)
+            for idx in range(ol.option_count):
+                opt = ol.get_option_at_index(idx)
+                if not str(opt.id).startswith("_disabled_"):
+                    _select_option(screen, ol, opt, idx)
+                    await pilot.pause()
+                    break
+
+    content = (openspec / "config.yaml").read_text()
+    assert "release_workflow:" in content
+    assert "enabled: true" in content
+
+
+@pytest.mark.asyncio
+async def test_on_mount_notifies_when_release_workflow_absent(tmp_path: Path) -> None:
+    from pathlib import Path as _Path
+
+    from sdd_tui.tui.app import SddTuiApp
+
+    openspec = tmp_path / "openspec"
+    openspec.mkdir()
+    (openspec / "config.yaml").write_text("project: test\n")
+    (openspec / "changes").mkdir()
+
+    notifications: list[str] = []
+
+    class PatchedApp(SddTuiApp):
+        def notify(self, message: str, **kwargs) -> None:  # type: ignore[override]
+            notifications.append(message)
+
+    async with PatchedApp(openspec).run_test() as pilot:
+        await pilot.pause()
+
+    assert any("Release workflow" in n for n in notifications)
+
+
+@pytest.mark.asyncio
+async def test_on_mount_no_notify_when_release_workflow_disabled(tmp_path: Path) -> None:
+    from sdd_tui.tui.app import SddTuiApp
+
+    openspec = tmp_path / "openspec"
+    openspec.mkdir()
+    (openspec / "config.yaml").write_text(
+        "project: test\n"
+        "release_workflow:\n"
+        "  enabled: false\n"
+        "  versioning: semver\n"
+        "  changelog_source: openspec\n"
+        "  homebrew_formula: null\n"
+    )
+    (openspec / "changes").mkdir()
+
+    release_notifications: list[str] = []
+
+    class PatchedApp(SddTuiApp):
+        def notify(self, message: str, **kwargs) -> None:  # type: ignore[override]
+            if "Release workflow" in message:
+                release_notifications.append(message)
+
+    async with PatchedApp(openspec).run_test() as pilot:
+        await pilot.pause()
+
+    assert len(release_notifications) == 0
