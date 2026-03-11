@@ -28,7 +28,12 @@
       "Bash(bash:*)",
       "Bash(~/.claude/scripts/sdd-tui-lint.sh:*)",
       "Bash(/tmp/test_milestones.yaml:*)",
-      "Bash(wc -l /Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md && python3 -c \"\ncontent = open\\('/Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md'\\).read\\(\\)\nprint\\(repr\\(content[-100:]\\)\\)\n\")"
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md && python3 -c \"\ncontent = open\\('/Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md'\\).read\\(\\)\nprint\\(repr\\(content[-100:]\\)\\)\n\")",
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/openspec/specs/*/spec.md 2>/dev/null | tail -1 && ls /Users/jorge/sites/sdd-tui/openspec/changes/archive/ | wc -l && git -C /Users/jorge/sites/sdd-tui log --oneline | wc -l)",
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/skills/*/SKILL.md 2>/dev/null)",
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/docs/**/*.md /Users/jorge/sites/sdd-tui/docs/*.md 2>/dev/null | sort -rn | head -20)",
+      "Bash(cp -r /Users/jorge/sites/sdd-tui/skills/sdd-docs ~/.claude/skills/sdd-docs)",
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/openspec/specs/*/spec.md | sort -rn)"
     ]
   }
 }
