@@ -1,6 +1,6 @@
 # Docs Reference
 
-The `docs` domain provides the `sdd-docs` CLI that turns an `openspec/` directory into a deployable MkDocs Material site. Running `sdd-docs` generates `mkdocs.yml`, a home page, one reference page per spec domain (with requirements and decisions tables), and a changelog derived from the archive. Existing files are skipped unless `--force` is passed. Pages that require human judgement — overviews, quickstarts, examples — are emitted as typed HTML comment placeholders, which the **`/sdd-docs` skill** then fills in with context-aware prose using Claude Code. The result is a fully navigable, searchable documentation site generated from the same source of truth as the implementation.
+The docs domain covers automated documentation generation from `openspec/`. The `sdd-docs` CLI (mechanical layer) reads your specs and generates a MkDocs scaffold — `mkdocs.yml`, `docs/index.md`, one reference page per domain, and a changelog from the archive. The `/sdd-docs` Claude Code skill (intelligent layer) then fills in the placeholder sections with human-readable prose derived from the specs. The result is a deployable documentation site that stays in sync with your specs as the project evolves.
 
 ## Requirements
 

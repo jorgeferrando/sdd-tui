@@ -1,6 +1,6 @@
 # Github Reference
 
-The `github` domain covers the integration between sdd-tui and GitHub through the `gh` CLI. When you open a change's detail screen, the app asynchronously fetches the **PR status** (open, merged, draft) and **CI status** (queued, running, passed, failed) and displays them in the pipeline panel — with graceful "—" fallbacks if `gh` is not available. A **Ship binding** (`W`) copies a ready-to-paste `gh pr create` command to the clipboard. The **Releases screen** (`L`) shows all published releases for the repository. All GitHub calls are non-blocking and degrade silently so the TUI remains usable without a GitHub connection.
+The github domain handles all GitHub-specific integrations via the `gh` CLI: fetching CI/pipeline status for the current branch, listing releases, and surfacing PR review state inside the change detail screen. All GitHub calls are made asynchronously in background threads to avoid blocking the TUI — a sentinel value is shown while data loads, then replaced when the worker completes.
 
 ## Requirements
 

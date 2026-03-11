@@ -1,6 +1,6 @@
 # Core Reference
 
-The `core` domain is the pure-Python business logic layer with no Textual dependency. It contains the **reader** (loading changes, configs, steering, and spec JSON from `openspec/`), the **spec parser** (delta sections, EARS requirements, and decisions extraction), the **metrics** module (EARS coverage, artifact presence, inactivity days, complexity score), the **git reader** (commits, diffs, branch, working tree status), the **deps** registry (required and optional CLI dependencies), and the **velocity** module (lead time and throughput from the archive). Every function in `core` is designed to degrade silently on missing files or unavailable tools, returning safe defaults rather than raising exceptions.
+The core domain is the engine behind sdd-tui: it reads `openspec/` from disk, parses tasks and pipelines, queries git for commit history and working-tree state, computes spec health metrics and repair hints, tracks velocity, loads milestones and todos, and manages multi-project configuration. Everything the TUI displays is derived from pure functions in `core/` — no side effects, no UI coupling, fully testable in isolation.
 
 ## Requirements
 

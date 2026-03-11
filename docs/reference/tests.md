@@ -1,6 +1,6 @@
 # Tests Reference
 
-The `tests` domain establishes the testing strategy and conventions for sdd-tui. All TUI tests use **pytest-asyncio** with Textual's `run_test()` pilot API, driving the app through real key presses and asserting on screen state — no UI mocking. `GitReader` is mocked to avoid real git dependencies, and fixtures create minimal `openspec/` trees in `tmp_path` to keep tests fast and hermetic. The test suite covers every major screen and user flow: change list rendering, archived toggle, keyboard navigation, document viewers, spec health, and spec evolution. One test per observable behaviour keeps failures pinpointed and refactoring safe.
+The tests domain defines the infrastructure and conventions for testing sdd-tui with pytest and pytest-asyncio. TUI screens are tested using Textual's `app.run_test()` and `Pilot` API, which allows simulating key presses and asserting on rendered output. Core logic is tested with plain pytest functions — no TUI harness needed. Shared fixtures (fake openspec directories, mock git readers) live in `conftest.py` and are reused across the full test suite of 489+ tests.
 
 ## Requirements
 

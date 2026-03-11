@@ -1,6 +1,6 @@
 # Tui Reference
 
-The `tui` domain implements the terminal user interface built on [Textual](https://textual.textualize.io/). It provides a multi-screen experience: **EpicsView** (View 1) lists all active changes with size, status, and search filtering; **ChangeDetailScreen** (View 2) shows tasks, pipeline progress, PR/CI status, and inline diffs; **SpecHealthScreen** (View 8) gives a quality overview with repair hints; **SpecEvolutionScreen** (View 9) renders delta specs and the decisions timeline. Navigation is keyboard-driven — `Enter` drills down, `Esc` goes back, and each screen exposes context-specific bindings documented in `?`.
+The tui domain contains every screen and widget built on [Textual](https://textual.textualize.io/): the main epics list, change detail with live git diffs, spec health dashboard, spec evolution timeline, progress and velocity screens, release history, git log, skill palette, and more. Navigation is entirely keyboard-driven — `j/k` to move, `Enter` to drill down, `?` for help. Heavy operations (git diffs, GitHub API calls) run in background threads via `@work(thread=True)` so the UI stays responsive.
 
 ## Requirements
 

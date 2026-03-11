@@ -1,6 +1,6 @@
 # Distribution Reference
 
-The `distribution` domain covers how sdd-tui is packaged and delivered to users across platforms. The Python package on PyPI provides two entry points: `sdd-tui` (the TUI) and `sdd-setup` (the skill installer). `sdd-setup` downloads the latest skills directly from the GitHub repository at install time — skills are never bundled in the wheel, so upgrading the TUI package never downgrades the skills. A **Homebrew formula** in `Formula/sdd-tui.rb` enables `brew install` on macOS, a **bash installer** (`scripts/install.sh`) handles Linux and detects `uv`, `pipx`, or `pip`, and a **PowerShell installer** covers Windows. All three installers automatically invoke `sdd-setup --global` after installing the package.
+The distribution domain covers how sdd-tui reaches end users: a Homebrew formula for macOS/Linux, `pipx`/`pip` via PyPI, and the `sdd-setup` CLI that installs SDD skills into `~/.claude/skills/` (globally or per-project). It also defines the release workflow: `scripts/changelog.py` generates `CHANGELOG.md` from `openspec/changes/archive/`, version markers live in `openspec/versions/`, and `scripts/release.sh` orchestrates tagging and publishing.
 
 ## Requirements
 

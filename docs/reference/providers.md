@@ -1,6 +1,6 @@
 # Providers Reference
 
-The `providers` domain defines a Protocol-based abstraction layer for external services so the TUI is not hard-coded to any specific platform. Two protocols — **`IssueTracker`** and **`GitHost`** — describe the operations the app needs (PR status, CI runs, releases, issues). The default implementations target GitHub via the `gh` CLI, while **`NullProvider`** implementations return safe empty values when `gh` is absent or unconfigured. A `GitWorkflowConfig` dataclass read from `openspec/config.yaml` selects which concrete provider to instantiate at startup, making it straightforward to add Jira, GitLab, or Bitbucket support in the future without touching TUI code.
+The providers domain abstracts external integrations — git hosting (GitHub, Bitbucket) and issue tracking (GitHub Issues, Jira, Trello) — behind `typing.Protocol` interfaces. This means sdd-tui works with any combination of tools: you configure your provider once via the setup wizard (`S` in the epics list), and the rest of the app (PR status, CI checks, issue links) adapts automatically. Null implementations are provided for offline use or projects that don't need issue tracking.
 
 ## Requirements
 

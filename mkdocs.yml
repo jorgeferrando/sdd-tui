@@ -1,8 +1,5 @@
-site_name: SDD — Spec-Driven Development
-site_description: A lightweight workflow for building software with specification files and Claude Code skills.
-site_url: https://jorgeferrando.github.io/sdd-tui
-repo_url: https://github.com/jorgeferrando/sdd-tui
-repo_name: jorgeferrando/sdd-tui
+site_name: sdd-tui
+site_description: <!-- sdd-docs:placeholder type="description" description="2-3 sentence overview of the project for end users" -->
 
 theme:
   name: material
@@ -23,9 +20,7 @@ theme:
         name: Switch to light mode
   features:
     - navigation.tabs
-    - navigation.sections
     - navigation.top
-    - navigation.footer
     - content.code.copy
     - search.highlight
     - search.suggest
@@ -33,47 +28,23 @@ theme:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences:
-      custom_fences:
-        - name: mermaid
-          class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.tabbed:
-      alternate_style: true
+  - pymdownx.superfences
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
   - tables
-  - attr_list
-  - md_in_html
   - toc:
       permalink: true
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Install: getting-started/install.md
-    - First Change: getting-started/first-change.md
-  - Workflow:
-    - Overview: workflow/overview.md
-    - sdd-init: workflow/sdd-init.md
-    - sdd-new: workflow/sdd-new.md
-    - sdd-ff: workflow/sdd-ff.md
-    - sdd-apply: workflow/sdd-apply.md
-    - sdd-verify: workflow/sdd-verify.md
-    - sdd-archive: workflow/sdd-archive.md
-    - sdd-continue: workflow/sdd-continue.md
-    - sdd-steer: workflow/sdd-steer.md
-  - openspec Reference:
-    - Structure: openspec/structure.md
-    - Steering Files: openspec/steering.md
-    - Milestones & Todos: openspec/milestones.md
-    - Providers: openspec/providers.md
-  - TUI Reference:
-    - Overview: tui/overview.md
-    - Keybindings: tui/keybindings.md
-    - Views: tui/views.md
-  - Best Practices:
-    - Scope Control: best-practices/scope-control.md
-    - Atomic Commits: best-practices/atomic-commits.md
-    - When Not to Use SDD: best-practices/when-not-to-use-sdd.md
+  - Reference:
+    - Core: reference/core.md
+    - Distribution: reference/distribution.md
+    - Docs: reference/docs.md
+    - Github: reference/github.md
+    - Providers: reference/providers.md
+    - Tests: reference/tests.md
+    - Tooling: reference/tooling.md
+    - Tui: reference/tui.md
+  - Changelog: changelog.md
