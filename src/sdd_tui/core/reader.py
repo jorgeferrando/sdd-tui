@@ -6,7 +6,7 @@ from pathlib import Path
 
 from sdd_tui.core.config import AppConfig
 from sdd_tui.core.models import Change, OpenspecNotFoundError
-from sdd_tui.core.providers.protocol import GitWorkflowConfig
+from sdd_tui.core.providers.protocol import GitWorkflowConfig, ReleaseWorkflowConfig
 
 
 def load_git_workflow_config(openspec_path: Path) -> GitWorkflowConfig:
@@ -86,6 +86,100 @@ def _write_git_workflow_config(openspec_path: Path, cfg: GitWorkflowConfig) -> N
         config_file.write_text("".join(new_lines))
     else:
         # Append at the end, ensuring a newline separator
+        if existing and not existing.endswith("\n"):
+            existing += "\n"
+        config_file.write_text(existing + block)
+
+
+def load_release_config(openspec_path: Path) -> tuple[ReleaseWorkflowConfig, bool]:
+    """Read the release_workflow: section from openspec/config.yaml.
+
+    Returns (config, is_configured).
+    is_configured=False when the section is absent (user has not set it up yet).
+    is_configured=True even when enabled=False (user explicitly opted out).
+    """
+    config_file = openspec_path / "config.yaml"
+    if not config_file.exists():
+        return ReleaseWorkflowConfig(), False
+    try:
+        text = config_file.read_text(errors="replace")
+        if "release_workflow:" not in text:
+            return ReleaseWorkflowConfig(), False
+        return _parse_release_workflow(text), True
+    except Exception:
+        return ReleaseWorkflowConfig(), False
+
+
+def _parse_release_workflow(text: str) -> ReleaseWorkflowConfig:
+    raw: dict[str, str] = {}
+    in_section = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == "release_workflow:":
+            in_section = True
+            continue
+        if in_section:
+            if not stripped or stripped.startswith("#"):
+                continue
+            if line and not line[0].isspace():
+                break
+            m = re.match(r"\s+(\w+):\s*(.+)", line)
+            if m:
+                raw[m.group(1)] = m.group(2).strip()
+
+    kwargs: dict = {}
+    if "enabled" in raw:
+        kwargs["enabled"] = raw["enabled"].lower() == "true"
+    if "versioning" in raw:
+        kwargs["versioning"] = raw["versioning"]
+    if "changelog_source" in raw:
+        kwargs["changelog_source"] = raw["changelog_source"]
+    if "homebrew_formula" in raw:
+        val = raw["homebrew_formula"]
+        kwargs["homebrew_formula"] = None if val in ("null", "none", "~") else val
+    return ReleaseWorkflowConfig(**kwargs)
+
+
+def _write_release_config(openspec_path: Path, cfg: ReleaseWorkflowConfig) -> None:
+    """Write or replace the release_workflow: section in openspec/config.yaml."""
+    config_file = openspec_path / "config.yaml"
+
+    formula_val = cfg.homebrew_formula if cfg.homebrew_formula else "null"
+    block_lines = [
+        "release_workflow:",
+        f"  enabled: {str(cfg.enabled).lower()}",
+        f"  versioning: {cfg.versioning}",
+        f"  changelog_source: {cfg.changelog_source}",
+        f"  homebrew_formula: {formula_val}",
+    ]
+    block = "\n".join(block_lines) + "\n"
+
+    if not config_file.exists():
+        openspec_path.mkdir(parents=True, exist_ok=True)
+        config_file.write_text(block)
+        return
+
+    existing = config_file.read_text(errors="replace")
+    lines = existing.splitlines(keepends=True)
+
+    start = None
+    end = len(lines)
+    for i, line in enumerate(lines):
+        if line.strip() == "release_workflow:":
+            start = i
+            continue
+        if start is not None and i > start:
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if line and not line[0].isspace():
+                end = i
+                break
+
+    if start is not None:
+        new_lines = lines[:start] + [block] + lines[end:]
+        config_file.write_text("".join(new_lines))
+    else:
         if existing and not existing.endswith("\n"):
             existing += "\n"
         config_file.write_text(existing + block)
