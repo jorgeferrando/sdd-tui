@@ -10,7 +10,8 @@ from sdd_tui.core.config import AppConfig
 from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, OpenspecNotFoundError, Task, TaskGitState
 from sdd_tui.core.pipeline import PipelineInferer, TaskParser
-from sdd_tui.core.reader import load_all_changes
+from sdd_tui.core.providers.protocol import make_git_host, make_issue_tracker
+from sdd_tui.core.reader import load_all_changes, load_git_workflow_config
 from sdd_tui.tui.epics import EpicsView
 
 
@@ -33,6 +34,9 @@ class SddTuiApp(App):
         self._inferer = PipelineInferer()
         self._parser = TaskParser()
         self._git = GitReader()
+        _wf_cfg = load_git_workflow_config(openspec_path)
+        self._git_host = make_git_host(_wf_cfg)
+        self._issue_tracker = make_issue_tracker(_wf_cfg)
 
     def on_mount(self) -> None:
         from sdd_tui.core.deps import check_deps
