@@ -1,0 +1,1675 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A lightweight workflow for building software with specification files and Claude Code skills.">
+      
+      
+      
+        <link rel="canonical" href="https://jorgeferrando.github.io/sdd-tui/reference/docs/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>Docs Reference - SDD — Spec-Driven Development</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#docs-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SDD — Spec-Driven Development" class="md-header__button md-logo" aria-label="SDD — Spec-Driven Development" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SDD — Spec-Driven Development
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Docs Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jorgeferrando/sdd-tui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jorgeferrando/sdd-tui
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../workflow/overview/" class="md-tabs__link">
+          
+  
+  
+  Workflow
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../openspec/structure/" class="md-tabs__link">
+          
+  
+  
+  openspec Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tui/overview/" class="md-tabs__link">
+          
+  
+  
+  TUI Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../best-practices/scope-control/" class="md-tabs__link">
+          
+  
+  
+  Best Practices
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SDD — Spec-Driven Development" class="md-nav__button md-logo" aria-label="SDD — Spec-Driven Development" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SDD — Spec-Driven Development
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jorgeferrando/sdd-tui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jorgeferrando/sdd-tui
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/first-change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workflow
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-new/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-new
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-ff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-ff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-apply/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-apply
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-verify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-archive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-continue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-continue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-steer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-steer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    openspec Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    openspec Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/steering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steering Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/milestones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Milestones & Todos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    TUI Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/keybindings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keybindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best Practices
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Best Practices
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/scope-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/atomic-commits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atomic Commits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/when-not-to-use-sdd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When Not to Use SDD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#decisions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Decisions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="docs-reference">Docs Reference<a class="headerlink" href="#docs-reference" title="Permanent link">&para;</a></h1>
+<p>The <code>docs</code> domain provides the <code>sdd-docs</code> CLI that turns an <code>openspec/</code> directory into a deployable MkDocs Material site. Running <code>sdd-docs</code> generates <code>mkdocs.yml</code>, a home page, one reference page per spec domain (with requirements and decisions tables), and a changelog derived from the archive. Existing files are skipped unless <code>--force</code> is passed. Pages that require human judgement — overviews, quickstarts, examples — are emitted as typed HTML comment placeholders, which the <strong><code>/sdd-docs</code> skill</strong> then fills in with context-aware prose using Claude Code. The result is a fully navigable, searchable documentation site generated from the same source of truth as the implementation.</p>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REQ-CLI01</code></td>
+<td>Event</td>
+<td>When <code>sdd-docs</code> is invoked, the CLI SHALL search for <code>openspec/</code> starting from the current working directory, traversing up to the git root.</td>
+</tr>
+<tr>
+<td><code>REQ-CLI02</code></td>
+<td>Unwanted</td>
+<td>If no <code>openspec/</code> directory is found, the CLI SHALL exit with code 1 and print: <code>"openspec/ not found. Run /sdd-init in Claude Code first."</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-CLI03</code></td>
+<td>Ubiquitous</td>
+<td>The CLI SHALL accept <code>--help</code> and display all flags with one-line descriptions. #### Flags</td>
+</tr>
+<tr>
+<td><code>REQ-CLI04</code></td>
+<td>Optional</td>
+<td>Where <code>--dry-run</code> is provided, the CLI SHALL list all files that would be generated or skipped, without writing anything.</td>
+</tr>
+<tr>
+<td><code>REQ-CLI05</code></td>
+<td>Optional</td>
+<td>Where <code>--output &lt;dir&gt;</code> is provided, the CLI SHALL write <code>docs/</code> and <code>mkdocs.yml</code> under <code>&lt;dir&gt;</code> instead of the default (git root).</td>
+</tr>
+<tr>
+<td><code>REQ-CLI06</code></td>
+<td>Optional</td>
+<td>Where <code>--force</code> is provided, the CLI SHALL overwrite existing files. Without <code>--force</code>, existing files SHALL be skipped with a warning.</td>
+</tr>
+<tr>
+<td><code>REQ-CLI07</code></td>
+<td>Event</td>
+<td>When generation completes, the CLI SHALL print a summary: files created, skipped, and a next step message. #### Generación de <code>mkdocs.yml</code></td>
+</tr>
+<tr>
+<td><code>REQ-MKD01</code></td>
+<td>Ubiquitous</td>
+<td>The generated <code>mkdocs.yml</code> SHALL use MkDocs Material theme with: light/dark toggle, navigation tabs, navigation top, content.code.copy, search.highlight.</td>
+</tr>
+<tr>
+<td><code>REQ-MKD02</code></td>
+<td>Ubiquitous</td>
+<td><code>site_name</code> SHALL be derived from <code>openspec/steering/product.md</code> (first H1), <code>openspec/config.yaml</code> (project name field if present), or the git repo directory name as fallback — in that order.</td>
+</tr>
+<tr>
+<td><code>REQ-MKD03</code></td>
+<td>Ubiquitous</td>
+<td><code>site_description</code> SHALL be derived from the first paragraph of <code>openspec/steering/product.md</code>, or left as a placeholder if steering is absent.</td>
+</tr>
+<tr>
+<td><code>REQ-MKD04</code></td>
+<td>Ubiquitous</td>
+<td>The nav structure SHALL be derived from available content: one nav entry per spec domain, plus standard sections (Changelog, Reference) when the corresponding source exists in openspec/.</td>
+</tr>
+<tr>
+<td><code>REQ-MKD05</code></td>
+<td>Unwanted</td>
+<td>If a nav entry points to a page that was not generated, the CLI SHALL NOT include that entry in the nav. #### Generación de páginas desde <code>openspec/specs/</code></td>
+</tr>
+<tr>
+<td><code>REQ-SPEC01</code></td>
+<td>Ubiquitous</td>
+<td>For each domain in <code>openspec/specs/</code>, the CLI SHALL generate <code>docs/reference/{domain}.md</code> with: spec title, requirements table, decisions table.</td>
+</tr>
+<tr>
+<td><code>REQ-SPEC02</code></td>
+<td>Ubiquitous</td>
+<td>The requirements table SHALL include columns: ID, Type (EARS), Description. Content is extracted directly from the spec's EARS requirements.</td>
+</tr>
+<tr>
+<td><code>REQ-SPEC03</code></td>
+<td>Ubiquitous</td>
+<td>The decisions table SHALL include columns: Decision, Discarded Alternative, Reason. Content is extracted from the spec's decisions section.</td>
+</tr>
+<tr>
+<td><code>REQ-SPEC04</code></td>
+<td>Optional</td>
+<td>Where <code>openspec/steering/product.md</code> exists, the CLI SHALL inject a one-sentence domain summary at the top of each reference page. Where steering is absent, it SHALL insert a placeholder. #### Generación de Changelog</td>
+</tr>
+<tr>
+<td><code>REQ-CL01</code></td>
+<td>Event</td>
+<td>When <code>openspec/changes/archive/</code> contains at least one change, the CLI SHALL generate <code>docs/changelog.md</code> from the archive.</td>
+</tr>
+<tr>
+<td><code>REQ-CL02</code></td>
+<td>Ubiquitous</td>
+<td>Each archived change SHALL appear as a list item with: change name, archive date (from directory prefix), and first line of <code>proposal.md</code> description field (if parseable), or change name as fallback.</td>
+</tr>
+<tr>
+<td><code>REQ-CL03</code></td>
+<td>Ubiquitous</td>
+<td>Changes SHALL be ordered newest-first.</td>
+</tr>
+<tr>
+<td><code>REQ-CL04</code></td>
+<td>Unwanted</td>
+<td>If <code>openspec/changes/archive/</code> is absent or empty, the CLI SHALL NOT generate <code>docs/changelog.md</code> and SHALL NOT include it in the nav. #### Generación de página Home</td>
+</tr>
+<tr>
+<td><code>REQ-HOME01</code></td>
+<td>Ubiquitous</td>
+<td>The CLI SHALL generate <code>docs/index.md</code> with: project name (from REQ-MKD02), a placeholder for the project description, and a placeholder for the "quick start" section.</td>
+</tr>
+<tr>
+<td><code>REQ-HOME02</code></td>
+<td>Optional</td>
+<td>Where <code>openspec/steering/product.md</code> exists, the CLI SHALL use its content to populate the description section instead of a placeholder. #### Placeholders</td>
+</tr>
+<tr>
+<td><code>REQ-PH01</code></td>
+<td>Ubiquitous</td>
+<td>Placeholders SHALL use the format: <code>&lt;!-- sdd-docs:placeholder type="{type}" description="{what goes here}" --&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-PH02</code></td>
+<td>Ubiquitous</td>
+<td>Placeholder types: <code>description</code>, <code>quickstart</code>, <code>prose</code>, <code>example</code>, <code>diagram</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-PH03</code></td>
+<td>Ubiquitous</td>
+<td>Every generated page SHALL contain at most one placeholder per logical section. Placeholder density SHALL NOT exceed 50% of a page's content. #### Idempotencia</td>
+</tr>
+<tr>
+<td><code>REQ-IDEM01</code></td>
+<td>Ubiquitous</td>
+<td>Running <code>sdd-docs</code> twice without <code>--force</code> SHALL produce no changes — existing files are skipped, not overwritten.</td>
+</tr>
+<tr>
+<td><code>REQ-IDEM02</code></td>
+<td>Ubiquitous</td>
+<td>Running <code>sdd-docs --force</code> twice SHALL produce identical output — the generation is deterministic given the same openspec/ state. ### Skill <code>/sdd-docs</code></td>
+</tr>
+<tr>
+<td><code>REQ-SK01</code></td>
+<td>Event</td>
+<td>When <code>/sdd-docs</code> is invoked, the skill SHALL check if <code>docs/</code> and <code>mkdocs.yml</code> exist. If absent, it SHALL run <code>sdd-docs</code> first.</td>
+</tr>
+<tr>
+<td><code>REQ-SK02</code></td>
+<td>Event</td>
+<td>When scaffold exists, the skill SHALL scan all generated files for placeholders matching <code>&lt;!-- sdd-docs:placeholder ... --&gt;</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-SK03</code></td>
+<td>Ubiquitous</td>
+<td>For each placeholder, the skill SHALL read the relevant steering files (<code>product.md</code>, <code>tech.md</code>, <code>structure.md</code>) to generate appropriate prose.</td>
+</tr>
+<tr>
+<td><code>REQ-SK04</code></td>
+<td>Ubiquitous</td>
+<td>The skill SHALL replace each placeholder with generated prose, preserving the surrounding Markdown structure.</td>
+</tr>
+<tr>
+<td><code>REQ-SK05</code></td>
+<td>Ubiquitous</td>
+<td>The skill SHALL NOT modify sections of pages that were mechanically generated (requirements tables, decisions tables, changelog entries).</td>
+</tr>
+<tr>
+<td><code>REQ-SK06</code></td>
+<td>Event</td>
+<td>When the skill completes, it SHALL report: pages updated, total placeholders filled, and a reminder to review before publishing.</td>
+</tr>
+<tr>
+<td><code>REQ-SK07</code></td>
+<td>Unwanted</td>
+<td>If <code>openspec/steering/</code> does not exist, the skill SHALL warn that output quality will be lower (no project context) and proceed with best-effort prose. ### Distribución</td>
+</tr>
+<tr>
+<td><code>REQ-DIST01</code></td>
+<td>Ubiquitous</td>
+<td><code>sdd-docs</code> SHALL be declared as an entry point in <code>pyproject.toml</code>: <code>sdd-docs = "sdd_tui.docs_gen:main"</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-DIST02</code></td>
+<td>Ubiquitous</td>
+<td>The <code>/sdd-docs</code> skill SHALL be distributed via <code>sdd-setup</code> alongside the other SDD skills, fetched from the GitHub repository.</td>
+</tr>
+<tr>
+<td><code>REQ-DIST03</code></td>
+<td>Ubiquitous</td>
+<td>The Homebrew formula's <code>test</code> block SHALL verify that <code>sdd-docs --help</code> exits with code 0 (alongside existing <code>sdd-tui</code> and <code>sdd-setup</code> checks). ## Escenarios de Verificación <strong>REQ-CLI01/02 — openspec/ no encontrado</strong> <strong>Dado</strong> que el directorio actual no contiene <code>openspec/</code> ni ningún padre hasta el root <strong>Cuando</strong> el usuario ejecuta <code>sdd-docs</code> <strong>Entonces</strong> el CLI imprime <code>"openspec/ not found. Run /sdd-init in Claude Code first."</code> y sale con código 1 <strong>REQ-CLI06 / REQ-IDEM01 — no sobreescribir sin --force</strong> <strong>Dado</strong> que <code>docs/index.md</code> ya existe <strong>Cuando</strong> el usuario ejecuta <code>sdd-docs</code> (sin --force) <strong>Entonces</strong> <code>docs/index.md</code> no se modifica y el summary muestra "index.md: skipped (use --force to overwrite)" <strong>REQ-SPEC01/02 — generación de página de referencia</strong> <strong>Dado</strong> que <code>openspec/specs/core/spec.md</code> existe con requisitos EARS <strong>Cuando</strong> se ejecuta <code>sdd-docs</code> <strong>Entonces</strong> se genera <code>docs/reference/core.md</code> con tabla de requisitos (ID | Type | Description) y tabla de decisiones si la spec tiene sección de decisiones <strong>REQ-CL01-03 — changelog desde archive</strong> <strong>Dado</strong> que <code>openspec/changes/archive/</code> tiene 5 directorios con prefijo fecha <strong>Cuando</strong> se ejecuta <code>sdd-docs</code> <strong>Entonces</strong> <code>docs/changelog.md</code> lista los 5 changes ordenados newest-first con nombre, fecha, y descripción del proposal.md <strong>REQ-SK01 — scaffold ausente</strong> <strong>Dado</strong> que <code>docs/</code> no existe <strong>Cuando</strong> el usuario invoca <code>/sdd-docs</code> <strong>Entonces</strong> el skill ejecuta <code>sdd-docs</code> primero, luego procede a rellenar placeholders ## Interfaces / Contratos ### CLI <code>sdd-docs</code> — flags | Flag | Tipo | Descripción | |------|------|-------------| | <code>--dry-run</code> | bool | Listar archivos sin escribir | | <code>--output &lt;dir&gt;</code> | str | Directorio de salida alternativo | | <code>--force</code> | bool | Sobreescribir archivos existentes | | <code>--help</code> | bool | Mostrar ayuda | ### Exit codes <code>sdd-docs</code> | Código | Significado | |--------|-------------| | 0 | Éxito (incluyendo "archivos skipped") | | 1 | <code>openspec/</code> no encontrado o error de escritura | ### Formato de placeholder <code>html &lt;!-- sdd-docs:placeholder type="description" description="2-3 sentence overview of the project for end users" --&gt;</code> ### Estructura de salida generada <code>docs/ ├── index.md ← home page ├── reference/ │ ├── {domain1}.md ← una por cada openspec/specs/{domain}/ │ └── {domain2}.md └── changelog.md ← de openspec/changes/archive/ (si existe) mkdocs.yml ← site config con nav derivado del contenido</code> ## Decisiones Tomadas | Decisión | Alternativa Descartada | Motivo | |---------|----------------------|--------| | CLI separado del TUI | Integrar en la TUI | Más componible, testeable, invocable desde CI/CD | | Skill como capa separada | CLI con LLM integrado | Separación de concerns; CLI sin dependencia de API | | Placeholders en HTML comments | Marcadores propietarios | Compatible con MkDocs/Markdown renderers | | Un <code>docs/reference/{domain}.md</code> por dominio | Todos en una página | Navegación más limpia; secciones independientes | | Changelog desde openspec/archive | Desde git log | openspec contiene "por qué", no solo "qué" | | <code>sdd_tui/docs_gen.py</code> | Módulo standalone | Misma distribución que sdd-setup; un paquete | | <code>docs/</code> en git root por defecto | <code>docs/</code> junto a openspec/ | Convención MkDocs estándar | | No generar Getting Started ni workflow pages | Generar todo | Esas páginas son muy específicas del proyecto — mejor generarlas con el skill | ## Abierto / Pendiente <em>(ninguno — scope claro)</em></td>
+</tr>
+</tbody>
+</table>
+<h2 id="decisions">Decisions<a class="headerlink" href="#decisions" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Decision</th>
+<th>Discarded Alternative</th>
+<th>Reason</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CLI separado del TUI</td>
+<td>Integrar en la TUI</td>
+<td>Más componible, testeable, invocable desde CI/CD</td>
+</tr>
+<tr>
+<td>Skill como capa separada</td>
+<td>CLI con LLM integrado</td>
+<td>Separación de concerns; CLI sin dependencia de API</td>
+</tr>
+<tr>
+<td>Placeholders en HTML comments</td>
+<td>Marcadores propietarios</td>
+<td>Compatible con MkDocs/Markdown renderers</td>
+</tr>
+<tr>
+<td>Un <code>docs/reference/{domain}.md</code> por dominio</td>
+<td>Todos en una página</td>
+<td>Navegación más limpia; secciones independientes</td>
+</tr>
+<tr>
+<td>Changelog desde openspec/archive</td>
+<td>Desde git log</td>
+<td>openspec contiene "por qué", no solo "qué"</td>
+</tr>
+<tr>
+<td><code>sdd_tui/docs_gen.py</code></td>
+<td>Módulo standalone</td>
+<td>Misma distribución que sdd-setup; un paquete</td>
+</tr>
+<tr>
+<td><code>docs/</code> en git root por defecto</td>
+<td><code>docs/</code> junto a openspec/</td>
+<td>Convención MkDocs estándar</td>
+</tr>
+<tr>
+<td>No generar Getting Started ni workflow pages</td>
+<td>Generar todo</td>
+<td>Esas páginas son muy específicas del proyecto — mejor generarlas con el skill</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

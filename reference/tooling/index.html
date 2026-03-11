@@ -1,0 +1,1687 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A lightweight workflow for building software with specification files and Claude Code skills.">
+      
+      
+      
+        <link rel="canonical" href="https://jorgeferrando.github.io/sdd-tui/reference/tooling/">
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.5">
+    
+    
+      
+        <title>Tooling Reference - SDD — Spec-Driven Development</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#tooling-reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SDD — Spec-Driven Development" class="md-header__button md-logo" aria-label="SDD — Spec-Driven Development" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SDD — Spec-Driven Development
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Tooling Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/jorgeferrando/sdd-tui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jorgeferrando/sdd-tui
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../getting-started/install/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../workflow/overview/" class="md-tabs__link">
+          
+  
+  
+  Workflow
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../openspec/structure/" class="md-tabs__link">
+          
+  
+  
+  openspec Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../tui/overview/" class="md-tabs__link">
+          
+  
+  
+  TUI Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../best-practices/scope-control/" class="md-tabs__link">
+          
+  
+  
+  Best Practices
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SDD — Spec-Driven Development" class="md-nav__button md-logo" aria-label="SDD — Spec-Driven Development" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SDD — Spec-Driven Development
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/jorgeferrando/sdd-tui" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    jorgeferrando/sdd-tui
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/install/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Install
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/first-change/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    First Change
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflow
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Workflow
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-init/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-init
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-new/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-new
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-ff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-ff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-apply/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-apply
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-verify/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-verify
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-archive/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-archive
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-continue/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-continue
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../workflow/sdd-steer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    sdd-steer
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    openspec Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    openspec Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/steering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Steering Files
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/milestones/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Milestones & Todos
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../openspec/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TUI Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    TUI Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/keybindings/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Keybindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../tui/views/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Views
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Best Practices
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Best Practices
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/scope-control/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Scope Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/atomic-commits/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Atomic Commits
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../best-practices/when-not-to-use-sdd/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    When Not to Use SDD
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="tooling-reference">Tooling Reference<a class="headerlink" href="#tooling-reference" title="Permanent link">&para;</a></h1>
+<p>The <code>tooling</code> domain covers the development quality gates and SDD workflow skills that keep the project healthy. It includes <strong>ruff</strong> linting and formatting (via <code>sdd-tui-lint.sh</code>) for the Python codebase, the <strong><code>/sdd-steer</code></strong> skill that generates steering documents from architecture conventions, and the <strong><code>/sdd-audit</code></strong> skill that analyses changed files against <code>conventions.md</code> and produces a classified violation report with ready-to-use correction prompts. Together these three tools enforce consistency without manual review overhead — linters catch syntax, audit catches semantic drift, and steering keeps the conventions up to date.</p>
+<h2 id="requirements">Requirements<a class="headerlink" href="#requirements" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>REQ-01</code></td>
+<td>Ubiquitous</td>
+<td>The proyecto SHALL tener ruff como dependencia de desarrollo.</td>
+</tr>
+<tr>
+<td><code>REQ-02</code></td>
+<td>Ubiquitous</td>
+<td>The configuración SHALL estar en <code>pyproject.toml</code> con <code>line-length = 100</code> y reglas <code>E</code>, <code>F</code>, <code>I</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-03</code></td>
+<td>Ubiquitous</td>
+<td>The código en <code>src/</code> y <code>tests/</code> SHALL pasar <code>ruff check</code> y <code>ruff format --check</code> sin errores.</td>
+</tr>
+<tr>
+<td><code>REQ-04</code></td>
+<td>Ubiquitous</td>
+<td>The script <code>~/.claude/scripts/sdd-tui-lint.sh</code> SHALL ejecutar el quality gate. ## Reglas de negocio - <strong>RB-LINT01:</strong> Solo se activan reglas E (pycodestyle), F (pyflakes) e I (isort) — sin reglas agresivas. - <strong>RB-LINT02:</strong> <code>line-length = 100</code> (no 88 de black por defecto — el código existente usaba ~90 chars). - <strong>RB-LINT03:</strong> El script acepta argumentos opcionales; sin args aplica al proyecto completo. --- ## 2. SDD Steer — Steering Generation ### Skill <code>/sdd-steer</code> Genera y sincroniza archivos de "steering" en <code>openspec/steering/</code>. <strong>Archivos generados:</strong> <code>openspec/steering/ ├── product.md ← qué construye el proyecto, para quién ├── tech.md ← stack, versiones, herramientas clave ├── structure.md ← organización del código, capas └── conventions.md ← reglas con niveles RFC 2119 (MUST/SHOULD/MAY)</code></td>
+</tr>
+<tr>
+<td><code>REQ-ST01</code></td>
+<td>Event</td>
+<td>When invoked, the skill SHALL create <code>openspec/steering/</code> if it does not exist.</td>
+</tr>
+<tr>
+<td><code>REQ-ST02</code></td>
+<td>Event</td>
+<td>When bootstrapping, the skill SHALL generate all four steering files.</td>
+</tr>
+<tr>
+<td><code>REQ-ST03</code></td>
+<td>Ubiquitous</td>
+<td>Conventions SHALL be derived from: architecture/code-quality skills, MEMORY.md, and actual code patterns.</td>
+</tr>
+<tr>
+<td><code>REQ-ST04</code></td>
+<td>Ubiquitous</td>
+<td>Each convention SHALL include: scope, RFC 2119 level (MUST/SHOULD/MAY), and a one-line rationale.</td>
+</tr>
+<tr>
+<td><code>REQ-ST05</code></td>
+<td>Unwanted</td>
+<td>If <code>openspec/steering/</code> already has content, the skill SHALL warn and offer sync instead.</td>
+</tr>
+<tr>
+<td><code>REQ-ST06-08</code></td>
+<td>Event</td>
+<td>Sync mode SHALL detect drift and propose changes — NOT auto-modify steering files. ### Reglas de negocio - <strong>RB-ST01:</strong> Skills de arquitectura son la fuente de verdad; el código es evidencia de implementación. - <strong>RB-ST02:</strong> <code>conventions.md</code> usa RFC 2119 — no lenguaje libre. - <strong>RB-ST03:</strong> Sync propone cambios, espera confirmación del usuario antes de escribir. --- ## 3. SDD Audit — Architecture Violation Detection ### Skill <code>/sdd-audit</code> Analiza el codebase contra <code>conventions.md</code> y produce un reporte clasificado.</td>
+</tr>
+<tr>
+<td><code>REQ-AU01</code></td>
+<td>Event</td>
+<td>When invoked, the skill SHALL read <code>openspec/steering/conventions.md</code> first.</td>
+</tr>
+<tr>
+<td><code>REQ-AU02</code></td>
+<td>Unwanted</td>
+<td>If <code>conventions.md</code> does not exist, the skill SHALL stop and instruct the user to run <code>/sdd-steer</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-AU03</code></td>
+<td>Optional</td>
+<td>Where a scope argument is provided, the skill SHALL restrict analysis to that path.</td>
+</tr>
+<tr>
+<td><code>REQ-AU04</code></td>
+<td>Ubiquitous</td>
+<td>Without a scope, the skill SHALL analyze files modified since the base branch (<code>git diff --name-only</code>).</td>
+</tr>
+<tr>
+<td><code>REQ-AU05</code></td>
+<td>Ubiquitous</td>
+<td>Each violation SHALL include: file path, approximate line, violated convention, and fix suggestion.</td>
+</tr>
+<tr>
+<td><code>REQ-AU06</code></td>
+<td>Event</td>
+<td>When critical violations are found, the skill SHALL generate <code>/sdd-new</code> prompts for correction.</td>
+</tr>
+<tr>
+<td><code>REQ-AU07</code></td>
+<td>Unwanted</td>
+<td>If no violations are found, the skill SHALL output a clean confirmation.</td>
+</tr>
+<tr>
+<td><code>REQ-AU08</code></td>
+<td>Optional</td>
+<td>Where <code>conventions.md</code> exists, <code>/sdd-verify</code> SHOULD run <code>/sdd-audit</code> as Paso 5b. ### Clasificación | Nivel | Criterio | Convención violada | |-------|----------|--------------------| | Crítico | Bloquea PR review | MUST / MUST NOT | | Importante | Deuda técnica | SHOULD | | Menor | Estético | MAY | ### Reglas de negocio - <strong>RB-AU01:</strong> El audit es semántico — complementa linters, no los reemplaza. - <strong>RB-AU02:</strong> El audit NO modifica código — solo reporta y propone prompts. - <strong>RB-AU03:</strong> Prompts <code>/sdd-new</code> agrupan violaciones por dominio, no uno por violación. - <strong>RB-AU04:</strong> Scope por defecto = archivos modificados en el branch. --- ## 4. SDD Init — Onboarding Guiado ### Skill <code>/sdd-init</code> (ampliado) + <code>scripts/sdd-env-scan.sh</code> #### Fase 1 — Environment Discovery</td>
+</tr>
+<tr>
+<td><code>REQ-ENV01</code></td>
+<td>Event</td>
+<td>When <code>/sdd-init</code> is invoked, the skill SHALL scan the environment before asking any questions, detecting: active MCPs, installed runtimes (node, python, php, ruby, go, rust), CLI tools (git, gh, docker, uv, bun, composer), and running Docker containers.</td>
+</tr>
+<tr>
+<td><code>REQ-ENV02</code></td>
+<td>Event</td>
+<td>When source files or known config files exist in the project root (<code>package.json</code>, <code>pyproject.toml</code>, <code>composer.json</code>, <code>go.mod</code>, <code>Cargo.toml</code>, etc.), the skill SHALL derive the stack automatically and pre-fill questionnaire answers.</td>
+</tr>
+<tr>
+<td><code>REQ-ENV03</code></td>
+<td>Event</td>
+<td>When <code>openspec/steering/</code> already exists with content, the skill SHALL skip the onboarding questionnaire and display the current steering state instead.</td>
+</tr>
+<tr>
+<td><code>REQ-ENV04</code></td>
+<td>Ubiquitous</td>
+<td>The environment scan SHALL complete silently — no intermediate output until the summary is shown. #### Fase 2 — Cuestionario Interactivo</td>
+</tr>
+<tr>
+<td><code>REQ-Q01</code></td>
+<td>Event</td>
+<td>When the project has no existing code, the skill SHALL present the full questionnaire covering: project description, audience, bounded context, stack, team size, rigor level, CI/CD, available MCPs, and preferred patterns.</td>
+</tr>
+<tr>
+<td><code>REQ-Q02</code></td>
+<td>Event</td>
+<td>When existing code is detected, the skill SHALL present a reduced questionnaire that confirms detected values and only asks for unresolvable gaps.</td>
+</tr>
+<tr>
+<td><code>REQ-Q03</code></td>
+<td>Ubiquitous</td>
+<td>For each technical decision with multiple valid options, the skill SHALL present trade-offs in plain language — advantages and disadvantages — without assuming prior technical knowledge.</td>
+</tr>
+<tr>
+<td><code>REQ-Q04</code></td>
+<td>Ubiquitous</td>
+<td>When Claude has high confidence in the best option given the project context, the skill SHALL recommend it explicitly with a one-line justification. The user may accept or override.</td>
+</tr>
+<tr>
+<td><code>REQ-Q05</code></td>
+<td>Ubiquitous</td>
+<td>The questionnaire SHALL never require the user to know specific technology names to answer — all questions SHALL offer concrete options or "let Claude decide". #### Fase 3 — Generación de Artefactos</td>
+</tr>
+<tr>
+<td><code>REQ-ART01</code></td>
+<td>Event</td>
+<td>When all questionnaire answers are collected, the skill SHALL generate the full <code>openspec/steering/</code> directory with seven files: <code>product.md</code>, <code>tech.md</code>, <code>structure.md</code>, <code>conventions.md</code>, <code>environment.md</code>, <code>project-skill.md</code>, <code>project-rules.md</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-ART02</code></td>
+<td>Optional</td>
+<td>Where <code>mcp__context7</code> is available, the skill SHALL resolve library IDs for the detected stack dependencies and add documentation references to <code>tech.md</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-ART03</code></td>
+<td>Ubiquitous</td>
+<td>The onboarding SHALL NOT block or fail if optional MCPs are unavailable.</td>
+</tr>
+<tr>
+<td><code>REQ-ART04</code></td>
+<td>Ubiquitous</td>
+<td><code>project-skill.md</code> SHALL act as an index file and SHALL NOT exceed 100 lines.</td>
+</tr>
+<tr>
+<td><code>REQ-ART05</code></td>
+<td>Ubiquitous</td>
+<td><code>project-rules.md</code> SHALL be the primary file for granular implementation rules. <code>conventions.md</code> SHALL only contain architectural decisions at RFC 2119 level.</td>
+</tr>
+<tr>
+<td><code>REQ-ART06</code></td>
+<td>Ubiquitous</td>
+<td><code>environment.md</code> SHALL document confirmed available tools and MCPs. #### Integración con <code>sdd-audit</code></td>
+</tr>
+<tr>
+<td><code>REQ-AUDIT-EXT01</code></td>
+<td>Event</td>
+<td>When <code>/sdd-audit</code> is invoked and <code>project-rules.md</code> exists, the skill SHALL read both <code>conventions.md</code> and <code>project-rules.md</code> as a unified ruleset.</td>
+</tr>
+<tr>
+<td><code>REQ-AUDIT-EXT02</code></td>
+<td>Ubiquitous</td>
+<td>Violations from <code>project-rules.md</code> SHALL follow the same severity classification (Critical/Important/Minor) as violations from <code>conventions.md</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-AUDIT-EXT03</code></td>
+<td>Ubiquitous</td>
+<td>Rules in <code>project-rules.md</code> that duplicate linter coverage SHALL NOT generate audit violations — the audit remains semantic. #### Estructura de <code>openspec/steering/</code> <code>openspec/steering/ ├── product.md ← qué construye, para quién, bounded context ├── tech.md ← stack, versiones, dependencias clave, refs Context7 ├── structure.md ← organización del código, capas, flujo estándar ├── conventions.md ← decisiones arquitecturales RFC 2119 (MUST/SHOULD/MAY) ├── environment.md ← MCPs, CLI tools, contenedores disponibles confirmados ├── project-skill.md ← índice del proyecto; referencia los demás archivos └── project-rules.md ← reglas granulares de implementación; crece con el proyecto</code> ### Reglas de negocio - <strong>RB-INIT01:</strong> El onboarding solo se ejecuta una vez por proyecto. Re-ejecutar <code>/sdd-init</code> con steering existente muestra el estado actual — usar <code>/sdd-steer sync</code> para actualizar. - <strong>RB-INIT02:</strong> <code>project-skill.md</code> es el punto de entrada que los demás skills cargan. Debe poder leerse en &lt; 30 segundos — concisión obligatoria (≤ 100 líneas). - <strong>RB-INIT03:</strong> Las decisiones tomadas durante el onboarding se registran en <code>conventions.md</code> como sección "## Bootstrap decisions" para trazabilidad. --- ## 5. SDD Apply — Bootstrap Verification ### Skill <code>/sdd-apply</code> (ampliado)</td>
+</tr>
+<tr>
+<td><code>REQ-BOOT01</code></td>
+<td>Event</td>
+<td>When <code>/sdd-apply</code> is invoked, the skill SHALL verify that <code>openspec/steering/conventions.md</code> exists before implementing any task.</td>
+</tr>
+<tr>
+<td><code>REQ-BOOT02</code></td>
+<td>Unwanted</td>
+<td>If <code>openspec/steering/conventions.md</code> does not exist, the skill SHALL stop and instruct the user to run <code>/sdd-init</code> first.</td>
+</tr>
+<tr>
+<td><code>REQ-BOOT03</code></td>
+<td>Event</td>
+<td>When bootstrap verification passes, the skill SHALL read <code>openspec/steering/conventions.md</code>, <code>openspec/steering/project-rules.md</code>, and <code>openspec/steering/tech.md</code> before starting implementation.</td>
+</tr>
+<tr>
+<td><code>REQ-BOOT04</code></td>
+<td>Optional</td>
+<td>Where <code>openspec/steering/project-skill.md</code> exists, the skill SHALL read it as the primary context entry point instead of reading individual files. ### Reglas de negocio - <strong>RB-BOOT01:</strong> La lectura del steering es silenciosa — no se muestra al usuario. - <strong>RB-BOOT02:</strong> Si algún archivo de steering no existe (excepto <code>conventions.md</code>), el skill continúa sin error — el steering es incremental. --- ## 6. Living Rules — Actualización de <code>project-rules.md</code></td>
+</tr>
+<tr>
+<td><code>REQ-LIVE01</code></td>
+<td>Event</td>
+<td>When the user explicitly instructs Claude to remember a rule, Claude SHALL add it to <code>project-rules.md</code> in RFC 2119 format and confirm what was saved.</td>
+</tr>
+<tr>
+<td><code>REQ-LIVE02</code></td>
+<td>Event</td>
+<td>When Claude detects an implicit correction during implementation, Claude SHALL ask before writing to <code>project-rules.md</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-LIVE03</code></td>
+<td>Ubiquitous</td>
+<td>Rules added to <code>project-rules.md</code> SHALL follow RFC 2119 format with scope, level, rule, and one-line rationale.</td>
+</tr>
+<tr>
+<td><code>REQ-LIVE04</code></td>
+<td>Ubiquitous</td>
+<td>Granular implementation rules SHALL go to <code>project-rules.md</code>. Architectural decisions SHALL go to <code>conventions.md</code>.</td>
+</tr>
+<tr>
+<td><code>REQ-LIVE05</code></td>
+<td>Event</td>
+<td>When a rule is saved, Claude SHALL confirm what was saved and where.</td>
+</tr>
+<tr>
+<td><code>REQ-LIVE06</code></td>
+<td>Unwanted</td>
+<td>If <code>project-rules.md</code> does not exist when a rule needs saving, Claude SHALL create it before writing. ### Reglas de negocio - <strong>RB-LIVE01:</strong> Si el usuario corrige lo mismo dos veces, la segunda vez Claude guarda sin preguntar. - <strong>RB-LIVE02:</strong> <code>project-rules.md</code> se organiza por secciones temáticas (## Style, ## Tests, etc.). - <strong>RB-LIVE03:</strong> Las reglas guardadas se aplican en la misma sesión desde el momento en que se guardan. --- ## 7. Mermaid Diagrams — Convención para SDD Docs ### Skill <code>/sdd-design</code> (ampliado) + <code>/sdd-propose</code> (ampliado)</td>
+</tr>
+<tr>
+<td><code>REQ-MD-01</code></td>
+<td>Ubiquitous</td>
+<td>When generating <code>design.md</code>, the <code>## Arquitectura</code> section SHALL include a Mermaid diagram when the design involves ≥3 components with relationships between them. For designs with &lt; 3 components, the diagram is optional.</td>
+</tr>
+<tr>
+<td><code>REQ-MD-02</code></td>
+<td>Ubiquitous</td>
+<td>The diagram type SHALL be chosen according to the situation: <code>classDiagram</code> for modules/classes/Protocols/inheritance; <code>sequenceDiagram</code> for temporal flows (wizard steps, async workers, request/response); <code>flowchart LR</code> for screen navigation, system context, file dependencies; <code>stateDiagram-v2</code> for object lifecycle or pipeline states.</td>
+</tr>
+<tr>
+<td><code>REQ-MD-03</code></td>
+<td>Ubiquitous</td>
+<td>The diagram SHALL be placed within the <code>## Arquitectura</code> section, after any prose summary. It complements text — does not replace it.</td>
+</tr>
+<tr>
+<td><code>REQ-MD-04</code></td>
+<td>Optional</td>
+<td>When generating <code>proposal.md</code>, the <code>## Solución Propuesta</code> section MAY include a <code>flowchart LR</code> context diagram when the scope involves ≥2 external systems or actors interacting. For internal single-module changes, the diagram SHOULD be omitted.</td>
+</tr>
+<tr>
+<td><code>REQ-MD-05</code></td>
+<td>Ubiquitous</td>
+<td>Mermaid blocks in TUI render as code blocks (rich.Markdown fallback). This is acceptable — diagrams are design documentation, not runtime display.</td>
+</tr>
+<tr>
+<td><code>REQ-MD-06</code></td>
+<td>Ubiquitous</td>
+<td>Diagrams are snapshots of the design at authoring time. If the implementation diverges, the code is the source of truth. Post-implementation diagram updates are NOT required. ### Reglas de negocio - <strong>RB-MD01:</strong> La regla "≥3 componentes" previene diagramas triviales en changes de 1-2 archivos. - <strong>RB-MD02:</strong> El tipo de diagrama se elige por situación (REQ-MD-02) — no hay un tipo por defecto. - <strong>RB-MD03:</strong> Los diagramas no son fuente de verdad — el código lo es.</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "content.code.copy", "search.highlight", "search.suggest"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
