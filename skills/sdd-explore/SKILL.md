@@ -20,7 +20,8 @@ description: SDD Explore - Read-only codebase exploration to understand context 
 - **Affected files** — what will need to change and why
 - **Domain models** — data structures, interfaces, contracts involved
 - **Tests** — how existing tests are structured for similar code
-- **Specs** — check `openspec/specs/` for canonical domain specs
+- **Specs** — check `openspec/INDEX.md` first (if it exists) to identify relevant domains,
+  then load only those spec files from `openspec/specs/`
 
 ## Output
 
@@ -36,12 +37,21 @@ Relevant files:
 Existing patterns:
   - Pattern X used in Y — can follow the same approach
 
-Canonical specs:
-  - openspec/specs/{domain}/spec.md — covers Z behavior
+OpenSpec Index (if present):
+  - openspec/INDEX.md → identified domains: {domain1}, {domain2}
+  - Loaded specs: openspec/specs/{domain}/spec.md
 
 Key constraints:
   - {anything that affects the design}
 ```
+
+## OpenSpec Index Lookup
+
+If `openspec/INDEX.md` exists, read it **before** loading any individual spec file:
+1. Match the change description / ticket keywords against the `**Keywords:**` field of each entry
+2. Load only the 1-3 most relevant domain spec files
+3. If no clear match, load the most likely domain + `core`
+4. If `openspec/INDEX.md` does not exist, scan `openspec/specs/` directly (fallback)
 
 ## Notes
 
