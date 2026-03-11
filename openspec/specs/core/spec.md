@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** core
-- **Change:** spec-health-hints
+- **Change:** milestone-grouping
 - **Fecha:** 2026-03-06
-- **Versión:** 1.3
+- **Versión:** 1.5
 - **Estado:** approved
 
 ## Contexto
@@ -475,6 +475,7 @@ class Decision:
     decision: str
     alternative: str
     reason: str
+    status: str = "locked"  # locked | open | deferred
 
 @dataclass
 class ChangeDecisions:
@@ -489,7 +490,9 @@ Reconoce tanto `## Decisiones Tomadas` como `## Decisiones de Diseño` (y varian
 |-----------|-----------|-----------|
 | `design.md` no existe | Archivo ausente | `ChangeDecisions` con `decisions=[]` |
 | Sin tabla de decisiones | No hay `##` de decisiones | `decisions=[]` |
-| Tabla presente | Filas `\| col1 \| col2 \| col3 \|` | Lista de `Decision` |
+| Tabla 3 columnas | `\| dec \| alt \| why \|` | `Decision` con `status="locked"` |
+| Tabla 4 columnas | `\| dec \| alt \| why \| status \|` | `Decision` con `status` del campo 4 |
+| Status desconocido | Valor no en `locked/open/deferred` | Almacenado as-is, sin error |
 
 ### `collect_archived_decisions` — Agregador por archive
 
@@ -822,4 +825,127 @@ retorna al menos un elemento.
 - **RB-RH-01:** Early return cuando `spec == PENDING` — los hints de calidad son irrelevantes sin spec.
 - **RB-RH-02:** Retorna `["✓"]` (nunca lista vacía) cuando no hay hints aplicables.
 - **RB-RH-03:** Función pura — sin efectos secundarios ni I/O.
+
+---
+
+## 14. Milestones Reader — load_milestones
+
+### Propósito
+
+Módulo `core/milestones.py` — lee `openspec/milestones.yaml` y retorna agrupaciones
+lógicas de changes. Sin dependencias externas — parsing manual consistente con `core/config.py`.
+
+### Modelo de Datos
+
+```python
+@dataclass
+class Milestone:
+    name: str            # ej: "v1.0 — Bootstrap"
+    changes: list[str]   # nombres de changes asignados (en orden declarado)
+```
+
+### Formato milestones.yaml
+
+```yaml
+milestones:
+  - name: "v1.0 — Bootstrap"
+    changes:
+      - bootstrap
+      - view-2-change-detail
+  - name: "v1.1 — UX"
+    changes:
+      - ux-feedback
+      - ux-navigation
+```
+
+### `load_milestones(openspec_path: Path) -> list[Milestone]`
+
+**Dado** un path al directorio `openspec/`
+**Cuando** se llama a `load_milestones(openspec_path)`
+**Entonces** se retorna la lista de `Milestone` definidos en `openspec/milestones.yaml`,
+en el orden en que aparecen en el archivo
+
+### Requisitos (EARS)
+
+- **REQ-ML-01** `[Event]` When `load_milestones(openspec_path)` is called and `milestones.yaml` exists, the system SHALL return a `list[Milestone]` parsed from the file, in declaration order.
+- **REQ-ML-02** `[Unwanted]` If `milestones.yaml` does not exist, the system SHALL return `[]` without raising.
+- **REQ-ML-03** `[Unwanted]` If `milestones.yaml` is malformed or unparseable, the system SHALL return `[]` without raising.
+- **REQ-ML-04** `[Unwanted]` If a milestone block has no `changes:` list, the system SHALL include the milestone with `changes=[]`.
+- **REQ-ML-05** `[Ubiquitous]` The parser SHALL NOT require PyYAML — parsing SHALL be implemented with stdlib only (regex + string ops).
+
+### Casos alternativos
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Archivo no existe | `milestones.yaml` ausente | `[]` |
+| Archivo vacío | Sin contenido | `[]` |
+| Milestone sin changes | `changes:` ausente o vacía | `Milestone(name=..., changes=[])` |
+| Nombres con guiones | `view-2-change-detail` | Preservado exactamente |
+| Encoding inválido | Caracteres especiales | `errors="replace"`, nunca `UnicodeDecodeError` |
+
+### Reglas de negocio
+
+- **RB-ML-01:** Parser de estado: detecta `milestones:` → luego `- name:` → luego `  - change-name` dentro del bloque de changes.
+- **RB-ML-02:** `load_milestones` no lanza excepciones — todos los errores retornan `[]`.
+- **RB-ML-03:** El orden de milestones en la lista de retorno es el mismo que en el YAML.
+- **RB-ML-04:** Los nombres de changes en `Milestone.changes` son exactamente los strings del YAML (sin trim extra).
+
+---
+
+## 15. Todos Reader — load_todos
+
+### Propósito
+
+Módulo `core/todos.py` — lee archivos `*.md` de `openspec/todos/` y retorna
+ítems de tipo checkbox Markdown. Espacio informal para notas abiertas, deuda técnica
+o ideas que no encajan en un change activo.
+
+### Modelo de Datos
+
+```python
+@dataclass
+class TodoItem:
+    text: str     # texto del ítem (sin el checkbox)
+    done: bool    # True si [x], False si [ ]
+
+@dataclass
+class TodoFile:
+    title: str           # encabezado # del archivo, o nombre del archivo sin extensión
+    items: list[TodoItem]
+```
+
+### `load_todos(openspec_path: Path) -> list[TodoFile]`
+
+**Dado** un path al directorio `openspec/`
+**Cuando** se llama a `load_todos(openspec_path)`
+**Entonces** se retorna la lista de `TodoFile` parseados de todos los `*.md`
+en `openspec/todos/`, ordenados alfabéticamente por nombre de archivo
+
+### Requisitos (EARS)
+
+- **REQ-TD-01** `[Event]` When `load_todos(openspec_path)` is called and `openspec/todos/` exists, the system SHALL return a `list[TodoFile]` parsed from all `*.md` files, sorted alphabetically by filename.
+- **REQ-TD-02** `[Unwanted]` If `openspec/todos/` does not exist, the system SHALL return `[]` without raising.
+- **REQ-TD-03** `[Unwanted]` If a file cannot be read or decoded, the system SHALL skip it silently.
+- **REQ-TD-04** `[Ubiquitous]` The `TodoFile.title` SHALL be the text of the first `# Heading` found in the file; if none, the filename stem.
+- **REQ-TD-05** `[Ubiquitous]` Only lines matching `- [ ] text` or `- [x] text` SHALL be parsed as `TodoItem`; all other lines SHALL be ignored.
+- **REQ-TD-06** `[Ubiquitous]` The parser SHALL NOT require PyYAML or any dependency beyond stdlib.
+- **REQ-TD-07** `[Unwanted]` If a file contains no checkbox lines, the system SHALL include a `TodoFile` with `items=[]`.
+
+### Casos alternativos
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Directorio vacío | `todos/` existe pero sin `.md` | `[]` |
+| Archivo sin heading | Sin línea `# ...` | `title` = filename stem |
+| Archivo sin ítems | Solo texto plano | `TodoFile(title=..., items=[])` |
+| Ítems mixtos | `[x]` y `[ ]` en el mismo archivo | Ambos parseados correctamente |
+| Encoding inválido | Caracteres especiales | `errors="replace"`, nunca `UnicodeDecodeError` |
+| Archivos no-md | `.yaml`, `.json` en `todos/` | Ignorados (solo `*.md`) |
+
+### Reglas de negocio
+
+- **RB-TD-01:** `load_todos` no lanza excepciones — todos los errores retornan `[]` o saltan el archivo.
+- **RB-TD-02:** El orden de `TodoFile` en la lista es alfabético por nombre de archivo.
+- **RB-TD-03:** El orden de `TodoItem` dentro de cada `TodoFile` es el de aparición en el archivo.
+- **RB-TD-04:** El regex de ítem es `^- \[([ x])\] (.+)$` (strip de línea antes de aplicar).
 

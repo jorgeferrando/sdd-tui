@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tui
-- **Change:** progress-dashboard
-- **Fecha:** 2026-03-06
-- **Versión:** 2.3
+- **Change:** provider-abstraction
+- **Fecha:** 2026-03-11
+- **Versión:** 2.7
 - **Estado:** approved
 
 ## Contexto
@@ -517,12 +517,24 @@ Pantalla scrollable que agrega todas las decisiones de los changes archivados.
 
 ```
 ── {change_name} ({archive_date}) ──    (bold cyan)
-  • {decision}                          (white)
+  • [badge] {decision}                  (badge + white)
     vs: {alternative}                   (dim)
     why: {reason}                       (italic)
 ```
 
+Badges de status:
+
+| Status | Badge | Estilo |
+|--------|-------|--------|
+| `locked` | `[locked]` | dim |
+| `open` | `[open]` | yellow |
+| `deferred` | `[deferred]` | cyan |
+| desconocido | `[{value}]` | dim |
+
 Si no hay decisions en ningún archivado → `"No archived decisions found"`.
+
+- **RB-DSB-01:** El badge se renderiza con `_status_badge(status) -> (badge_text, rich_style)` — función pura module-level.
+- **RB-DSB-02:** Status desconocido se renderiza como `[{value}]` en `dim` sin lanzar error.
 
 ### Reglas de negocio
 
@@ -1107,3 +1119,135 @@ Pantalla global de progreso accesible con `P` desde EpicsView.
 - `core/progress.py` — `ProgressReport`, `ChangeProgress`, `compute_progress(list[Change]) -> ProgressReport` (función pura, sin I/O)
 - `tui/progress.py` — `ProgressDashboard(Screen)` con `ScrollableContainer + Static`
 - `furthest_phase` = última fase DONE en orden propose→spec→design→tasks→apply→verify
+
+---
+
+## 15. EpicsView — Milestone Grouping
+
+### Comportamiento con milestones.yaml presente (single-project)
+
+**Dado** View 1 en modo single-project
+**Cuando** `openspec/milestones.yaml` existe y contiene al menos un milestone
+**Entonces** los changes activos se muestran agrupados bajo cabeceras de milestone,
+seguidos de una sección `── unassigned ──` para changes sin milestone asignado
+
+**Layout ejemplo:**
+```
+  change              SIZE  propose  spec  design  tasks  apply  verify
+  ── v1.0 — Bootstrap ──
+  bootstrap             S      ✓      ✓      ✓      ✓      ✓      ✓
+  ── v1.1 — UX ──
+  ux-feedback           XS     ✓      ✓      ✓      ✓      ✓      ✓
+  ── unassigned ──
+  new-feature           XS     ✓      ·      ·      ·      ·      ·
+  ── archived ──
+  bootstrap             ...
+```
+
+### Requisitos (EARS)
+
+- **REQ-MG-01** `[Optional]` Where `milestones.yaml` exists and single-project mode is active, `EpicsView` SHALL display active changes grouped under milestone header rows.
+- **REQ-MG-02** `[Ubiquitous]` Each milestone header SHALL be rendered as a non-selectable separator row (no key registered in `_change_map`).
+- **REQ-MG-03** `[Optional]` Where a change is not assigned to any milestone, the system SHALL display it under an `── unassigned ──` separator.
+- **REQ-MG-04** `[Unwanted]` If `milestones.yaml` does not exist or returns `[]`, `EpicsView` SHALL fall back to the current flat list behavior without modification.
+- **REQ-MG-05** `[Optional]` Where multi-project mode is active (`len(active_projects) > 1`), milestone grouping SHALL NOT be applied — existing project separator behavior is preserved.
+- **REQ-MG-06** `[Ubiquitous]` The archived section (`── archived ──`) SHALL NOT be grouped by milestone, regardless of milestones.yaml content.
+- **REQ-MG-07** `[Optional]` Where `milestones.yaml` exists and the `unassigned` section is empty (all active changes are assigned), the `── unassigned ──` separator SHALL NOT be rendered.
+- **REQ-MG-08** `[Optional]` Where search filter is active, milestone grouping is preserved — only matching changes are shown within each milestone section. Empty milestone sections (no matches) are omitted.
+- **REQ-MG-09** `[Ubiquitous]` A change that appears in `milestones.yaml` but has no corresponding `Change` object (e.g., archived) SHALL be silently skipped — no empty row rendered.
+
+### Casos alternativos
+
+| Escenario | Condición | Resultado |
+|-----------|-----------|-----------|
+| Sin milestones.yaml | Archivo ausente | Comportamiento actual (sin separadores de milestone) |
+| milestones.yaml vacío | `load_milestones()` retorna `[]` | Comportamiento actual |
+| Todos asignados | Ningún change sin milestone | No se muestra `── unassigned ──` |
+| Ninguno asignado | milestones.yaml existe pero ningún change coincide | Solo sección `── unassigned ──` con todos los changes activos |
+| Multi-project | `len(active_projects) > 1` | Separadores por proyecto, sin milestones |
+| Change en milestone no existe | Nombre en YAML sin Change object | Ignorado silenciosamente |
+| Búsqueda activa | Filtro `/` aplicado | Solo changes que coincidan, agrupados por milestone; milestones vacíos omitidos |
+
+### Reglas de negocio
+
+- **RB-MG-01:** `load_milestones()` se llama en `_populate()` — no se cachea entre refreshes.
+- **RB-MG-02:** El orden de milestones en pantalla sigue el orden declarado en `milestones.yaml`.
+- **RB-MG-03:** Un change puede aparecer como máximo en un milestone (el primero que lo declara si hay duplicados).
+- **RB-MG-04:** El `openspec_path` se obtiene con `getattr(self.app, "_openspec_path", None)` — degradación silenciosa si el atributo no existe (ej: test apps).
+- **RB-MG-05:** Las filas separadoras de milestone usan el mismo formato visual que los separadores existentes de proyecto/archive.
+
+---
+
+## 20. TodosScreen — panel de openspec/todos/
+
+### Propósito
+
+Pantalla de solo lectura accesible desde EpicsView (View 1) mediante la tecla `T`.
+Muestra el contenido de `openspec/todos/*.md` agrupado por archivo, con indicador
+de progreso por grupo y estilo diferenciado para ítems completados.
+
+### Layout
+
+```
+┌─────────────────────────────────────────────────┐
+│ sdd-tui — todos                                  │
+├─────────────────────────────────────────────────┤
+│  ── ideas [1/3] ──                               │
+│  ✓ Ítem completado                    (dim)      │
+│  · Ítem pendiente A                              │
+│  · Ítem pendiente B                              │
+│                                                  │
+│  ── deuda-tecnica [0/2] ──                       │
+│  · Refactorizar reader                           │
+│  · Añadir tipos en todos los módulos             │
+├─────────────────────────────────────────────────┤
+│ [esc] back  [j/k] scroll                        │
+└─────────────────────────────────────────────────┘
+```
+
+### Requisitos (EARS)
+
+- **REQ-TU-01** `[Event]` When the user presses `T` in EpicsView, the system SHALL push `TodosScreen` onto the screen stack.
+- **REQ-TU-02** `[Event]` When the user presses `Escape` in TodosScreen, the system SHALL pop the screen and return to EpicsView.
+- **REQ-TU-03** `[Ubiquitous]` TodosScreen SHALL display todos grouped by `TodoFile`, with a header showing `── {title} [{done}/{total}] ──`.
+- **REQ-TU-04** `[Ubiquitous]` Completed items (`done=True`) SHALL be displayed with `dim` style and a `✓` prefix.
+- **REQ-TU-05** `[Ubiquitous]` Pending items (`done=False`) SHALL be displayed with a `·` prefix and default style.
+- **REQ-TU-06** `[Unwanted]` If `load_todos()` returns `[]`, the system SHALL display "No todos found".
+- **REQ-TU-07** `[Ubiquitous]` TodosScreen SHALL support scroll via `j`/`k` bindings, delegating to the inner `ScrollableContainer`.
+- **REQ-TU-08** `[Ubiquitous]` The screen title SHALL be "sdd-tui — todos".
+
+### Implementación
+
+- `tui/todos.py` — `TodosScreen(Screen)` + `_build_content(todos) -> rich.Text`
+- Patrón: `ScrollableContainer(Static)` idéntico a `ProgressDashboard`
+- Binding `T` en `EpicsView.BINDINGS` + `action_todos()` con import lazy
+
+---
+
+## 17. GitWorkflowSetupScreen (provider-abstraction)
+
+### Contexto
+
+Wizard de configuración del flujo git. Escribe la sección `git_workflow:` en
+`openspec/config.yaml`. Accesible desde `EpicsView` con `S`.
+
+### Requisitos (EARS)
+
+- **REQ-SW01** `[Event]` When the user presses `S` in `EpicsView`, the system SHALL open `GitWorkflowSetupScreen`.
+- **REQ-SW02** `[Ubiquitous]` The `S` binding SHALL appear in the `Footer` with label "Setup".
+- **REQ-WZ01** `[Event]` When `GitWorkflowSetupScreen` mounts, the system SHALL display the first question of the wizard.
+- **REQ-WZ02** `[Ubiquitous]` The wizard SHALL present 5 questions in sequence: (1) Issue tracker, (2) Git host, (3) Branching model, (4) Change prefix, (5) Changelog format.
+- **REQ-WZ03** `[Ubiquitous]` Options marked as "coming soon" (jira, trello, bitbucket, gitlab) SHALL be displayed as disabled. Attempting to select them SHALL show "Not yet available" without advancing.
+- **REQ-WZ04** `[Event]` When the user selects "Custom prefix…" for change prefix, the system SHALL show a text input for free-form entry.
+- **REQ-WZ05** `[Event]` When the user completes all 5 questions, the system SHALL write the `git_workflow:` section to `openspec/config.yaml` and notify "Git workflow configured ✓".
+- **REQ-WZ06** `[Ubiquitous]` The write operation SHALL be atomic: only `git_workflow:` block is added or replaced; the rest of `config.yaml` remains unchanged.
+- **REQ-WZ07** `[Unwanted]` If `openspec/config.yaml` does not exist, the system SHALL create it with only the `git_workflow:` section plus the comment `# Añadir jira_prefix: si usas SDD`.
+- **REQ-WZ08** `[Event]` When the user presses `Escape`, the system SHALL discard all answers and return to `EpicsView` without modifying `config.yaml`.
+- **REQ-WZ09** `[Ubiquitous]` The wizard is all-or-nothing: partial answers are never persisted.
+
+### Implementación
+
+- `tui/setup.py` — `GitWorkflowSetupScreen(Screen)` con `OptionList` + `Input` (custom prefix)
+- Binding `S` en `EpicsView.BINDINGS` + `action_git_workflow_setup()` con import lazy
+- Escribe via `core/reader._write_git_workflow_config(openspec_path, cfg)`
+

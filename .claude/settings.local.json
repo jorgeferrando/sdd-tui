@@ -9,7 +9,26 @@
       "Bash(uv run:*)",
       "Bash(cat:*)",
       "Bash(echo:*)",
-      "Bash(brew info:*)"
+      "Bash(brew info:*)",
+      "Bash(python3 -m json.tool)",
+      "Bash(grep:*)",
+      "Bash(chmod +x:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:openspec.dev)",
+      "WebFetch(domain:api.github.com)",
+      "Bash(gh api:*)",
+      "Bash(gtimeout 3:*)",
+      "Bash(uv add:*)",
+      "Bash(/Users/jorge/.claude/scripts/sdd-tui-lint.sh:*)",
+      "Bash(mkdir:*)",
+      "Bash(python:*)",
+      "Bash(/Users/jorge/sites/sdd-tui/openspec/specs/tui/spec.md:*)",
+      "Read(//Users/jorge/.claude/skills/**)",
+      "Bash(bash:*)",
+      "Bash(~/.claude/scripts/sdd-tui-lint.sh:*)",
+      "Bash(/tmp/test_milestones.yaml:*)",
+      "Bash(wc -l /Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md && python3 -c \"\ncontent = open\\('/Users/jorge/sites/sdd-tui/openspec/specs/core/spec.md'\\).read\\(\\)\nprint\\(repr\\(content[-100:]\\)\\)\n\")"
     ]
   }
 }
