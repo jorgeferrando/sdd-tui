@@ -252,7 +252,8 @@ def assign_changes_to_versions(
 
     for change in sorted(changes, key=lambda c: c.date, reverse=True):
         assigned = False
-        for boundary in sorted_boundaries:
+        # Find the oldest (earliest) boundary whose date >= change.date
+        for boundary in reversed(sorted_boundaries):
             if change.date <= boundary.date:
                 result.setdefault(boundary.version, []).append(change)
                 assigned = True
