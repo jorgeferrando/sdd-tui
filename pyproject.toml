@@ -8,6 +8,9 @@ dependencies = ["textual>=0.70.0"]
 sdd-tui = "sdd_tui.tui.app:main"
 sdd-setup = "sdd_tui.setup:main"
 
+[project.optional-dependencies]
+docs = ["mkdocs-material>=9.0"]
+
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
