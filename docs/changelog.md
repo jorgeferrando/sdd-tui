@@ -1,0 +1,47 @@
+# Changelog
+
+- **2026-03-11** `docs-site-content` — Completar el site de documentación reemplazando los 10 stubs placeholder creados en `docs-site` con contenido real. Las tres secciones pendientes son: openspec Reference (4 páginas), TUI Reference (3 páginas) y Best Practices (3 páginas).
+- **2026-03-11** `provider-abstraction` — Introduce una capa de abstracción de providers (Protocol-based) para desacoplar la TUI de implementaciones concretas de issue tracking (GitHub Issues, JIRA, Trello) y hosting git (GitHub, Bitbucket, GitLab). Incluye el wizard de configuración de flujo git en `openspec/config.yaml`.
+- **2026-03-11** `sdd-docs-generator` — Añadir un generador automático de documentación MkDocs para proyectos con `openspec/`. El sistema tiene dos capas independientes que se complementan:
+- **2026-03-11** `mermaid-diagrams` — - **Change:** mermaid-diagrams
+- **2026-03-11** `todos-panel` — Añadir una pantalla `TodosScreen` a la TUI que muestre los archivos de `openspec/todos/`. El directorio `openspec/todos/` contendrá archivos Markdown con ítems de tipo `- [ ] texto` / `- [x] texto`. La pantalla agrupa los ítems por archivo, muestra el progreso de cada sección y permite distinguir pendientes de completados.
+- **2026-03-11** `release-workflow` — Definir y automatizar el proceso de releases de `sdd-tui`: versionado semántico, script de release, creación de GitHub Releases, actualización de Homebrew formula, y proceso de hotfix.
+- **2026-03-11** `docs-site` — Crear un sitio de documentación público con MkDocs Material, publicado en GitHub Pages, que cubra tanto la metodología SDD como el tooling (sdd-tui + skills). El site actúa como punto de entrada amigable para cualquier persona o equipo que quiera adoptar SDD en su proyecto.
+- **2026-03-06** `progress-dashboard` — Añadir una pantalla global de progreso (`ProgressDashboard`) que agrega el estado de todos los changes activos: tareas completadas, fase del pipeline actual, y resumen numérico global. Se accede desde `EpicsView` con el binding `P`.
+- **2026-03-06** `complexity-badge` — Añadir una columna `SIZE` en `EpicsView` que muestre una métrica de complejidad por change, calculada a partir de datos ya disponibles (tareas, archivos git modificados, líneas de spec). El badge sirve como señal visual para identificar changes sobredimensionados que deberían dividirse.
+- **2026-03-06** `skill-palette` — Pantalla de skills disponibles con escaneo dinámico de `~/.claude/skills/` y copia al portapapeles del comando de invocación. Accesible desde View 1 (EpicsView) y View 2 (ChangeDetailScreen), con paleta de comandos global.
+- **2026-03-06** `pipeline-next-action` — Añadir una línea `NEXT` al `PipelinePanel` de View 2 que muestra visualmente cuál es la siguiente acción del flujo SDD para el change activo.
+- **2026-03-06** `milestone-grouping` — Añadir soporte para agrupar changes en EpicsView por hitos (milestones) definidos en `openspec/milestones.yaml`. Cuando el archivo existe, los changes activos se organizan bajo cabeceras de milestone en lugar de mostrarse en una lista plana.
+- **2026-03-06** `spec-health-hints` — Añadir una columna `HINT` en `SpecHealthScreen` que muestre el comando SDD más urgente para arreglar el problema detectado en cada change.
+- **2026-03-06** `decision-status-badges` — Añadir un campo `status` a las decisiones de diseño (`locked` / `open` / `deferred`) y mostrarlo como badge visual en `DecisionsTimeline`.
+- **2026-03-05** `velocity-metrics` — - **Change:** velocity-metrics
+- **2026-03-05** `observatory-v1` — - **Change:** observatory-v1
+- **2026-03-05** `startup-deps-check` — - **Change:** startup-deps-check
+- **2026-03-05** `git-local-info` — - **Change:** git-local-info
+- **2026-03-05** `sdd-tooling-steer-audit` — - **Change:** sdd-tooling-steer-audit
+- **2026-03-05** `sdd-setup-experience` — - **Change:** sdd-setup-experience
+- **2026-03-05** `gh-actions` — Integración con GitHub Actions y releases en la TUI. Tres features complementarias que amplían la visibilidad del estado de un change más allá del PR:
+- **2026-03-05** `pr-status` — - **Change:** pr-status
+- **2026-03-05** `sdd-init-onboarding` — Ampliar `/sdd-init` con un flujo de onboarding guiado que, mediante preguntas interactivas, recoge suficiente contexto para generar los artefactos que definen la idiosincrasia de un proyecto nuevo: stack, patrones, convenciones, y entorno disponible.
+- **2026-03-04** `docs-skills-install` — - **Change:** docs-skills-install
+- **2026-03-04** `ux-navigation` — - **Change:** ux-navigation
+- **2026-03-04** `tooling-python-lint` — - **Change:** tooling-python-lint
+- **2026-03-04** `ux-feedback` — - **Change:** ux-feedback
+- **2026-03-04** `view-search-filter` — - **Change:** view-search-filter
+- **2026-03-04** `view-help-screen` — - **Change:** view-help-screen
+- **2026-03-04** `tui-tests` — - **Change:** tui-tests
+- **2026-03-04** `view-8-spec-health` — - **Change:** view-8-spec-health
+- **2026-03-04** `cleanup-spec-debt` — - **Change:** cleanup-spec-debt
+- **2026-03-04** `openspec-enrichment` — - **Change:** openspec-enrichment
+- **2026-03-04** `view-9-delta-specs` — - **Change:** view-9-delta-specs
+- **2026-03-04** `perf-async-diffs` — - **Change:** perf-async-diffs
+- **2026-03-03** `view-5-transports` — Añadir una capa de transporte desacoplada que permita al TUI enviar instrucciones a un agente IA (Claude, Codex, Gemini, Opencode, etc.) corriendo en otro panel del terminal, sin que el TUI dependa de qué multiplexer o qué agente se usa.
+- **2026-03-03** `view-7-show-archived` — - **Change:** view-7-show-archived
+- **2026-03-03** `view-6-refresh-in-place` — - **Change:** view-6-refresh-in-place
+- **2026-03-03** `docs-readme-install` — - **Change:** docs-readme-install
+- **2026-03-03** `view-5-clipboard` — Desde View 2 (detalle de un change), el usuario puede lanzar cualquier comando del flujo SDD con una tecla. El TUI construye el comando correcto y lo copia al portapapeles. El usuario lo pega en el terminal donde tiene Claude activo.
+- **2026-03-03** `view-3-commit-diff` — - **Change:** view-3-commit-diff
+- **2026-03-03** `cleanup-remove-transports` — Eliminar `core/transports.py` y `tests/test_transports.py` introducidos en view-5-transports. El approach de comunicación inter-panel via tmux/zellij ha sido descartado en favor de copiar instrucciones al portapapeles.
+- **2026-03-03** `view-4-doc-viewer` — - **Change:** view-4-doc-viewer
+- **2026-03-02** `view-2-change-detail` — - **Change:** view-2-change-detail
+- **2026-03-02** `bootstrap` — - **Change:** bootstrap
