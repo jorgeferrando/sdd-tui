@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tooling
-- **Change:** openspec-index-bootstrap
+- **Change:** sdd-init-reverse-spec
 - **Fecha:** 2026-03-11
-- **Versión:** 5.1
+- **Versión:** 5.2
 - **Estado:** approved
 
 ## Contexto
@@ -325,3 +325,121 @@ los spec files individuales son el nivel 2 (detalle solo cuando es relevante).
 - **RB-IDX03:** Fallback silencioso si no existe INDEX.md — compatibilidad con repos sin índice.
 - **RB-IDX04:** Keywords como campo libre (sin taxonomía formal) — menor coste de mantenimiento.
 - **RB-IDX05:** Límite de 400 líneas — el índice no puede convertirse en el problema que resuelve.
+
+---
+
+## 9. sdd-init — Hint de Canon Inicial
+
+Extensión del skill `/sdd-init` existente (sección 4).
+
+### Requisitos
+
+- **REQ-HINT-01** `[Event]` When `/sdd-init` completes and `openspec/specs/` is empty,
+  the skill SHALL display a hint: `"sin canon inicial — ejecuta /sdd-discover para
+  analizar el codebase existente"`.
+
+- **REQ-HINT-02** `[State]` While `openspec/specs/` contains at least one spec file,
+  the skill SHALL NOT display the hint.
+
+- **REQ-HINT-03** `[Ubiquitous]` The hint SHALL appear as the last item in the "Próximos pasos"
+  section of the init summary — it does not interrupt or alter the existing init flow.
+
+### Reglas de negocio
+
+- **RB-HINT01:** El hint es informativo — no bloquea ni lanza `/sdd-discover` automáticamente.
+- **RB-HINT02:** La condición es `openspec/specs/` sin ningún `spec.md` (incluyendo proyectos nuevos sin código).
+
+---
+
+## 10. sdd-discover — Reverse-Spec desde Codebase Existente
+
+### Skill `/sdd-discover`
+
+Nuevo skill que analiza el codebase del proyecto y genera specs canónicas iniciales
+en `openspec/specs/` con `Status: inferred`.
+
+### Flujo
+
+```
+/sdd-discover
+│
+├── Paso 1: Detectar dominios (Glob + Bash)
+├── Paso 2: Resumen interactivo — lista con conteos + confirmación
+├── Paso 3: Subagente por dominio en paralelo (Agent tool)
+│   └── Cada subagente escribe openspec/specs/{dominio}/spec.md
+└── Paso 4: Actualizar/crear openspec/INDEX.md
+```
+
+### Requisitos
+
+#### Detección de dominios
+
+- **REQ-DISC-01** `[Event]` When `/sdd-discover` is invoked, the skill SHALL scan the
+  project root to identify architectural domains by inspecting directory structure and
+  file extensions (`.py`, `.ts`, `.php`, `.rb`, `.go`, `.rs`, `.java`).
+
+- **REQ-DISC-02** `[Ubiquitous]` Domain detection SHALL consider top-level subdirectories
+  under common source roots (`src/`, `app/`, `lib/`, `packages/`, project root) as domain
+  candidates. `tests/`, `spec/`, `__tests__/` SHALL be treated as a single `tests` domain.
+
+- **REQ-DISC-03** `[Unwanted]` If no source files are found, the skill SHALL stop and
+  inform the user: `"No se detectó código fuente. El proyecto parece estar vacío."`.
+
+#### Resumen interactivo
+
+- **REQ-DISC-04** `[Event]` When domains are identified, the skill SHALL present a summary
+  list with file counts per domain and request confirmation before proceeding.
+
+- **REQ-DISC-05** `[Event]` When the user confirms, the skill SHALL proceed. When the user
+  declines, the skill SHALL stop without creating any files.
+
+#### Generación de specs
+
+- **REQ-DISC-06** `[Event]` When analyzing each domain, the skill SHALL delegate the analysis
+  to a subagent with its own isolated context. Each subagent receives: the domain path, the
+  list of files in that domain, and the canonical spec template. The subagent reads files
+  until it has sufficient context to describe the domain's purpose and main entities.
+
+- **REQ-DISC-06b** `[Ubiquitous]` Subagents SHALL run in parallel — each writes its spec to
+  `openspec/specs/{dominio}/spec.md` independently. The orchestrating agent only receives the
+  completion status per domain, keeping orchestrator context lean.
+
+- **REQ-DISC-07** `[Event]` When generating a spec, the subagent SHALL produce a valid
+  canonical spec (Metadata, Contexto, Comportamiento Actual, Requisitos EARS, Decisiones, Pendiente).
+
+- **REQ-DISC-08** `[Ubiquitous]` All generated specs SHALL have `Status: inferred` in Metadata.
+
+- **REQ-DISC-09** `[Ubiquitous]` REQs in inferred specs SHALL be marked with
+  `<!-- inferred — validate with /sdd-spec -->` at the end of the Requisitos section.
+
+- **REQ-DISC-10** `[Ubiquitous]` Inferred specs SHALL include a closing note:
+  `> Spec generada automáticamente por /sdd-discover. Validar y completar con /sdd-spec.`
+
+- **REQ-DISC-11** `[Unwanted]` If a spec already exists at `openspec/specs/{dominio}/spec.md`,
+  the skill SHALL skip that domain and inform the user.
+
+#### INDEX.md
+
+- **REQ-DISC-12** `[Event]` When all specs are generated, the skill SHALL create or update
+  `openspec/INDEX.md` with an entry per new domain using the standard format.
+
+- **REQ-DISC-13** `[Event]` When `openspec/INDEX.md` already exists, the skill SHALL only
+  add entries for new domains — existing entries SHALL NOT be modified.
+
+### Reglas de negocio
+
+- **RB-DISC01:** `/sdd-discover` es idempotente — dominios con spec existente se omiten siempre.
+- **RB-DISC02:** `Status: inferred` es la señal explícita de borrador automático — no fuente de verdad.
+- **RB-DISC03:** El skill no crea change activo — opera directamente sobre `openspec/specs/`.
+- **RB-DISC04:** Read-only sobre código fuente — solo escribe en `openspec/`.
+- **RB-DISC05:** Si existe `openspec/steering/structure.md`, el subagente MAY leerlo para mejorar la inferencia.
+
+### Decisiones
+
+| Decisión | Alternativa Descartada | Motivo |
+|---------|----------------------|--------|
+| Skill separado `/sdd-discover` | Fase integrada en `sdd-init` | `sdd-init` se mantiene rápido y predecible |
+| Hint en `sdd-init` | Auto-ejecutar `sdd-discover` | El usuario decide cuándo hacer el análisis |
+| `Status: inferred` como diferenciador | Badge visual en SpecHealthScreen | El estado en el archivo es señal suficiente; evita cambios en el TUI |
+| Confirmación interactiva con listado | Análisis silencioso | El usuario valida dominios antes de escribir archivos |
+| Subagentes en paralelo | Análisis secuencial en un contexto | Contexto aislado por dominio; proyectos grandes no saturan el orquestador |
