@@ -2,9 +2,9 @@
 
 ## Metadata
 - **Dominio:** tooling
-- **Change:** openspec-index
+- **Change:** openspec-index-bootstrap
 - **Fecha:** 2026-03-11
-- **Versión:** 5.0
+- **Versión:** 5.1
 - **Estado:** approved
 
 ## Contexto
@@ -273,13 +273,27 @@ los spec files individuales son el nivel 2 (detalle solo cuando es relevante).
 #### sdd-archive — Mantenimiento
 
 - **REQ-ARC-01** `[Event]` When closing a change that adds or modifies a canonical spec,
-  sdd-archive SHALL update the corresponding entries in `openspec/INDEX.md`.
+  sdd-archive SHALL update the corresponding entries in `openspec/INDEX.md` if it exists,
+  or bootstrap it from all canonical specs if it does not exist.
 
 - **REQ-ARC-02** `[Event]` When closing a change that adds a new domain,
   sdd-archive SHALL add a new entry to `openspec/INDEX.md`.
 
 - **REQ-ARC-03** `[Ubiquitous]` The INDEX.md update SHALL happen after merging delta specs
   into canonical specs (Step 2) and before moving the change to archive (Step 3).
+
+- **REQ-BOOT-01** `[Event]` When sdd-archive runs Paso 2b and `openspec/INDEX.md` does not
+  exist, the skill SHALL read all spec files in `openspec/specs/` and generate a complete
+  INDEX.md with one entry per domain.
+
+- **REQ-BOOT-02** `[Ubiquitous]` The bootstrapped INDEX.md SHALL follow the standard format:
+  header note, one `##` section per domain with path, summary, entities, and keywords.
+
+- **REQ-BOOT-03** `[Unwanted]` If `openspec/specs/` is empty or does not exist,
+  sdd-archive SHALL NOT create an empty INDEX.md.
+
+- **REQ-BOOT-04** `[Ubiquitous]` After bootstrap, sdd-archive SHALL continue with the
+  normal update logic so the current change's entities are reflected immediately.
 
 #### sdd-explore — Uso
 
