@@ -1,0 +1,79 @@
+site_name: SDD — Spec-Driven Development
+site_description: A lightweight workflow for building software with specification files and Claude Code skills.
+site_url: https://jorgeferrando.github.io/sdd-tui
+repo_url: https://github.com/jorgeferrando/sdd-tui
+repo_name: jorgeferrando/sdd-tui
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - content.code.copy
+    - search.highlight
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Install: getting-started/install.md
+    - First Change: getting-started/first-change.md
+  - Workflow:
+    - Overview: workflow/overview.md
+    - sdd-init: workflow/sdd-init.md
+    - sdd-new: workflow/sdd-new.md
+    - sdd-ff: workflow/sdd-ff.md
+    - sdd-apply: workflow/sdd-apply.md
+    - sdd-verify: workflow/sdd-verify.md
+    - sdd-archive: workflow/sdd-archive.md
+    - sdd-continue: workflow/sdd-continue.md
+    - sdd-steer: workflow/sdd-steer.md
+  - openspec Reference:
+    - Structure: openspec/structure.md
+    - Steering Files: openspec/steering.md
+    - Milestones & Todos: openspec/milestones.md
+    - Providers: openspec/providers.md
+  - TUI Reference:
+    - Overview: tui/overview.md
+    - Keybindings: tui/keybindings.md
+    - Views: tui/views.md
+  - Best Practices:
+    - Scope Control: best-practices/scope-control.md
+    - Atomic Commits: best-practices/atomic-commits.md
+    - When Not to Use SDD: best-practices/when-not-to-use-sdd.md
