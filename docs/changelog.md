@@ -1,9 +1,11 @@
 # Changelog
 
+- **2026-03-11** `openspec-index-bootstrap` — Extender `sdd-archive` Paso 2b para que **cree** `openspec/INDEX.md` desde cero si no existe, en lugar de saltar silenciosamente. El índice se genera leyendo todas las specs canónicas presentes en `openspec/specs/` en el momento del archive.
 - **2026-03-11** `docs-site-content` — Completar el site de documentación reemplazando los 10 stubs placeholder creados en `docs-site` con contenido real. Las tres secciones pendientes son: openspec Reference (4 páginas), TUI Reference (3 páginas) y Best Practices (3 páginas).
 - **2026-03-11** `provider-abstraction` — Introduce una capa de abstracción de providers (Protocol-based) para desacoplar la TUI de implementaciones concretas de issue tracking (GitHub Issues, JIRA, Trello) y hosting git (GitHub, Bitbucket, GitLab). Incluye el wizard de configuración de flujo git en `openspec/config.yaml`.
 - **2026-03-11** `sdd-docs-generator` — Añadir un generador automático de documentación MkDocs para proyectos con `openspec/`. El sistema tiene dos capas independientes que se complementan:
 - **2026-03-11** `mermaid-diagrams` — - **Change:** mermaid-diagrams
+- **2026-03-11** `openspec-index` — Añadir un índice estructurado de dos niveles (`openspec/INDEX.md`) que permita a los skills SDD identificar qué dominios son relevantes para un change sin necesidad de leer todas las specs canónicas.
 - **2026-03-11** `todos-panel` — Añadir una pantalla `TodosScreen` a la TUI que muestre los archivos de `openspec/todos/`. El directorio `openspec/todos/` contendrá archivos Markdown con ítems de tipo `- [ ] texto` / `- [x] texto`. La pantalla agrupa los ítems por archivo, muestra el progreso de cada sección y permite distinguir pendientes de completados.
 - **2026-03-11** `release-workflow` — Definir y automatizar el proceso de releases de `sdd-tui`: versionado semántico, script de release, creación de GitHub Releases, actualización de Homebrew formula, y proceso de hotfix.
 - **2026-03-11** `docs-site` — Crear un sitio de documentación público con MkDocs Material, publicado en GitHub Pages, que cubra tanto la metodología SDD como el tooling (sdd-tui + skills). El site actúa como punto de entrada amigable para cualquier persona o equipo que quiera adoptar SDD en su proyecto.
