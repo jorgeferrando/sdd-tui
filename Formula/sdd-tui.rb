@@ -25,6 +25,7 @@ class SddTui < Formula
   test do
     system bin/"sdd-tui", "--help"
     system bin/"sdd-setup", "--help"
+    system bin/"sdd-docs", "--help"
   end
 end
 
