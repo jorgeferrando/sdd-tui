@@ -48,6 +48,7 @@ class EpicsView(Widget):
         Binding("K", "skill_palette", "Skills"),
         Binding("P", "progress", "Progress"),
         Binding("T", "todos", "Todos"),
+        Binding("S", "git_workflow_setup", "Setup"),
         Binding("/", "search", "Search"),
         Binding("q", "quit", "Quit"),
     ]
@@ -329,6 +330,11 @@ class EpicsView(Widget):
         from sdd_tui.tui.todos import TodosScreen
 
         self.app.push_screen(TodosScreen())
+
+    def action_git_workflow_setup(self) -> None:
+        from sdd_tui.tui.setup import GitWorkflowSetupScreen
+
+        self.app.push_screen(GitWorkflowSetupScreen(self.app._openspec_path))
 
     def action_quit(self) -> None:
         self.app.exit()
