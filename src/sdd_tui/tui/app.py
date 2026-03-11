@@ -11,7 +11,7 @@ from sdd_tui.core.git_reader import GitReader
 from sdd_tui.core.models import Change, OpenspecNotFoundError, Task, TaskGitState
 from sdd_tui.core.pipeline import PipelineInferer, TaskParser
 from sdd_tui.core.providers.protocol import make_git_host, make_issue_tracker
-from sdd_tui.core.reader import load_all_changes, load_git_workflow_config
+from sdd_tui.core.reader import load_all_changes, load_git_workflow_config, load_release_config
 from sdd_tui.tui.epics import EpicsView
 
 
@@ -59,6 +59,16 @@ class SddTuiApp(App):
             self.notify("  |  ".join(parts), severity="warning", timeout=15)
 
         self._refresh_branch()
+        self._check_release_workflow()
+
+    def _check_release_workflow(self) -> None:
+        _rel_cfg, _rel_configured = load_release_config(self._openspec_path)
+        if not _rel_configured:
+            self.notify(
+                "Release workflow not configured — press S to set up",
+                severity="warning",
+                timeout=10,
+            )
 
     def action_help(self) -> None:
         from sdd_tui.tui.help import HelpScreen
