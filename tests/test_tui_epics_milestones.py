@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import DataTable
 
@@ -107,15 +106,20 @@ async def test_no_milestone_grouping_in_multiproject(tmp_path: Path) -> None:
     _write_milestones(tmp_path, BASIC_YAML)
     # Two changes from different projects → multi-project mode
     changes = [
-        Change(name="change-a", path=Path("/tmp"), project="proj-alpha", project_path=Path("/tmp") / "alpha"),
-        Change(name="change-b", path=Path("/tmp"), project="proj-beta", project_path=Path("/tmp") / "beta"),
+        Change(
+            name="change-a", path=Path("/tmp"),
+            project="proj-alpha", project_path=Path("/tmp") / "alpha",
+        ),
+        Change(
+            name="change-b", path=Path("/tmp"),
+            project="proj-beta", project_path=Path("/tmp") / "beta",
+        ),
     ]
     app = _MilestoneApp(changes, tmp_path)
     async with app.run_test():
         table = app.query_one(DataTable)
         # Multi-project: 2 project separators + 2 change rows = 4 rows (no milestone separators)
         assert table.row_count == 4
-        epics = app.query_one(EpicsView)
         row_keys = [str(k.value) for k in table.rows]
         assert not any("v1.0" in (k or "") for k in row_keys)
 

@@ -310,10 +310,6 @@ def test_complexity_label_thresholds(tmp_path: Path) -> None:
     change_dir.mkdir()
     # Inject known scores by using tasks only (no git, no spec)
     # Score = task_count * 3; sizes: XS<6, S<13, M<25, L<41, XL>=41
-    cases = [
-        (0, "XS"),   # 0 tasks → 0
-        (2, "XS"),   # 2 tasks → 6... wait: 2*3=6 → S
-    ]
     # Use _count_tasks / _count_spec_lines / _count_git_files directly
     # Test boundary values for _get_complexity via tasks.md manipulation
     for task_count, expected_label in [
@@ -330,7 +326,10 @@ def test_complexity_label_thresholds(tmp_path: Path) -> None:
         lines = "".join(f"- [ ] **T{i:02d}** desc\n" for i in range(task_count))
         (c / "tasks.md").write_text(lines)
         score, label = _get_complexity(c, tmp_path)
-        assert label == expected_label, f"task_count={task_count} score={score} expected={expected_label} got={label}"
+        assert label == expected_label, (
+            f"task_count={task_count} score={score} "
+            f"expected={expected_label} got={label}"
+        )
 
 
 def test_complexity_git_files_fallback(tmp_path: Path) -> None:

@@ -386,10 +386,14 @@ async def test_epics_size_column_shows_valid_label() -> None:
 async def test_epics_size_column_xl_rendered_yellow() -> None:
     """REQ-CB-12: XL complexity badge is rendered in yellow."""
     from unittest.mock import patch
+
     from textual.coordinate import Coordinate
+
     from sdd_tui.core.metrics import ChangeMetrics
 
-    xl_metrics = ChangeMetrics(req_count=0, ears_count=0, complexity_score=50, complexity_label="XL")
+    xl_metrics = ChangeMetrics(
+        req_count=0, ears_count=0, complexity_score=50, complexity_label="XL"
+    )
     change = Change(name="fat-change", path=Path("/tmp"), project_path=Path("/tmp"))
     app = _EpicsApp([change])
     with patch("sdd_tui.tui.epics.parse_metrics", return_value=xl_metrics):

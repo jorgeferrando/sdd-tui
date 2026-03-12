@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 from sdd_tui.core.milestones import Milestone, _parse_milestones, load_milestones
 
 
@@ -35,7 +33,9 @@ milestones:
 """
     result = _parse_milestones(text)
     assert len(result) == 2
-    assert result[0] == Milestone(name="v1.0 — Bootstrap", changes=["bootstrap", "view-2-change-detail"])
+    assert result[0] == Milestone(
+        name="v1.0 — Bootstrap", changes=["bootstrap", "view-2-change-detail"]
+    )
     assert result[1] == Milestone(name="v1.1 — UX", changes=["ux-feedback", "ux-navigation"])
 
 

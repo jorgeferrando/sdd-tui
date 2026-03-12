@@ -6,15 +6,12 @@ AnthropicProvider and make_provider() are tested with environment patching.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from sdd_tui.ai_docs import (
-    LLMProvider,
     AnthropicProvider,
+    LLMProvider,
     build_context,
     fill_index,
     fill_mkdocs,
@@ -22,7 +19,6 @@ from sdd_tui.ai_docs import (
     is_available,
     make_provider,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -40,7 +36,9 @@ class _FakeProvider:
         return self.response
 
 
-def _make_openspec(tmp_path: Path, *, with_steering: bool = False, with_readme: bool = False) -> Path:
+def _make_openspec(
+    tmp_path: Path, *, with_steering: bool = False, with_readme: bool = False
+) -> Path:
     openspec = tmp_path / "openspec"
     (openspec / "specs" / "core").mkdir(parents=True)
     (openspec / "specs" / "core" / "spec.md").write_text(
