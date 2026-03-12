@@ -1,146 +1,91 @@
 ---
 name: sdd-docs
-description: SDD Docs - Genera documentación MkDocs desde openspec/. Capa mecánica via CLI + capa inteligente que rellena placeholders con prosa. Uso - /sdd-docs.
+description: SDD Docs - Genera documentación MkDocs desde openspec/ usando AI. Corre sdd-docs --fill --force para producir docs publicables sin placeholders. Uso - /sdd-docs.
 ---
 
 # SDD Docs
 
 > Genera un site de documentación MkDocs para cualquier proyecto con `openspec/`.
-> Combina el CLI `sdd-docs` (scaffold mecánico) con Claude Code (prosa inteligente).
+> Usa la Claude API (o cualquier LLM configurado) para producir prosa narrativa directamente,
+> sin placeholders ni paso manual de relleno.
 
 ## Usage
 
 ```
-/sdd-docs          # Generar o completar docs/ para el proyecto actual
-/sdd-docs --check  # Solo verificar qué placeholders quedan pendientes
+/sdd-docs          # Regenerar docs/ completo con contenido rico
 ```
 
 ## Prerequisitos
 
 - `openspec/` existe en el proyecto (si no: ejecutar `/sdd-init` primero)
-- `sdd-tui` instalado (`sdd-docs` disponible en PATH)
-- Estar en el directorio raíz del proyecto (o cualquier subdirectorio)
+- `sdd-tui` instalado con el extra `[fill]`: `pip install sdd-tui[fill]`
+- `ANTHROPIC_API_KEY` (u otro LLM env var soportado) disponible en el entorno
 
-## Paso 1: Verificar scaffold
+## Paso 1: Verificar entorno
 
-Comprobar si `docs/` y `mkdocs.yml` ya existen:
-
-```bash
-ls docs/ 2>/dev/null && echo "scaffold exists" || echo "no scaffold"
-ls mkdocs.yml 2>/dev/null && echo "mkdocs.yml exists" || echo "no mkdocs.yml"
-```
-
-- Si **no existen**: ejecutar `sdd-docs` para generar el scaffold.
-- Si **existen**: saltar al Paso 3 para buscar placeholders.
-
-## Paso 2: Generar scaffold mecánico
+Comprobar que el LLM está disponible:
 
 ```bash
-sdd-docs
+echo $ANTHROPIC_API_KEY  # debe mostrar una key, no estar vacío
 ```
 
-El CLI lee `openspec/` y genera:
-- `mkdocs.yml` — site config con nav derivado del contenido disponible
-- `docs/index.md` — home page
-- `docs/reference/{domain}.md` — una página por dominio en `openspec/specs/`
-- `docs/changelog.md` — desde `openspec/changes/archive/` (si existe)
+Si no está configurada:
+1. Obtener una API key en https://console.anthropic.com
+2. Exportarla: `export ANTHROPIC_API_KEY=sk-ant-...`
+3. (Opcional) Añadirla a `~/.zshrc` o `~/.bashrc` para persistencia
 
-Revisar el output del CLI para confirmar qué archivos fueron generados.
-
-Si ya existían archivos (skipped): usar `sdd-docs --force` para regenerar, o
-trabajar con los existentes.
-
-## Paso 3: Identificar placeholders
-
-Buscar todos los placeholders en los archivos generados:
+## Paso 2: Generar documentación
 
 ```bash
-grep -r "sdd-docs:placeholder" docs/
+sdd-docs --fill --force
 ```
 
-Cada placeholder tiene este formato:
-```
-<!-- sdd-docs:placeholder type="{type}" description="{what goes here}" -->
-```
+El CLI leerá `openspec/` completo, construirá el contexto del proyecto, y generará:
+- `mkdocs.yml` — configuración completa (nav, Mermaid, Material features)
+- `docs/index.md` — home page narrativa (problema, herramientas, quick start, diagrama)
+- `docs/reference/{domain}.md` — una página por dominio, con prosa + tablas REQ/decisiones
+- `docs/changelog.md` — desde `openspec/changes/archive/`
 
-Tipos posibles:
-- `description` — descripción del proyecto o dominio para usuarios finales
-- `quickstart` — pasos de instalación y primer uso
-- `prose` — párrafo narrativo sobre un concepto o dominio
-- `example` — ejemplo de uso concreto con código
-- `diagram` — diagrama de arquitectura o flujo
+Sin placeholders. Output directamente publicable.
 
-## Paso 4: Cargar contexto del proyecto
-
-Leer los steering files disponibles para tener contexto del proyecto:
-
-```
-openspec/steering/product.md    ← qué construye, para quién
-openspec/steering/tech.md       ← stack, versiones, herramientas
-openspec/steering/structure.md  ← organización del código, capas
-```
-
-Si alguno no existe, continuar con el contexto disponible.
-
-## Paso 5: Rellenar placeholders
-
-Para cada placeholder encontrado:
-
-1. Leer el contexto de la página (título, sección, REQs circundantes si es reference page)
-2. Usar el steering como fuente de verdad para nombres, stack, convenciones
-3. Generar prosa apropiada según el tipo:
-
-**`description`** — 2-3 frases orientadas al usuario final. Qué hace el proyecto,
-qué problema resuelve, quién lo usa. Sin detalles técnicos internos.
-
-**`quickstart`** — Pasos numerados: instalar → configurar → primer uso. Incluir
-comandos reales derivados del `tech.md`. Máximo 5-6 pasos.
-
-**`prose`** — Párrafo explicativo sobre el dominio o concepto. Orientado a alguien
-que no conoce el proyecto. Derivar de los REQs circundantes en la misma página.
-
-**`example`** — Bloque de código con comentarios. Usar el stack real del proyecto.
-Mostrar el caso de uso más común del dominio, no edge cases.
-
-**`diagram`** — Diagrama Mermaid apropiado al contexto. Ver tipos disponibles en
-el skill `sdd-design`. Para docs: preferir `flowchart LR` para navegación/flujo,
-`classDiagram` para estructuras de datos.
-
-Reemplazar el HTML comment con el contenido generado. Mantener la estructura
-Markdown circundante intacta.
-
-## Paso 6: Verificar resultado
-
-Tras rellenar todos los placeholders:
+## Paso 3: Verificar resultado
 
 ```bash
-grep -r "sdd-docs:placeholder" docs/ && echo "placeholders remain" || echo "all filled"
+mkdocs serve
 ```
 
-Reportar al usuario:
-- Páginas actualizadas
-- Total placeholders rellenados
-- Si quedan placeholders: listarlos con su ubicación
+Revisar en el browser local. Si alguna sección no es satisfactoria, se puede editar
+manualmente y commitear — el próximo `sdd-docs --fill --force` regenerará de nuevo.
 
-## Reglas
+## Fallback sin API key
 
-- **NO modificar** secciones generadas mecánicamente: tablas de REQs, tablas de decisiones,
-  entradas del changelog. Solo tocar los placeholders.
-- **NO inventar** nombres de comandos, versiones o rutas. Derivar del steering o del código.
-- Si `openspec/steering/` no existe: generar prosa best-effort basada en los specs disponibles.
-  Advertir al usuario que la calidad será menor sin steering.
-- Si un placeholder es ambiguo: preguntar al usuario antes de rellenar.
-- La prosa debe ser en el **idioma del proyecto** (detectar desde steering o README).
+Si `ANTHROPIC_API_KEY` no está disponible, el CLI avisa y genera con placeholders:
+
+```bash
+sdd-docs --force  # sin --fill: comportamiento anterior con placeholders
+```
+
+En ese caso, rellenar los placeholders manualmente editando los archivos generados.
+
+## Providers soportados
+
+| Env var | Provider |
+|---------|----------|
+| `ANTHROPIC_API_KEY` | Claude (Haiku por defecto) |
+| _(futuro)_ `OPENAI_API_KEY` | GPT / Codex |
+| _(futuro)_ `GEMINI_API_KEY` | Gemini |
+
+El primer env var disponible gana. Ver `src/sdd_tui/ai_docs.py` → `make_provider()`.
 
 ## Output al usuario
 
 ```
-sdd-docs complete
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Scaffold: X archivos generados
-Placeholders rellenados: Y
-Páginas actualizadas: [lista]
+sdd-docs: Overwritten 10 file(s) (AI-enriched), skipped 0
 
-Próximo: mkdocs serve  # para preview local
-         mkdocs build  # para generar site/
+  +  mkdocs.yml
+  +  docs/index.md
+  +  docs/reference/core.md
+  ...
+
+Next: run 'mkdocs serve' to preview
 ```
