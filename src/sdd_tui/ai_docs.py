@@ -74,6 +74,7 @@ def make_provider() -> LLMProvider | None:
     """
     if os.environ.get("ANTHROPIC_API_KEY"):
         try:
+            import anthropic  # noqa: F401 — verify package is installed
             return AnthropicProvider()
         except ImportError:
             pass  # anthropic package not installed
