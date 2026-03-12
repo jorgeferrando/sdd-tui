@@ -238,12 +238,8 @@ def make_placeholder(type_: str, description: str) -> str:
     return f'<!-- sdd-docs:placeholder type="{type_}" description="{description}" -->'
 
 
-def render_mkdocs_yml(
-    site_name: str,
-    description: str,
-    domains: list[str],
-    has_changelog: bool,
-) -> str:
+def build_nav_block(domains: list[str], has_changelog: bool) -> str:
+    """Return just the 'nav:' YAML block, derived mechanically from available content."""
     nav_lines = ["nav:"]
     nav_lines.append("  - Home: index.md")
 
@@ -255,7 +251,16 @@ def render_mkdocs_yml(
     if has_changelog:
         nav_lines.append("  - Changelog: changelog.md")
 
-    nav = "\n".join(nav_lines)
+    return "\n".join(nav_lines)
+
+
+def render_mkdocs_yml(
+    site_name: str,
+    description: str,
+    domains: list[str],
+    has_changelog: bool,
+) -> str:
+    nav = build_nav_block(domains, has_changelog)
 
     return f"""\
 site_name: {site_name}
@@ -322,7 +327,7 @@ def render_index_md(site_name: str, description: str) -> str:
 """
 
 
-def render_reference_page(domain: str, spec_path: Path) -> str:
+def render_reference_page(domain: str, spec_path: Path, prose: str | None = None) -> str:
     text = spec_path.read_text(errors="replace")
     title = domain.replace("-", " ").title()
 
@@ -331,8 +336,11 @@ def render_reference_page(domain: str, spec_path: Path) -> str:
 
     lines = [f"# {title} Reference", ""]
 
-    # Summary placeholder
-    lines.append(make_placeholder("prose", f"One paragraph overview of the {domain} domain"))
+    # Summary: AI prose or placeholder
+    if prose:
+        lines.append(prose)
+    else:
+        lines.append(make_placeholder("prose", f"One paragraph overview of the {domain} domain"))
     lines.append("")
 
     # Requirements table
@@ -423,6 +431,15 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing files",
     )
+    parser.add_argument(
+        "--fill",
+        action="store_true",
+        help=(
+            "Use an LLM to generate rich prose instead of placeholders. "
+            "Requires ANTHROPIC_API_KEY (or another supported LLM env var). "
+            "Install the optional dep with: pip install sdd-tui[fill]"
+        ),
+    )
     args = parser.parse_args()
 
     # Locate openspec/
@@ -444,6 +461,26 @@ def main() -> None:
     docs_dir = out_root / "docs"
     force = args.force
     dry_run = args.dry_run
+    fill = args.fill
+
+    # Resolve LLM provider when --fill is requested
+    provider = None
+    if fill:
+        try:
+            from sdd_tui import ai_docs
+            provider = ai_docs.make_provider()
+            if provider is None:
+                print(
+                    "sdd-docs: --fill requested but no LLM provider is available. "
+                    "Set ANTHROPIC_API_KEY (or another supported key) and install the dep: "
+                    "pip install sdd-tui[fill]. Falling back to placeholders.",
+                    file=sys.stderr,
+                )
+        except ImportError:
+            print(
+                "sdd-docs: ai_docs module not found. Falling back to placeholders.",
+                file=sys.stderr,
+            )
 
     # Gather data
     site_name = load_site_name(openspec)
@@ -452,15 +489,27 @@ def main() -> None:
     archive = openspec / "changes" / "archive"
     has_changelog = archive.exists() and any(archive.iterdir())
 
+    # Build AI context once (reused across all fill_* calls)
+    ai_context: str = ""
+    if provider is not None:
+        ai_context = ai_docs.build_context(openspec, site_name)
+
     results: list[tuple[str, str]] = []  # (path_str, status)
 
     # mkdocs.yml
-    mkdocs_content = render_mkdocs_yml(site_name, description, domains, has_changelog)
+    nav_block = build_nav_block(domains, has_changelog)
+    if provider is not None:
+        mkdocs_content = ai_docs.fill_mkdocs(provider, ai_context, site_name, nav_block)
+    else:
+        mkdocs_content = render_mkdocs_yml(site_name, description, domains, has_changelog)
     status = _write_file(out_root / "mkdocs.yml", mkdocs_content, force, dry_run)
     results.append(("mkdocs.yml", status))
 
     # docs/index.md
-    index_content = render_index_md(site_name, description)
+    if provider is not None:
+        index_content = ai_docs.fill_index(provider, ai_context, site_name)
+    else:
+        index_content = render_index_md(site_name, description)
     status = _write_file(docs_dir / "index.md", index_content, force, dry_run)
     results.append(("docs/index.md", status))
 
@@ -469,7 +518,8 @@ def main() -> None:
         spec_path = openspec / "specs" / domain / "spec.md"
         if not spec_path.exists():
             continue
-        page_content = render_reference_page(domain, spec_path)
+        prose = ai_docs.fill_reference_prose(provider, domain, ai_context) if provider else None
+        page_content = render_reference_page(domain, spec_path, prose=prose)
         rel = f"docs/reference/{domain}.md"
         status = _write_file(out_root / rel, page_content, force, dry_run)
         results.append((rel, status))
@@ -494,12 +544,16 @@ def main() -> None:
         print(f"Would create: {len(created)}  Would skip: {len(skipped)}")
     else:
         verb = "Overwritten" if force else "Created"
-        print(f"sdd-docs: {verb} {len(created)} file(s), skipped {len(skipped)}")
+        fill_note = " (AI-enriched)" if provider else ""
+        print(f"sdd-docs: {verb} {len(created)} file(s){fill_note}, skipped {len(skipped)}")
         for path in created:
             print(f"  +  {path}")
         for path in skipped:
             print(f"  ~  {path} (use --force to overwrite)")
         if created:
             print("")
-            print("Next: run 'mkdocs serve' to preview, or use /sdd-docs in Claude Code")
-            print("      to fill in the placeholder sections.")
+            if provider:
+                print("Next: run 'mkdocs serve' to preview")
+            else:
+                print("Next: run 'mkdocs serve' to preview, or use /sdd-docs in Claude Code")
+                print("      to fill in the placeholder sections.")
