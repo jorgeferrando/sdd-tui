@@ -2,23 +2,27 @@
 
 ## Metadata
 - **Dominio:** docs
-- **Change:** sdd-docs-generator
-- **Fecha:** 2026-03-11
-- **Versión:** 1.0
+- **Change:** sdd-docs-ai-generation
+- **Fecha:** 2026-03-12
+- **Versión:** 2.0
 - **Estado:** canonical
 
 ## Contexto
 
 `sdd-docs` es un CLI que genera un site de documentación MkDocs a partir del contenido
 de `openspec/`. Cualquier proyecto con `openspec/` puede obtener un site de docs estructurado
-sin trabajo manual. La generación es en dos fases independientes:
+sin trabajo manual.
 
-1. **CLI mecánico** (`sdd-docs`): lee openspec/ y genera `docs/` + `mkdocs.yml` con
-   contenido estructurado y derivable. Donde el contenido requiere inteligencia, inserta
-   placeholders explícitos en formato machine-readable.
+Con `--fill`, el CLI llama directamente a un LLM para producir documentación rica
+y publicable — sin placeholders, sin paso manual. El LLM se selecciona automáticamente
+según los env vars disponibles (`ANTHROPIC_API_KEY`, etc.), siguiendo el patrón
+`LLMProvider` (Protocol) + factory `make_provider()` en `ai_docs.py`.
 
-2. **Skill inteligente** (`/sdd-docs`): detecta los placeholders generados y los rellena
-   con prosa de usuario usando Claude Code, leyendo steering files para contexto.
+Sin `--fill` (o si no hay API key), el CLI genera el scaffold con placeholders como
+en v1.0 — comportamiento de fallback compatible hacia atrás.
+
+La skill `/sdd-docs` invoca `sdd-docs --fill --force`, centralizando toda la lógica
+en el CLI y eliminando el flujo manual de relleno de 6 pasos.
 
 El generador es 100% agnóstico al proyecto — no contiene referencias hardcoded a sdd-tui
 ni a ningún otro proyecto.
@@ -177,6 +181,7 @@ No existe. Dominio nuevo.
 | `--dry-run` | bool | Listar archivos sin escribir |
 | `--output <dir>` | str | Directorio de salida alternativo |
 | `--force` | bool | Sobreescribir archivos existentes |
+| `--fill` | bool | Usar LLM para generar prosa rica (requiere API key) |
 | `--help` | bool | Mostrar ayuda |
 
 ### Exit codes `sdd-docs`
@@ -209,13 +214,18 @@ mkdocs.yml                      ← site config con nav derivado del contenido
 | Decisión | Alternativa Descartada | Motivo |
 |---------|----------------------|--------|
 | CLI separado del TUI | Integrar en la TUI | Más componible, testeable, invocable desde CI/CD |
-| Skill como capa separada | CLI con LLM integrado | Separación de concerns; CLI sin dependencia de API |
-| Placeholders en HTML comments | Marcadores propietarios | Compatible con MkDocs/Markdown renderers |
+| LLM integrado en CLI via `--fill` | Skill como única capa AI | `--force` ya no destruye contenido enriquecido; un solo comando |
+| `LLMProvider` Protocol + factory `make_provider()` | Hardcodear Anthropic | Añadir Codex/Gemini en el futuro = una clase + un `if` |
+| Provider inyectado en `fill_*` functions | Singleton global | Tests simples: mock del Protocol, sin parchear SDKs externos |
+| `anthropic` como optional dep `[fill]` | Dep runtime obligatoria | No rompe instalaciones base |
+| Flag `--fill` explícito | AI siempre activo si hay API key | Comportamiento predecible; el usuario elige cuándo generar |
+| Haiku como modelo por defecto | Sonnet/Opus | Docs generation es token-heavy; Haiku equilibra calidad/coste |
+| Fallback a placeholders sin API key | Error fatal | Compatible hacia atrás; sin dependencia forzada |
+| Placeholders en HTML comments | Marcadores propietarios | Compatible con MkDocs/Markdown renderers (modo fallback) |
 | Un `docs/reference/{domain}.md` por dominio | Todos en una página | Navegación más limpia; secciones independientes |
 | Changelog desde openspec/archive | Desde git log | openspec contiene "por qué", no solo "qué" |
-| `sdd_tui/docs_gen.py` | Módulo standalone | Misma distribución que sdd-setup; un paquete |
+| `sdd_tui/docs_gen.py` + `ai_docs.py` | Módulo standalone | Misma distribución que sdd-setup; un paquete |
 | `docs/` en git root por defecto | `docs/` junto a openspec/ | Convención MkDocs estándar |
-| No generar Getting Started ni workflow pages | Generar todo | Esas páginas son muy específicas del proyecto — mejor generarlas con el skill |
 
 ## Abierto / Pendiente
 
