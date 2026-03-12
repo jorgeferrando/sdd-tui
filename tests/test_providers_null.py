@@ -2,7 +2,6 @@ import pytest
 
 from sdd_tui.core.providers.null import NullGitHost, NullIssueTracker
 
-
 # --- NullGitHost ---
 
 

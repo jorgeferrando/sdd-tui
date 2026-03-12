@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from sdd_tui.core.todos import TodoFile, TodoItem, _parse_todo_file, load_todos
+from sdd_tui.core.todos import TodoItem, _parse_todo_file, load_todos
 
 
 def test_load_todos_missing_dir(tmp_path: Path) -> None:

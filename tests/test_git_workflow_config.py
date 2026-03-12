@@ -1,8 +1,11 @@
 from pathlib import Path
 
 from sdd_tui.core.providers.protocol import GitWorkflowConfig
-from sdd_tui.core.reader import _parse_git_workflow, _write_git_workflow_config, load_git_workflow_config
-
+from sdd_tui.core.reader import (
+    _parse_git_workflow,
+    _write_git_workflow_config,
+    load_git_workflow_config,
+)
 
 # --- load_git_workflow_config ---
 

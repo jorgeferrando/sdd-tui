@@ -1,8 +1,6 @@
 from pathlib import Path
 
-import pytest
-
-from sdd_tui.core.skills import SkillInfo, _CONTEXT_AWARE, load_skills
+from sdd_tui.core.skills import _CONTEXT_AWARE, SkillInfo, load_skills
 
 
 def _make_skill(tmp_path: Path, name: str, description: str = "A description") -> Path:

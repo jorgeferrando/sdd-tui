@@ -1,7 +1,6 @@
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 from textual.widgets import DataTable
 
 from sdd_tui.core.skills import SkillInfo
