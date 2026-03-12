@@ -45,18 +45,76 @@ openspec/changes/csv-export/
 
 Even in fast-forward mode, if an ambiguity requires a decision, the skill pauses and asks before continuing. You won't get a silently broken design.
 
-At the end, a summary is shown:
+---
 
+## Real example
+
+```
+/sdd-ff "add CSV export to the report dashboard"
+```
+
+**Phase 1 — Explore:**
+```
+Reading openspec/specs/reports/spec.md...
+Reading src/reports/views.py, src/reports/models.py...
+No existing export mechanism found. Will create from scratch.
+```
+
+**Phase 2 — Proposal:** (created in ~30 seconds)
+```markdown
+# Proposal: csv-export
+
+## Description
+Add a "Download CSV" button to the report dashboard that exports
+the currently displayed rows.
+
+## Motivation
+Users screenshot tables to paste into spreadsheets.
+
+## Alternatives considered
+- Excel (.xlsx): requires openpyxl, heavier
+- PDF: not machine-readable
+
+## Estimated impact
+~5 files, 1 domain (reports)
+```
+
+**Phase 3 — Spec:**
+```markdown
+REQ-01 [Event] When the user clicks "Download CSV", the system SHALL
+       generate a CSV file containing all currently visible rows.
+
+REQ-02 [Ubiquitous] Column headers in the CSV SHALL match the table headers.
+
+REQ-03 [Unwanted] If the table is empty, the system SHALL export a header-only
+       CSV and notify the user.
+```
+
+**Phase 4 — Design:**
+> One decision point: "Should the CSV be generated server-side or client-side?"
+> → Paused and asked. Answer: server-side.
+
+**Phase 5 — Tasks:**
+```
+- [ ] T01  src/reports/serializers.py  — CsvExporter class
+- [ ] T02  src/reports/views.py        — add export endpoint
+- [ ] T03  src/reports/templates/      — add Download CSV button
+- [ ] T04  tests/test_csv_export.py    — unit tests for CsvExporter
+```
+
+**Summary:**
 ```
 FF COMPLETE: csv-export
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 proposal.md  ✓
-spec.md      ✓  (reports)
-design.md    ✓  (6 files)
-tasks.md     ✓  (6 tasks)
+spec.md      ✓  (reports — 3 REQs)
+design.md    ✓  (4 files)
+tasks.md     ✓  (4 tasks)
 
 Next: /sdd-apply
 ```
+
+Total time from command to tasks-ready: ~3 minutes.
 
 ---
 

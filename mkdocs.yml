@@ -1,5 +1,5 @@
 site_name: sdd-tui
-site_description: <!-- sdd-docs:placeholder type="description" description="2-3 sentence overview of the project for end users" -->
+site_description: Terminal UI for Spec-Driven Development. Visualize pipeline state, browse specs and diffs, and integrate with Git and GitHub — all without leaving your editor.
 
 theme:
   name: material
@@ -28,7 +28,13 @@ theme:
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -38,6 +44,32 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/install.md
+    - First Change: getting-started/first-change.md
+  - Workflow:
+    - Overview: workflow/overview.md
+    - sdd-init: workflow/sdd-init.md
+    - sdd-new: workflow/sdd-new.md
+    - sdd-ff: workflow/sdd-ff.md
+    - sdd-apply: workflow/sdd-apply.md
+    - sdd-continue: workflow/sdd-continue.md
+    - sdd-verify: workflow/sdd-verify.md
+    - sdd-archive: workflow/sdd-archive.md
+    - sdd-steer: workflow/sdd-steer.md
+  - TUI:
+    - Overview: tui/overview.md
+    - Views: tui/views.md
+    - Keybindings: tui/keybindings.md
+  - OpenSpec:
+    - Structure: openspec/structure.md
+    - Steering: openspec/steering.md
+    - Milestones: openspec/milestones.md
+    - Providers: openspec/providers.md
+  - Best Practices:
+    - Atomic Commits: best-practices/atomic-commits.md
+    - Scope Control: best-practices/scope-control.md
+    - When Not to Use SDD: best-practices/when-not-to-use-sdd.md
   - Reference:
     - Core: reference/core.md
     - Distribution: reference/distribution.md
@@ -46,5 +78,5 @@ nav:
     - Providers: reference/providers.md
     - Tests: reference/tests.md
     - Tooling: reference/tooling.md
-    - Tui: reference/tui.md
+    - TUI: reference/tui.md
   - Changelog: changelog.md

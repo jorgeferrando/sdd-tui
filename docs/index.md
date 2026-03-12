@@ -1,36 +1,38 @@
 # sdd-tui
 
-**sdd-tui** is a terminal UI for Spec-Driven Development — it gives you a live view of your `openspec/` directory: active changes, pipeline status, spec health, git diffs, PR checks, and team velocity, all from the keyboard. It pairs with a set of Claude Code skills (`/sdd-init`, `/sdd-discover`, `/sdd-apply`, etc.) that automate the spec → design → implement → archive workflow.
+**sdd-tui** is a terminal UI for managing the [Spec-Driven Development (SDD)](https://github.com/jorgeferrando/sdd-tui) workflow without leaving your editor. It visualizes the pipeline state of every change, lets you browse specs, diffs, and documentation with a few keystrokes, and integrates with Git and GitHub so you always know what to work on next. It pairs with the `/sdd-*` Claude Code skills for a fully AI-assisted development loop.
 
 ---
 
 ## Quick Start
 
-**Via Homebrew (macOS/Linux):**
+**macOS (Homebrew)**
 
 ```bash
 brew tap jorgeferrando/sdd-tui
 brew install sdd-tui
+sdd-setup --global
 ```
 
-**Via pip/pipx:**
+**Linux / Windows**
 
 ```bash
-pipx install sdd-tui
+# Linux
+curl -fsSL https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/install.sh | bash
+
+# Windows (PowerShell)
+irm https://raw.githubusercontent.com/jorgeferrando/sdd-tui/main/scripts/Install-SddTui.ps1 | iex
 ```
 
-**First use:**
+**First run**
 
 ```bash
-# 1. Go to any project directory
-cd ~/my-project
+cd your-project
+sdd-tui          # Opens the TUI — press ? for keybindings
+```
 
-# 2. Bootstrap openspec/ and install SDD skills into Claude Code
-sdd-setup --global    # installs skills to ~/.claude/skills/
+Initialize SDD in an existing project:
 
-# 3. Open the TUI
-sdd-tui
-
-# 4. If the project already has code, generate initial specs
-/sdd-discover         # in Claude Code — analyzes codebase and generates openspec/specs/
+```
+/sdd-init        # Inside Claude Code — bootstraps openspec/ and loads steering
 ```

@@ -8,14 +8,14 @@ The SDD workflow is a fixed cycle of phases. Each phase produces one Markdown ar
 
 ```mermaid
 flowchart TD
-    INIT["/sdd-init\nBootstrap openspec/"]
-    NEW["/sdd-new\nExplore + Propose"]
-    SPEC["spec\nBehavior requirements"]
-    DESIGN["design\nImplementation plan"]
-    TASKS["tasks\nAtomic task list"]
-    APPLY["/sdd-apply\nCode + commit"]
-    VERIFY["/sdd-verify\nTests + self-review"]
-    ARCHIVE["/sdd-archive\nClose + merge specs"]
+    INIT["/sdd-init<br/>Bootstrap openspec/"]
+    NEW["/sdd-new<br/>Explore + Propose"]
+    SPEC["spec<br/>Behavior requirements"]
+    DESIGN["design<br/>Implementation plan"]
+    TASKS["tasks<br/>Atomic task list"]
+    APPLY["/sdd-apply<br/>Code + commit"]
+    VERIFY["/sdd-verify<br/>Tests + self-review"]
+    ARCHIVE["/sdd-archive<br/>Close + merge specs"]
 
     INIT --> NEW
     NEW --> SPEC

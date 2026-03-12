@@ -1,28 +1,28 @@
 # Github Reference
 
-The github domain handles all GitHub-specific integrations via the `gh` CLI: fetching CI/pipeline status for the current branch, listing releases, and surfacing PR review state inside the change detail screen. All GitHub calls are made asynchronously in background threads to avoid blocking the TUI — a sentinel value is shown while data loads, then replaced when the worker completes.
+The github domain handles all communication with GitHub via the `gh` CLI: fetching PR status and CI run results for the current branch, listing repository releases, and providing a one-key "ship" shortcut that copies the `gh pr create` command to the clipboard. All calls are non-blocking — they run in background workers so the TUI stays responsive while status loads. If `gh` is not installed or a command fails, every function degrades gracefully to `None` or an empty list rather than raising an exception.
 
 ## Requirements
 
 | ID | Type | Description |
 |----|------|-------------|
-| `REQ-CI01` | Event | When the user opens `ChangeDetailScreen`, the system SHALL fetch the CI status of the change's active branch asynchronously and display it in `PipelinePanel` under a "CI" row. |
-| `REQ-CI02` | State | While the CI status is loading, `PipelinePanel` SHALL show "…" in the CI row. |
-| `REQ-CI03` | Unwanted | If `gh` is not found or the command fails, `PipelinePanel` SHALL show "—" in the CI row. |
-| `REQ-CI04` | Unwanted | If no workflow runs exist for the branch, `PipelinePanel` SHALL show "—" in the CI row. |
-| `REQ-CI05` | Event | When the CI run status is `completed` and conclusion is `success`, `PipelinePanel` SHALL display "✓" in the CI row. |
-| `REQ-CI06` | Event | When the CI run status is `completed` and conclusion is `failure` or `cancelled`, `PipelinePanel` SHALL display "✗" in the CI row. |
-| `REQ-CI07` | Event | When the CI run status is `in_progress` or `queued`, `PipelinePanel` SHALL display "⟳" in the CI row. |
-| `REQ-CI08` | Ubiquitous | The CI row SHALL be positioned below the PR row in `PipelinePanel`. ### Ship Binding |
-| `REQ-SH01` | Event | When the user presses `W` in `ChangeDetailScreen`, the system SHALL copy a `gh pr create` command to the clipboard and notify the user. |
-| `REQ-SH02` | Ubiquitous | The copied command SHALL have the format: `gh pr create --title "[{change-name}] {description}" --body ""` where `{description}` is the first non-empty line of `proposal.md` after the `# ` heading, or empty string if `proposal.md` does not exist. |
-| `REQ-SH03` | Ubiquitous | The `W` binding SHALL appear in the `Footer` with label "Ship PR". ### Releases Screen |
-| `REQ-RL01` | Event | When the user presses `L` in `EpicsView`, the system SHALL open `ReleasesScreen`. |
-| `REQ-RL02` | Ubiquitous | `ReleasesScreen` SHALL display a `DataTable` with columns: TAG, NAME, DATE, LATEST. |
-| `REQ-RL03` | Event | When `ReleasesScreen` mounts, the system SHALL call `gh release list --json tagName,name,publishedAt,isLatest` and populate the table. |
-| `REQ-RL04` | Unwanted | If `gh` is not found, the command fails, or no releases exist, `ReleasesScreen` SHALL show "No releases found" in the table. |
-| `REQ-RL05` | Event | When the user presses `Escape` in `ReleasesScreen`, the system SHALL return to `EpicsView`. |
-| `REQ-RL06` | Optional | Where `isLatest` is true, the LATEST column SHALL display "✓", otherwise "·". ## Interfaces / Contratos ### CiStatus dataclass ```python @dataclass class CiStatus: workflow: str # nombre del workflow status: str # "queued" \| "in_progress" \| "completed" conclusion: str \| None # "success" \| "failure" \| "cancelled" \| None ``` ### ReleaseInfo dataclass ```python @dataclass class ReleaseInfo: tag_name: str name: str published_at: str # ISO 8601 is_latest: bool ``` ### get_ci_status(branch: str, cwd: Path) -> CiStatus \| None - Llama `gh run list --branch {branch} --limit 1 --json status,conclusion,workflowName` - Retorna `None` si gh no disponible, error o lista vacía ### get_releases(cwd: Path) -> list[ReleaseInfo] - Llama `gh release list --json tagName,name,publishedAt,isLatest` - Retorna lista vacía si gh no disponible o error ## Decisiones Tomadas \| Decisión \| Alternativa Descartada \| Motivo \| \|---------\|----------------------\|--------\| \| CI cargado solo en ChangeDetailScreen (bajo demanda) \| Columna CI en EpicsView \| Evita O(N) llamadas gh al abrir la app \| \| Ship = clipboard solamente \| Ejecutar `gh pr create` directo \| Acción irreversible — clipboard preserva control del usuario \| \| Releases en pantalla separada (L) \| Columna en EpicsView \| Las releases son del repo, no de un change específico \| \| `get_ci_status` recibe `branch: str` \| Inferir branch internamente \| Desacopla de git_reader — más testeable \| ## Abierto / Pendiente - ¿Cómo obtener el branch del change en `ChangeDetailScreen`? La rama activa viene de `app._git.get_branch(cwd)` — usaremos `get_branch()` al montar la pantalla. (No bloquea — decisión de implementación para design.) |
+| `REQ-CI01` | Event | When the user opens `ChangeDetailScreen`, the system SHALL |
+| `REQ-CI02` | State | While the CI status is loading, `PipelinePanel` SHALL show |
+| `REQ-CI03` | Unwanted | If `gh` is not found or the command fails, `PipelinePanel` |
+| `REQ-CI04` | Unwanted | If no workflow runs exist for the branch, `PipelinePanel` |
+| `REQ-CI05` | Event | When the CI run status is `completed` and conclusion is |
+| `REQ-CI06` | Event | When the CI run status is `completed` and conclusion is |
+| `REQ-CI07` | Event | When the CI run status is `in_progress` or `queued`, |
+| `REQ-CI08` | Ubiquitous | The CI row SHALL be positioned below the PR row in |
+| `REQ-SH01` | Event | When the user presses `W` in `ChangeDetailScreen`, the system |
+| `REQ-SH02` | Ubiquitous | The copied command SHALL have the format: |
+| `REQ-SH03` | Ubiquitous | The `W` binding SHALL appear in the `Footer` with label |
+| `REQ-RL01` | Event | When the user presses `L` in `EpicsView`, the system SHALL |
+| `REQ-RL02` | Ubiquitous | `ReleasesScreen` SHALL display a `DataTable` with columns: |
+| `REQ-RL03` | Event | When `ReleasesScreen` mounts, the system SHALL call |
+| `REQ-RL04` | Unwanted | If `gh` is not found, the command fails, or no releases |
+| `REQ-RL05` | Event | When the user presses `Escape` in `ReleasesScreen`, the system |
+| `REQ-RL06` | Optional | Where `isLatest` is true, the LATEST column SHALL display |
 
 ## Decisions
 

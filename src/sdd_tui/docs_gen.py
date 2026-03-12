@@ -119,16 +119,15 @@ def list_spec_domains(openspec: Path) -> list[str]:
 def parse_spec_requirements(text: str) -> list[Requirement]:
     """Extract EARS requirements from spec markdown text."""
     requirements: list[Requirement] = []
+    # Each requirement is a single bullet line: - **REQ-XX** `[Type]` description
     pattern = re.compile(
-        r"\*\*(REQ-[\w-]+)\*\*\s+`\[(\w+)\]`\s+(.+?)(?=\n\s*-\s*\*\*REQ-|\Z)",
-        re.DOTALL,
+        r"^\s*-\s*\*\*(REQ-[\w-]+)\*\*\s+`\[(\w+)\]`\s+(.+)$",
+        re.MULTILINE,
     )
     for m in pattern.finditer(text):
         req_id = m.group(1)
         req_type = m.group(2)
-        desc = re.sub(r"\s+", " ", m.group(3)).strip()
-        # Trim continuation lines that belong to the next bullet
-        desc = desc.split("\n-")[0].strip()
+        desc = m.group(3).strip()
         requirements.append(Requirement(id=req_id, type=req_type, description=desc))
     return requirements
 

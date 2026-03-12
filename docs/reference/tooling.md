@@ -1,6 +1,6 @@
 # Tooling Reference
 
-The tooling domain covers everything that keeps the SDD workflow healthy: Python quality gates (ruff for linting and formatting), the full suite of SDD Claude Code skills (`/sdd-init`, `/sdd-discover`, `/sdd-steer`, `/sdd-audit`, `/sdd-apply`, and more), and conventions for Mermaid diagrams in design docs. It also defines the `openspec/INDEX.md` two-level lookup protocol that lets skills orient themselves efficiently without loading every spec file.
+The tooling domain covers every Claude Code skill that drives the SDD workflow: `/sdd-init` (project bootstrap with guided onboarding), `/sdd-new` (explore + propose), `/sdd-ff` (fast-forward through all documentation phases), `/sdd-apply` (task-by-task implementation with atomic commits), `/sdd-verify` (tests + quality gates + self-review checklist), `/sdd-archive` (close a change, merge deltas into canonical specs, update INDEX.md), `/sdd-steer` (generate and sync steering conventions), `/sdd-audit` (detect convention violations), and `/sdd-discover` (infer canonical specs from an existing codebase). Together these skills form the AI-assisted loop that turns a ticket into working, documented, tested code without leaving your editor.
 
 ## Requirements
 
@@ -9,13 +9,13 @@ The tooling domain covers everything that keeps the SDD workflow healthy: Python
 | `REQ-01` | Ubiquitous | The proyecto SHALL tener ruff como dependencia de desarrollo. |
 | `REQ-02` | Ubiquitous | The configuración SHALL estar en `pyproject.toml` con `line-length = 100` y reglas `E`, `F`, `I`. |
 | `REQ-03` | Ubiquitous | The código en `src/` y `tests/` SHALL pasar `ruff check` y `ruff format --check` sin errores. |
-| `REQ-04` | Ubiquitous | The script `~/.claude/scripts/sdd-tui-lint.sh` SHALL ejecutar el quality gate. ## Reglas de negocio - **RB-LINT01:** Solo se activan reglas E (pycodestyle), F (pyflakes) e I (isort) — sin reglas agresivas. - **RB-LINT02:** `line-length = 100` (no 88 de black por defecto — el código existente usaba ~90 chars). - **RB-LINT03:** El script acepta argumentos opcionales; sin args aplica al proyecto completo. --- ## 2. SDD Steer — Steering Generation ### Skill `/sdd-steer` Genera y sincroniza archivos de "steering" en `openspec/steering/`. **Archivos generados:** ``` openspec/steering/ ├── product.md ← qué construye el proyecto, para quién ├── tech.md ← stack, versiones, herramientas clave ├── structure.md ← organización del código, capas └── conventions.md ← reglas con niveles RFC 2119 (MUST/SHOULD/MAY) ``` |
+| `REQ-04` | Ubiquitous | The script `~/.claude/scripts/sdd-tui-lint.sh` SHALL ejecutar el quality gate. |
 | `REQ-ST01` | Event | When invoked, the skill SHALL create `openspec/steering/` if it does not exist. |
 | `REQ-ST02` | Event | When bootstrapping, the skill SHALL generate all four steering files. |
 | `REQ-ST03` | Ubiquitous | Conventions SHALL be derived from: architecture/code-quality skills, MEMORY.md, and actual code patterns. |
 | `REQ-ST04` | Ubiquitous | Each convention SHALL include: scope, RFC 2119 level (MUST/SHOULD/MAY), and a one-line rationale. |
 | `REQ-ST05` | Unwanted | If `openspec/steering/` already has content, the skill SHALL warn and offer sync instead. |
-| `REQ-ST06-08` | Event | Sync mode SHALL detect drift and propose changes — NOT auto-modify steering files. ### Reglas de negocio - **RB-ST01:** Skills de arquitectura son la fuente de verdad; el código es evidencia de implementación. - **RB-ST02:** `conventions.md` usa RFC 2119 — no lenguaje libre. - **RB-ST03:** Sync propone cambios, espera confirmación del usuario antes de escribir. --- ## 3. SDD Audit — Architecture Violation Detection ### Skill `/sdd-audit` Analiza el codebase contra `conventions.md` y produce un reporte clasificado. |
+| `REQ-ST06-08` | Event | Sync mode SHALL detect drift and propose changes — NOT auto-modify steering files. |
 | `REQ-AU01` | Event | When invoked, the skill SHALL read `openspec/steering/conventions.md` first. |
 | `REQ-AU02` | Unwanted | If `conventions.md` does not exist, the skill SHALL stop and instruct the user to run `/sdd-steer`. |
 | `REQ-AU03` | Optional | Where a scope argument is provided, the skill SHALL restrict analysis to that path. |
@@ -23,74 +23,74 @@ The tooling domain covers everything that keeps the SDD workflow healthy: Python
 | `REQ-AU05` | Ubiquitous | Each violation SHALL include: file path, approximate line, violated convention, and fix suggestion. |
 | `REQ-AU06` | Event | When critical violations are found, the skill SHALL generate `/sdd-new` prompts for correction. |
 | `REQ-AU07` | Unwanted | If no violations are found, the skill SHALL output a clean confirmation. |
-| `REQ-AU08` | Optional | Where `conventions.md` exists, `/sdd-verify` SHOULD run `/sdd-audit` as Paso 5b. ### Clasificación \| Nivel \| Criterio \| Convención violada \| \|-------\|----------\|--------------------\| \| Crítico \| Bloquea PR review \| MUST / MUST NOT \| \| Importante \| Deuda técnica \| SHOULD \| \| Menor \| Estético \| MAY \| ### Reglas de negocio - **RB-AU01:** El audit es semántico — complementa linters, no los reemplaza. - **RB-AU02:** El audit NO modifica código — solo reporta y propone prompts. - **RB-AU03:** Prompts `/sdd-new` agrupan violaciones por dominio, no uno por violación. - **RB-AU04:** Scope por defecto = archivos modificados en el branch. --- ## 4. SDD Init — Onboarding Guiado ### Skill `/sdd-init` (ampliado) + `scripts/sdd-env-scan.sh` #### Fase 1 — Environment Discovery |
-| `REQ-ENV01` | Event | When `/sdd-init` is invoked, the skill SHALL scan the environment before asking any questions, detecting: active MCPs, installed runtimes (node, python, php, ruby, go, rust), CLI tools (git, gh, docker, uv, bun, composer), and running Docker containers. |
-| `REQ-ENV02` | Event | When source files or known config files exist in the project root (`package.json`, `pyproject.toml`, `composer.json`, `go.mod`, `Cargo.toml`, etc.), the skill SHALL derive the stack automatically and pre-fill questionnaire answers. |
-| `REQ-ENV03` | Event | When `openspec/steering/` already exists with content, the skill SHALL skip the onboarding questionnaire and display the current steering state instead. |
-| `REQ-ENV04` | Ubiquitous | The environment scan SHALL complete silently — no intermediate output until the summary is shown. #### Fase 2 — Cuestionario Interactivo |
-| `REQ-Q01` | Event | When the project has no existing code, the skill SHALL present the full questionnaire covering: project description, audience, bounded context, stack, team size, rigor level, CI/CD, available MCPs, and preferred patterns. |
-| `REQ-Q02` | Event | When existing code is detected, the skill SHALL present a reduced questionnaire that confirms detected values and only asks for unresolvable gaps. |
-| `REQ-Q03` | Ubiquitous | For each technical decision with multiple valid options, the skill SHALL present trade-offs in plain language — advantages and disadvantages — without assuming prior technical knowledge. |
-| `REQ-Q04` | Ubiquitous | When Claude has high confidence in the best option given the project context, the skill SHALL recommend it explicitly with a one-line justification. The user may accept or override. |
-| `REQ-Q05` | Ubiquitous | The questionnaire SHALL never require the user to know specific technology names to answer — all questions SHALL offer concrete options or "let Claude decide". #### Fase 3 — Generación de Artefactos |
-| `REQ-ART01` | Event | When all questionnaire answers are collected, the skill SHALL generate the full `openspec/steering/` directory with seven files: `product.md`, `tech.md`, `structure.md`, `conventions.md`, `environment.md`, `project-skill.md`, `project-rules.md`. |
-| `REQ-ART02` | Optional | Where `mcp__context7` is available, the skill SHALL resolve library IDs for the detected stack dependencies and add documentation references to `tech.md`. |
+| `REQ-AU08` | Optional | Where `conventions.md` exists, `/sdd-verify` SHOULD run `/sdd-audit` as Paso 5b. |
+| `REQ-ENV01` | Event | When `/sdd-init` is invoked, the skill SHALL scan the environment |
+| `REQ-ENV02` | Event | When source files or known config files exist in the project root |
+| `REQ-ENV03` | Event | When `openspec/steering/` already exists with content, the skill |
+| `REQ-ENV04` | Ubiquitous | The environment scan SHALL complete silently — no intermediate |
+| `REQ-Q01` | Event | When the project has no existing code, the skill SHALL present the |
+| `REQ-Q02` | Event | When existing code is detected, the skill SHALL present a reduced |
+| `REQ-Q03` | Ubiquitous | For each technical decision with multiple valid options, the |
+| `REQ-Q04` | Ubiquitous | When Claude has high confidence in the best option given the |
+| `REQ-Q05` | Ubiquitous | The questionnaire SHALL never require the user to know specific |
+| `REQ-ART01` | Event | When all questionnaire answers are collected, the skill SHALL |
+| `REQ-ART02` | Optional | Where `mcp__context7` is available, the skill SHALL resolve |
 | `REQ-ART03` | Ubiquitous | The onboarding SHALL NOT block or fail if optional MCPs are unavailable. |
 | `REQ-ART04` | Ubiquitous | `project-skill.md` SHALL act as an index file and SHALL NOT exceed 100 lines. |
-| `REQ-ART05` | Ubiquitous | `project-rules.md` SHALL be the primary file for granular implementation rules. `conventions.md` SHALL only contain architectural decisions at RFC 2119 level. |
-| `REQ-ART06` | Ubiquitous | `environment.md` SHALL document confirmed available tools and MCPs. #### Integración con `sdd-audit` |
-| `REQ-AUDIT-EXT01` | Event | When `/sdd-audit` is invoked and `project-rules.md` exists, the skill SHALL read both `conventions.md` and `project-rules.md` as a unified ruleset. |
-| `REQ-AUDIT-EXT02` | Ubiquitous | Violations from `project-rules.md` SHALL follow the same severity classification (Critical/Important/Minor) as violations from `conventions.md`. |
-| `REQ-AUDIT-EXT03` | Ubiquitous | Rules in `project-rules.md` that duplicate linter coverage SHALL NOT generate audit violations — the audit remains semantic. #### Estructura de `openspec/steering/` ``` openspec/steering/ ├── product.md ← qué construye, para quién, bounded context ├── tech.md ← stack, versiones, dependencias clave, refs Context7 ├── structure.md ← organización del código, capas, flujo estándar ├── conventions.md ← decisiones arquitecturales RFC 2119 (MUST/SHOULD/MAY) ├── environment.md ← MCPs, CLI tools, contenedores disponibles confirmados ├── project-skill.md ← índice del proyecto; referencia los demás archivos └── project-rules.md ← reglas granulares de implementación; crece con el proyecto ``` ### Reglas de negocio - **RB-INIT01:** El onboarding solo se ejecuta una vez por proyecto. Re-ejecutar `/sdd-init` con steering existente muestra el estado actual — usar `/sdd-steer sync` para actualizar. - **RB-INIT02:** `project-skill.md` es el punto de entrada que los demás skills cargan. Debe poder leerse en < 30 segundos — concisión obligatoria (≤ 100 líneas). - **RB-INIT03:** Las decisiones tomadas durante el onboarding se registran en `conventions.md` como sección "## Bootstrap decisions" para trazabilidad. --- ## 5. SDD Apply — Bootstrap Verification ### Skill `/sdd-apply` (ampliado) |
-| `REQ-BOOT01` | Event | When `/sdd-apply` is invoked, the skill SHALL verify that `openspec/steering/conventions.md` exists before implementing any task. |
-| `REQ-BOOT02` | Unwanted | If `openspec/steering/conventions.md` does not exist, the skill SHALL stop and instruct the user to run `/sdd-init` first. |
-| `REQ-BOOT03` | Event | When bootstrap verification passes, the skill SHALL read `openspec/steering/conventions.md`, `openspec/steering/project-rules.md`, and `openspec/steering/tech.md` before starting implementation. |
-| `REQ-BOOT04` | Optional | Where `openspec/steering/project-skill.md` exists, the skill SHALL read it as the primary context entry point instead of reading individual files. ### Reglas de negocio - **RB-BOOT01:** La lectura del steering es silenciosa — no se muestra al usuario. - **RB-BOOT02:** Si algún archivo de steering no existe (excepto `conventions.md`), el skill continúa sin error — el steering es incremental. --- ## 6. Living Rules — Actualización de `project-rules.md` |
-| `REQ-LIVE01` | Event | When the user explicitly instructs Claude to remember a rule, Claude SHALL add it to `project-rules.md` in RFC 2119 format and confirm what was saved. |
-| `REQ-LIVE02` | Event | When Claude detects an implicit correction during implementation, Claude SHALL ask before writing to `project-rules.md`. |
-| `REQ-LIVE03` | Ubiquitous | Rules added to `project-rules.md` SHALL follow RFC 2119 format with scope, level, rule, and one-line rationale. |
-| `REQ-LIVE04` | Ubiquitous | Granular implementation rules SHALL go to `project-rules.md`. Architectural decisions SHALL go to `conventions.md`. |
+| `REQ-ART05` | Ubiquitous | `project-rules.md` SHALL be the primary file for granular |
+| `REQ-ART06` | Ubiquitous | `environment.md` SHALL document confirmed available tools and MCPs. |
+| `REQ-AUDIT-EXT01` | Event | When `/sdd-audit` is invoked and `project-rules.md` exists, |
+| `REQ-AUDIT-EXT02` | Ubiquitous | Violations from `project-rules.md` SHALL follow the same |
+| `REQ-AUDIT-EXT03` | Ubiquitous | Rules in `project-rules.md` that duplicate linter coverage |
+| `REQ-BOOT01` | Event | When `/sdd-apply` is invoked, the skill SHALL verify that |
+| `REQ-BOOT02` | Unwanted | If `openspec/steering/conventions.md` does not exist, the |
+| `REQ-BOOT03` | Event | When bootstrap verification passes, the skill SHALL read |
+| `REQ-BOOT04` | Optional | Where `openspec/steering/project-skill.md` exists, the skill |
+| `REQ-LIVE01` | Event | When the user explicitly instructs Claude to remember a rule, |
+| `REQ-LIVE02` | Event | When Claude detects an implicit correction during implementation, |
+| `REQ-LIVE03` | Ubiquitous | Rules added to `project-rules.md` SHALL follow RFC 2119 |
+| `REQ-LIVE04` | Ubiquitous | Granular implementation rules SHALL go to `project-rules.md`. |
 | `REQ-LIVE05` | Event | When a rule is saved, Claude SHALL confirm what was saved and where. |
-| `REQ-LIVE06` | Unwanted | If `project-rules.md` does not exist when a rule needs saving, Claude SHALL create it before writing. ### Reglas de negocio - **RB-LIVE01:** Si el usuario corrige lo mismo dos veces, la segunda vez Claude guarda sin preguntar. - **RB-LIVE02:** `project-rules.md` se organiza por secciones temáticas (## Style, ## Tests, etc.). - **RB-LIVE03:** Las reglas guardadas se aplican en la misma sesión desde el momento en que se guardan. --- ## 7. Mermaid Diagrams — Convención para SDD Docs ### Skill `/sdd-design` (ampliado) + `/sdd-propose` (ampliado) |
-| `REQ-MD-01` | Ubiquitous | When generating `design.md`, the `## Arquitectura` section SHALL include a Mermaid diagram when the design involves ≥3 components with relationships between them. For designs with < 3 components, the diagram is optional. |
-| `REQ-MD-02` | Ubiquitous | The diagram type SHALL be chosen according to the situation: `classDiagram` for modules/classes/Protocols/inheritance; `sequenceDiagram` for temporal flows (wizard steps, async workers, request/response); `flowchart LR` for screen navigation, system context, file dependencies; `stateDiagram-v2` for object lifecycle or pipeline states. |
-| `REQ-MD-03` | Ubiquitous | The diagram SHALL be placed within the `## Arquitectura` section, after any prose summary. It complements text — does not replace it. |
-| `REQ-MD-04` | Optional | When generating `proposal.md`, the `## Solución Propuesta` section MAY include a `flowchart LR` context diagram when the scope involves ≥2 external systems or actors interacting. For internal single-module changes, the diagram SHOULD be omitted. |
-| `REQ-MD-05` | Ubiquitous | Mermaid blocks in TUI render as code blocks (rich.Markdown fallback). This is acceptable — diagrams are design documentation, not runtime display. |
-| `REQ-MD-06` | Ubiquitous | Diagrams are snapshots of the design at authoring time. If the implementation diverges, the code is the source of truth. Post-implementation diagram updates are NOT required. ### Reglas de negocio - **RB-MD01:** La regla "≥3 componentes" previene diagramas triviales en changes de 1-2 archivos. - **RB-MD02:** El tipo de diagrama se elige por situación (REQ-MD-02) — no hay un tipo por defecto. - **RB-MD03:** Los diagramas no son fuente de verdad — el código lo es. --- ## 8. OpenSpec Index — Two-Level Lookup ### Contexto A medida que `openspec/specs/` crece, los skills SDD consumen cada vez más tokens para orientarse. `openspec/INDEX.md` actúa como nivel 1 (orientación rápida, ~300 tokens); los spec files individuales son el nivel 2 (detalle solo cuando es relevante). ### Requisitos #### INDEX.md — Estructura y contenido |
-| `REQ-IDX-01` | Ubiquitous | The `openspec/INDEX.md` SHALL exist at the root of `openspec/` and cover all canonical domains present in `openspec/specs/`. |
-| `REQ-IDX-02` | Ubiquitous | Each domain entry SHALL contain: path to spec file, one-paragraph summary (≤ 2 lines), key entities/symbols, and keywords. |
-| `REQ-IDX-03` | Ubiquitous | The INDEX.md SHALL include a header note explaining its purpose and instructing readers to use it for orientation before loading individual specs. |
-| `REQ-IDX-04` | Ubiquitous | The INDEX.md SHALL remain under 400 lines regardless of the number of domains, enforcing conciseness per entry. |
-| `REQ-IDX-05` | Unwanted | If a domain in `openspec/specs/` has no entry in INDEX.md, the skill sdd-archive SHALL warn the user after closing a change. #### sdd-archive — Mantenimiento |
-| `REQ-ARC-01` | Event | When closing a change that adds or modifies a canonical spec, sdd-archive SHALL update the corresponding entries in `openspec/INDEX.md` if it exists, or bootstrap it from all canonical specs if it does not exist. |
-| `REQ-ARC-02` | Event | When closing a change that adds a new domain, sdd-archive SHALL add a new entry to `openspec/INDEX.md`. |
-| `REQ-ARC-03` | Ubiquitous | The INDEX.md update SHALL happen after merging delta specs into canonical specs (Step 2) and before moving the change to archive (Step 3). |
-| `REQ-BOOT-01` | Event | When sdd-archive runs Paso 2b and `openspec/INDEX.md` does not exist, the skill SHALL read all spec files in `openspec/specs/` and generate a complete INDEX.md with one entry per domain. |
-| `REQ-BOOT-02` | Ubiquitous | The bootstrapped INDEX.md SHALL follow the standard format: header note, one `##` section per domain with path, summary, entities, and keywords. |
-| `REQ-BOOT-03` | Unwanted | If `openspec/specs/` is empty or does not exist, sdd-archive SHALL NOT create an empty INDEX.md. |
-| `REQ-BOOT-04` | Ubiquitous | After bootstrap, sdd-archive SHALL continue with the normal update logic so the current change's entities are reflected immediately. #### sdd-explore — Uso |
-| `REQ-EXP-01` | Event | When `openspec/INDEX.md` exists, sdd-explore SHALL read it before loading any individual spec file. |
-| `REQ-EXP-02` | Event | When INDEX.md is available, sdd-explore SHALL use it to identify 1-3 relevant domains and load only those spec files. |
-| `REQ-EXP-03` | Unwanted | If `openspec/INDEX.md` does not exist, sdd-explore SHALL fall back to scanning `openspec/specs/` directly without error. |
-| `REQ-EXP-04` | Ubiquitous | Domain selection SHALL be based on keyword matching between the change description and the `Keywords` field of each INDEX.md entry. ### Formato de entrada en INDEX.md ```markdown ## {domain} (`specs/{domain}/spec.md`) {Descripción 1-2 líneas} **Entidades:** {Symbol1}, {function()}, ... **Keywords:** {kw1}, {kw2}, ... ``` ### Reglas de negocio - **RB-IDX01:** Formato Markdown plano — sin SQLite, JSON ni infraestructura. Legible por humanos y Claude. - **RB-IDX02:** Mantenimiento manual + auto por sdd-archive — el auto-generado preserva contexto semántico. - **RB-IDX03:** Fallback silencioso si no existe INDEX.md — compatibilidad con repos sin índice. - **RB-IDX04:** Keywords como campo libre (sin taxonomía formal) — menor coste de mantenimiento. - **RB-IDX05:** Límite de 400 líneas — el índice no puede convertirse en el problema que resuelve. --- ## 9. sdd-init — Hint de Canon Inicial Extensión del skill `/sdd-init` existente (sección 4). ### Requisitos |
-| `REQ-HINT-01` | Event | When `/sdd-init` completes and `openspec/specs/` is empty, the skill SHALL display a hint: `"sin canon inicial — ejecuta /sdd-discover para analizar el codebase existente"`. |
-| `REQ-HINT-02` | State | While `openspec/specs/` contains at least one spec file, the skill SHALL NOT display the hint. |
-| `REQ-HINT-03` | Ubiquitous | The hint SHALL appear as the last item in the "Próximos pasos" section of the init summary — it does not interrupt or alter the existing init flow. ### Reglas de negocio - **RB-HINT01:** El hint es informativo — no bloquea ni lanza `/sdd-discover` automáticamente. - **RB-HINT02:** La condición es `openspec/specs/` sin ningún `spec.md` (incluyendo proyectos nuevos sin código). --- ## 10. sdd-discover — Reverse-Spec desde Codebase Existente ### Skill `/sdd-discover` Nuevo skill que analiza el codebase del proyecto y genera specs canónicas iniciales en `openspec/specs/` con `Status: inferred`. ### Flujo ``` /sdd-discover │ ├── Paso 1: Detectar dominios (Glob + Bash) ├── Paso 2: Resumen interactivo — lista con conteos + confirmación ├── Paso 3: Subagente por dominio en paralelo (Agent tool) │ └── Cada subagente escribe openspec/specs/{dominio}/spec.md └── Paso 4: Actualizar/crear openspec/INDEX.md ``` ### Requisitos #### Detección de dominios |
-| `REQ-DISC-01` | Event | When `/sdd-discover` is invoked, the skill SHALL scan the project root to identify architectural domains by inspecting directory structure and file extensions (`.py`, `.ts`, `.php`, `.rb`, `.go`, `.rs`, `.java`). |
-| `REQ-DISC-02` | Ubiquitous | Domain detection SHALL consider top-level subdirectories under common source roots (`src/`, `app/`, `lib/`, `packages/`, project root) as domain candidates. `tests/`, `spec/`, `__tests__/` SHALL be treated as a single `tests` domain. |
-| `REQ-DISC-03` | Unwanted | If no source files are found, the skill SHALL stop and inform the user: `"No se detectó código fuente. El proyecto parece estar vacío."`. #### Resumen interactivo |
-| `REQ-DISC-04` | Event | When domains are identified, the skill SHALL present a summary list with file counts per domain and request confirmation before proceeding. |
-| `REQ-DISC-05` | Event | When the user confirms, the skill SHALL proceed. When the user declines, the skill SHALL stop without creating any files. #### Generación de specs |
-| `REQ-DISC-06` | Event | When analyzing each domain, the skill SHALL delegate the analysis to a subagent with its own isolated context. Each subagent receives: the domain path, the list of files in that domain, and the canonical spec template. The subagent reads files until it has sufficient context to describe the domain's purpose and main entities. |
-| `REQ-DISC-06b` | Ubiquitous | Subagents SHALL run in parallel — each writes its spec to `openspec/specs/{dominio}/spec.md` independently. The orchestrating agent only receives the completion status per domain, keeping orchestrator context lean. |
-| `REQ-DISC-07` | Event | When generating a spec, the subagent SHALL produce a valid canonical spec (Metadata, Contexto, Comportamiento Actual, Requisitos EARS, Decisiones, Pendiente). |
+| `REQ-LIVE06` | Unwanted | If `project-rules.md` does not exist when a rule needs saving, |
+| `REQ-MD-01` | Ubiquitous | When generating `design.md`, the `## Arquitectura` section SHALL |
+| `REQ-MD-02` | Ubiquitous | The diagram type SHALL be chosen according to the situation: |
+| `REQ-MD-03` | Ubiquitous | The diagram SHALL be placed within the `## Arquitectura` section, |
+| `REQ-MD-04` | Optional | When generating `proposal.md`, the `## Solución Propuesta` section |
+| `REQ-MD-05` | Ubiquitous | Mermaid blocks in TUI render as code blocks (rich.Markdown fallback). |
+| `REQ-MD-06` | Ubiquitous | Diagrams are snapshots of the design at authoring time. If the |
+| `REQ-IDX-01` | Ubiquitous | The `openspec/INDEX.md` SHALL exist at the root of `openspec/` |
+| `REQ-IDX-02` | Ubiquitous | Each domain entry SHALL contain: |
+| `REQ-IDX-03` | Ubiquitous | The INDEX.md SHALL include a header note explaining its purpose |
+| `REQ-IDX-04` | Ubiquitous | The INDEX.md SHALL remain under 400 lines regardless of the |
+| `REQ-IDX-05` | Unwanted | If a domain in `openspec/specs/` has no entry in INDEX.md, |
+| `REQ-ARC-01` | Event | When closing a change that adds or modifies a canonical spec, |
+| `REQ-ARC-02` | Event | When closing a change that adds a new domain, |
+| `REQ-ARC-03` | Ubiquitous | The INDEX.md update SHALL happen after merging delta specs |
+| `REQ-BOOT-01` | Event | When sdd-archive runs Paso 2b and `openspec/INDEX.md` does not |
+| `REQ-BOOT-02` | Ubiquitous | The bootstrapped INDEX.md SHALL follow the standard format: |
+| `REQ-BOOT-03` | Unwanted | If `openspec/specs/` is empty or does not exist, |
+| `REQ-BOOT-04` | Ubiquitous | After bootstrap, sdd-archive SHALL continue with the |
+| `REQ-EXP-01` | Event | When `openspec/INDEX.md` exists, sdd-explore SHALL read it |
+| `REQ-EXP-02` | Event | When INDEX.md is available, sdd-explore SHALL use it to identify |
+| `REQ-EXP-03` | Unwanted | If `openspec/INDEX.md` does not exist, sdd-explore SHALL |
+| `REQ-EXP-04` | Ubiquitous | Domain selection SHALL be based on keyword matching between |
+| `REQ-HINT-01` | Event | When `/sdd-init` completes and `openspec/specs/` is empty, |
+| `REQ-HINT-02` | State | While `openspec/specs/` contains at least one spec file, |
+| `REQ-HINT-03` | Ubiquitous | The hint SHALL appear as the last item in the "Próximos pasos" |
+| `REQ-DISC-01` | Event | When `/sdd-discover` is invoked, the skill SHALL scan the |
+| `REQ-DISC-02` | Ubiquitous | Domain detection SHALL consider top-level subdirectories |
+| `REQ-DISC-03` | Unwanted | If no source files are found, the skill SHALL stop and |
+| `REQ-DISC-04` | Event | When domains are identified, the skill SHALL present a summary |
+| `REQ-DISC-05` | Event | When the user confirms, the skill SHALL proceed. When the user |
+| `REQ-DISC-06` | Event | When analyzing each domain, the skill SHALL delegate the analysis |
+| `REQ-DISC-06b` | Ubiquitous | Subagents SHALL run in parallel — each writes its spec to |
+| `REQ-DISC-07` | Event | When generating a spec, the subagent SHALL produce a valid |
 | `REQ-DISC-08` | Ubiquitous | All generated specs SHALL have `Status: inferred` in Metadata. |
-| `REQ-DISC-09` | Ubiquitous | REQs in inferred specs SHALL be marked with `<!-- inferred — validate with /sdd-spec -->` at the end of the Requisitos section. |
-| `REQ-DISC-10` | Ubiquitous | Inferred specs SHALL include a closing note: `> Spec generada automáticamente por /sdd-discover. Validar y completar con /sdd-spec.` |
-| `REQ-DISC-11` | Unwanted | If a spec already exists at `openspec/specs/{dominio}/spec.md`, the skill SHALL skip that domain and inform the user. #### INDEX.md |
-| `REQ-DISC-12` | Event | When all specs are generated, the skill SHALL create or update `openspec/INDEX.md` with an entry per new domain using the standard format. |
-| `REQ-DISC-13` | Event | When `openspec/INDEX.md` already exists, the skill SHALL only add entries for new domains — existing entries SHALL NOT be modified. ### Reglas de negocio - **RB-DISC01:** `/sdd-discover` es idempotente — dominios con spec existente se omiten siempre. - **RB-DISC02:** `Status: inferred` es la señal explícita de borrador automático — no fuente de verdad. - **RB-DISC03:** El skill no crea change activo — opera directamente sobre `openspec/specs/`. - **RB-DISC04:** Read-only sobre código fuente — solo escribe en `openspec/`. - **RB-DISC05:** Si existe `openspec/steering/structure.md`, el subagente MAY leerlo para mejorar la inferencia. ### Decisiones \| Decisión \| Alternativa Descartada \| Motivo \| \|---------\|----------------------\|--------\| \| Skill separado `/sdd-discover` \| Fase integrada en `sdd-init` \| `sdd-init` se mantiene rápido y predecible \| \| Hint en `sdd-init` \| Auto-ejecutar `sdd-discover` \| El usuario decide cuándo hacer el análisis \| \| `Status: inferred` como diferenciador \| Badge visual en SpecHealthScreen \| El estado en el archivo es señal suficiente; evita cambios en el TUI \| \| Confirmación interactiva con listado \| Análisis silencioso \| El usuario valida dominios antes de escribir archivos \| \| Subagentes en paralelo \| Análisis secuencial en un contexto \| Contexto aislado por dominio; proyectos grandes no saturan el orquestador \| |
+| `REQ-DISC-09` | Ubiquitous | REQs in inferred specs SHALL be marked with |
+| `REQ-DISC-10` | Ubiquitous | Inferred specs SHALL include a closing note: |
+| `REQ-DISC-11` | Unwanted | If a spec already exists at `openspec/specs/{dominio}/spec.md`, |
+| `REQ-DISC-12` | Event | When all specs are generated, the skill SHALL create or update |
+| `REQ-DISC-13` | Event | When `openspec/INDEX.md` already exists, the skill SHALL only |
 
 ## Decisions
 

@@ -13,9 +13,52 @@ Safe to re-run — if steering already exists, it shows the current state instea
 ## What it does
 
 1. Checks that the SDD skills are installed
-2. Creates `openspec/` directory structure
-3. Runs a guided Q&A about your project (tech stack, conventions, deployment)
+2. Scans the project automatically (reads `package.json`, `pyproject.toml`, etc. to pre-fill answers)
+3. Runs a guided Q&A about your project — confirms or corrects what was auto-detected
 4. Generates **steering files** in `openspec/steering/`
+
+---
+
+## Example session
+
+Running `/sdd-init` on a Python project looks like this:
+
+```
+Scanning project...
+  ✓ pyproject.toml detected — Python project
+  ✓ pytest found in dev dependencies
+  ✓ ruff found in dev dependencies
+  ✓ src/ layout detected
+
+Let me confirm a few things:
+
+[1/4] Tech stack detected: Python 3.11 + FastAPI + pytest. Correct?
+> yes
+
+[2/4] What does this project do? (one sentence)
+> REST API for managing project tasks and deadlines
+
+[3/4] Who are the main users?
+> internal developer teams
+
+[4/4] Any naming conventions not obvious from the code?
+> We always prefix internal helpers with underscore, and never use
+> abbreviations in variable names.
+
+Generating steering files...
+
+INIT COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+openspec/steering/product.md     ✓
+openspec/steering/tech.md        ✓
+openspec/steering/structure.md   ✓
+openspec/steering/conventions.md ✓
+openspec/steering/project-rules.md ✓
+
+Next: /sdd-new "your first feature"
+```
+
+The scan reads real project files before asking questions, so most answers are pre-filled. For a typical project you'll only need to confirm or add a detail or two.
 
 ---
 
