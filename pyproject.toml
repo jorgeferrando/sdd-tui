@@ -11,6 +11,8 @@ sdd-docs = "sdd_tui.docs_gen:main"
 
 [project.optional-dependencies]
 docs = ["mkdocs-material>=9.0"]
+anthropic = ["anthropic>=0.40"]
+fill = ["anthropic>=0.40"]
 
 [build-system]
 requires = ["hatchling"]
