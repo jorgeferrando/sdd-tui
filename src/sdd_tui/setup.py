@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-GITHUB_REPO = "https://github.com/jorgeferrando/sdd-tui"
+GITHUB_REPO = "https://github.com/jorgeferrando/sdd-skills"
 SKILLS_PREFIX = "sdd-"
 
 
@@ -85,9 +85,9 @@ def _fetch_and_install(dest: Path) -> tuple[list[str], list[str], list[str]]:
     tmp = tempfile.mkdtemp(prefix="sdd-tui-")
     try:
         _clone_repo(tmp)
-        skills_src = Path(tmp) / "skills"
-        if not skills_src.exists():
-            print(f"Error: skills/ not found in cloned repo at {tmp}", file=sys.stderr)
+        skills_src = Path(tmp)
+        if not any(skills_src.iterdir()):
+            print(f"Error: cloned repo is empty at {tmp}", file=sys.stderr)
             sys.exit(1)
 
         installed: list[str] = []

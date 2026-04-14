@@ -98,8 +98,8 @@ def test_prompt_conflict_eof_defaults_to_skip() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _make_skill(skills_dir: Path, name: str) -> None:
-    skill_path = skills_dir / name
+def _make_skill(base_dir: Path, name: str) -> None:
+    skill_path = base_dir / name
     skill_path.mkdir(parents=True)
     (skill_path / "SKILL.md").write_text(f"# {name}")
 
@@ -109,8 +109,7 @@ def test_install_new_skill(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
     dest.mkdir()
     fake_clone = tmp_path / "clone"
-    skills_src = fake_clone / "skills"
-    _make_skill(skills_src, "sdd-init")
+    _make_skill(fake_clone, "sdd-init")
 
     with (
         patch("sdd_tui.setup._clone_repo") as mock_clone,
@@ -133,8 +132,7 @@ def test_install_skill_conflict_update(tmp_path: Path) -> None:
     (dest / "sdd-init" / "SKILL.md").write_text("old content")
 
     fake_clone = tmp_path / "clone"
-    skills_src = fake_clone / "skills"
-    _make_skill(skills_src, "sdd-init")
+    _make_skill(fake_clone, "sdd-init")
 
     with (
         patch("sdd_tui.setup._clone_repo"),
@@ -157,8 +155,7 @@ def test_install_skill_conflict_skip(tmp_path: Path) -> None:
     (dest / "sdd-init" / "SKILL.md").write_text("old content")
 
     fake_clone = tmp_path / "clone"
-    skills_src = fake_clone / "skills"
-    _make_skill(skills_src, "sdd-init")
+    _make_skill(fake_clone, "sdd-init")
 
     with (
         patch("sdd_tui.setup._clone_repo"),
@@ -176,10 +173,9 @@ def test_install_multiple_skills_sorted(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
     dest.mkdir()
     fake_clone = tmp_path / "clone"
-    skills_src = fake_clone / "skills"
-    _make_skill(skills_src, "sdd-tasks")
-    _make_skill(skills_src, "sdd-apply")
-    _make_skill(skills_src, "sdd-init")
+    _make_skill(fake_clone, "sdd-tasks")
+    _make_skill(fake_clone, "sdd-apply")
+    _make_skill(fake_clone, "sdd-init")
 
     with (
         patch("sdd_tui.setup._clone_repo"),
@@ -195,7 +191,8 @@ def test_tmp_dir_cleaned_up_after_install(tmp_path: Path) -> None:
     dest = tmp_path / "dest"
     dest.mkdir()
     fake_clone = tmp_path / "clone"
-    (fake_clone / "skills").mkdir(parents=True)
+    fake_clone.mkdir(parents=True)
+    (fake_clone / "README.md").write_text("stub")
 
     with (
         patch("sdd_tui.setup._clone_repo"),
@@ -263,7 +260,7 @@ def test_run_check_shows_version(capsys: pytest.CaptureFixture, tmp_path: Path) 
 
     out = capsys.readouterr().out
     assert "1.2.3" in out
-    assert "github.com/jorgeferrando/sdd-tui" in out
+    assert "github.com/jorgeferrando/sdd-skills" in out
 
 
 def test_run_check_lists_installed_skills(capsys: pytest.CaptureFixture, tmp_path: Path) -> None:
